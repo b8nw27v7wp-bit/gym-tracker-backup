@@ -24,8 +24,8 @@
             wx:for-item="s"
             wx:for-index="si"
             wx:key="index"
-            class="detail-set"
-          >{{s.weight}}kg × {{s.reps}}</text>
+            class="detail-set {{s.warmup ? 'detail-set-warm' : ''}}"
+          >{{s.warmup ? '热身 ' : ''}}{{s.weight}}kg×{{s.reps}}{{s.rpe ? ' @RPE' + s.rpe : ''}}</text>
         </view>
       </view>
       <view class="btn-ghost danger-btn" data-id="{{item.id}}" bindtap="onDelete">删除本次记录</view>

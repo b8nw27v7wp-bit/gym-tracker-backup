@@ -142,8 +142,16 @@
   border-bottom: 1rpx solid #f3f4f6;
 }
 
+/* 组行列宽 */
+.set-c-no { width: 8%; }
+.set-c-warm { width: 9%; }
+.set-c-w { width: 19%; }
+.set-c-x { width: 6%; }
+.set-c-r { width: 19%; }
+.set-c-rpe { width: 19%; }
+.set-c-del { width: 9%; }
+
 .set-col {
-  width: 22%;
   text-align: center;
 }
 
@@ -162,6 +170,11 @@
   min-height: 48rpx;
 }
 
+.set-input-rpe {
+  font-size: 26rpx;
+  color: #6b7280;
+}
+
 .set-x {
   color: #9ca3af;
   font-size: 24rpx;
@@ -171,6 +184,54 @@
   color: #d1d5db;
   font-size: 30rpx;
   padding: 8rpx;
+}
+
+/* 热身开关 */
+.warm-btn {
+  font-size: 24rpx;
+  color: #d1d5db;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 10rpx;
+  line-height: 40rpx;
+  height: 40rpx;
+  width: 44rpx;
+  margin: 0 auto;
+}
+
+.warm-on {
+  background: #ffedd5;
+  border-color: #fb923c;
+  color: #ea580c;
+  font-weight: 700;
+}
+
+.set-tip {
+  font-size: 21rpx;
+  color: #9ca3af;
+  padding: 10rpx 0 16rpx;
+}
+
+/* 搜索（训练页内） */
+.search-mini {
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+}
+
+.search-mini-input {
+  flex: 1;
+  font-size: 27rpx;
+  padding: 18rpx 0;
+  height: auto;
+  min-height: 44rpx;
+}
+
+.search-clear {
+  color: #9ca3af;
+  font-size: 28rpx;
+  padding: 12rpx;
 }
 
 /* 已添加动作 */

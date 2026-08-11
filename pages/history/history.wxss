@@ -84,6 +84,11 @@
   margin-bottom: 10rpx;
 }
 
+.detail-set-warm {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
 .danger-btn {
   margin-top: 10rpx;
   color: #ef4444;

@@ -21,11 +21,15 @@ Page({
     totalSets: 0,
     sessionStarted: false,
     sessionMinutes: 0,
-    note: ''
+    note: '',
+    searchKeyword: ''
   },
 
   onLoad: function () {
+    // 动作使用频率（常用动作置顶）
+    this.freqMap = util.frequencyByExercise(store.getWorkouts());
     this.refreshDraftMeta();
+    this.refreshExerciseList();
   },
 
   onShow: function () {
@@ -95,8 +99,35 @@ Page({
     var key = e.currentTarget.dataset.key;
     this.setData({
       currentMuscle: key,
-      exerciseList: exercisesData.exercisesByMuscle(key)
+      exerciseList: util.sortByFrequency(exercisesData.exercisesByMuscle(key), this.freqMap || {})
     });
+  },
+
+  refreshExerciseList: function () {
+    this.setData({
+      exerciseList: util.sortByFrequency(
+        exercisesData.exercisesByMuscle(this.data.currentMuscle),
+        this.freqMap || {}
+      )
+    });
+  },
+
+  // 训练页内搜索（跨部位）
+  onSearchInput: function (e) {
+    var kw = e.detail.value.trim();
+    this.setData({ searchKeyword: kw });
+    if (kw) {
+      this.setData({
+        exerciseList: exercisesData.searchExercises(kw)
+      });
+    } else {
+      this.refreshExerciseList();
+    }
+  },
+
+  onClearSearch: function () {
+    this.setData({ searchKeyword: '' });
+    this.refreshExerciseList();
   },
 
   onAddExercise: function (e) {
@@ -117,7 +148,7 @@ Page({
       exerciseId: ex.id,
       exerciseName: ex.name,
       muscle: ex.muscle,
-      sets: [{ weight: '', reps: '' }]
+      sets: [{ weight: '', reps: '', rpe: '', warmup: false }]
     };
     draft.push(item);
     this.setData({ draft: draft });
@@ -143,7 +174,7 @@ Page({
 
   onAddSet: function () {
     var editing = this.data.editing;
-    editing.sets.push({ weight: '', reps: '' });
+    editing.sets.push({ weight: '', reps: '', rpe: '', warmup: false });
     this.setData({ editing: editing });
   },
 
@@ -169,15 +200,29 @@ Page({
     this.setData({ editing: editing });
   },
 
+  onRpeInput: function (e) {
+    var editing = this.data.editing;
+    editing.sets[e.currentTarget.dataset.idx].rpe = e.detail.value;
+    this.setData({ editing: editing });
+  },
+
+  onToggleWarmup: function (e) {
+    var editing = this.data.editing;
+    var idx = e.currentTarget.dataset.idx;
+    editing.sets[idx].warmup = !editing.sets[idx].warmup;
+    this.setData({ editing: editing });
+  },
+
   onDoneEdit: function () {
     var draft = this.data.draft;
     var editing = this.data.editing;
+    // 过滤完全空白的组（保留 rpe/warmup 字段）
     var cleaned = [];
     (editing.sets || []).forEach(function (s) {
       if ((s.weight === '' || s.weight === undefined) && (s.reps === '' || s.reps === undefined)) return;
-      cleaned.push({ weight: s.weight, reps: s.reps });
+      cleaned.push(s);
     });
-    if (cleaned.length === 0) cleaned = [{ weight: '', reps: '' }];
+    if (cleaned.length === 0) cleaned = [{ weight: '', reps: '', rpe: '', warmup: false }];
     editing.sets = cleaned;
     draft[this.data.editingIndex] = editing;
     this.setData({ draft: draft, step: 'pick' });
@@ -252,10 +297,13 @@ Page({
                 return !((s.weight === '' || s.weight === undefined) && (s.reps === '' || s.reps === undefined));
               })
               .map(function (s) {
-                return {
+                var savedSet = {
                   weight: Number(s.weight) || 0,
                   reps: Number(s.reps) || 0
                 };
+                if (s.rpe !== '' && s.rpe !== undefined) savedSet.rpe = Number(s.rpe) || 0;
+                if (s.warmup) savedSet.warmup = true;
+                return savedSet;
               })
           };
           if (item.note) saved.note = item.note;

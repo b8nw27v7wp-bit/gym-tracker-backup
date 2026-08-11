@@ -189,6 +189,29 @@ assert(weekly[6].volume === 500, '上周柱 500');
 const pr = util.exercisePR('bench', all);
 assert(pr.maxWeight === 80 && pr.bestSetVol === 600, '卧推 PR 80kg / 最佳单组 600');
 
+// 热身组不计容量
+const wWarm = {
+  id: 'ww', ts: thisWeekMon + 3 * dayMs, date: util.dateStr(thisWeekMon + 3 * dayMs), duration: 50,
+  items: [
+    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [
+      { weight: 20, reps: 10, warmup: true },
+      { weight: 40, reps: 8, warmup: true },
+      { weight: 70, reps: 8 },
+      { weight: 70, reps: 8, rpe: 8 }
+    ]}
+  ]
+};
+const cw = util.calcWorkout(wWarm);
+assert(cw.volume === 1120 && cw.sets === 2 && cw.warmupSets === 2, '热身组不计容量（70×8×2=1120，实际 ' + cw.volume + '）');
+
+// 动作使用频率
+const freq = util.frequencyByExercise(all.concat(wWarm));
+assert(freq.bench === 3, '卧推出现 3 次（实际 ' + freq.bench + '）');
+assert(freq.squat === 1 && freq.pullup === 1, '深蹲/引体各 1 次');
+// 排序：使用多的在前
+const sorted = util.sortByFrequency(exercisesData.exercisesByMuscle('chest'), freq);
+assert(sorted[0].id === 'bench', '常用动作置顶（bench 排第一，实际 ' + sorted[0].id + '）');
+
 // 时长格式化
 assert(util.fmtDuration(55) === '55分钟', '时长 55 分钟');
 assert(util.fmtDuration(80) === '1小时20分', '时长 1小时20分');

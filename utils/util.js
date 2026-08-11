@@ -7,15 +7,26 @@ function setVolume(set) {
   return (Number(set.weight) || 0) * (Number(set.reps) || 0);
 }
 
-// 一次训练：{ volume 总容量, weightVolume 负重容量, sets 总组数, reps 总次数, maxWeight 最大重量 }
+// 是否热身组（热身组不纳入统计）
+function isWarmup(set) {
+  return !!set.warmup;
+}
+
+// 一次训练：{ volume 总容量, weightVolume 负重容量, sets 正式组数, reps 正式组总次数, maxWeight 最大重量, warmupSets 热身组数 }
+// 热身组（warmup: true）不纳入容量/组数/次数统计
 function calcWorkout(workout) {
   var volume = 0;
   var weightVolume = 0;
   var sets = 0;
   var reps = 0;
   var maxWeight = 0;
+  var warmupSets = 0;
   (workout.items || []).forEach(function (item) {
     (item.sets || []).forEach(function (s) {
+      if (isWarmup(s)) {
+        warmupSets += 1;
+        return;
+      }
       var v = setVolume(s);
       volume += v;
       if (Number(s.weight) > 0) weightVolume += v;
@@ -24,7 +35,30 @@ function calcWorkout(workout) {
       if (Number(s.weight) > maxWeight) maxWeight = Number(s.weight);
     });
   });
-  return { volume: volume, weightVolume: weightVolume, sets: sets, reps: reps, maxWeight: maxWeight };
+  return { volume: volume, weightVolume: weightVolume, sets: sets, reps: reps, maxWeight: maxWeight, warmupSets: warmupSets };
+}
+
+// 动作使用频率统计：{ exerciseId: 使用次数 }（含热身组在内的所有出现）
+function frequencyByExercise(workouts) {
+  var map = {};
+  (workouts || []).forEach(function (w) {
+    (w.items || []).forEach(function (item) {
+      map[item.exerciseId] = (map[item.exerciseId] || 0) + 1;
+    });
+  });
+  return map;
+}
+
+// 按使用频率排序动作列表（未用过的保持原顺序）
+function sortByFrequency(exercises, freqMap) {
+  var list = exercises.slice();
+  list.sort(function (a, b) {
+    var fa = freqMap[a.id] || 0;
+    var fb = freqMap[b.id] || 0;
+    if (fa !== fb) return fb - fa;
+    return 0;
+  });
+  return list;
 }
 
 // ---------- 日期工具 ----------
@@ -153,7 +187,10 @@ function exercisePR(exerciseId, workouts) {
 
 module.exports = {
   setVolume: setVolume,
+  isWarmup: isWarmup,
   calcWorkout: calcWorkout,
+  frequencyByExercise: frequencyByExercise,
+  sortByFrequency: sortByFrequency,
   dateStr: dateStr,
   todayStr: todayStr,
   weekStart: weekStart,
