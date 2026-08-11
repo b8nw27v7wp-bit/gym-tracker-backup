@@ -6,7 +6,8 @@
     "pages/stats/stats",
     "pages/history/history",
     "pages/exercise-detail/exercise-detail",
-    "pages/knowledge-detail/knowledge-detail"
+    "pages/knowledge-detail/knowledge-detail",
+    "pages/plans/plans"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",

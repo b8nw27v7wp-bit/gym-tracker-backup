@@ -13,6 +13,7 @@ const store = require('./utils/store');
 const util = require('./utils/util');
 const exercisesData = require('./data/exercises');
 const knowledge = require('./data/knowledge');
+const planUtil = require('./utils/plan');
 
 let passed = 0, failed = 0;
 function assert(cond, name) {
@@ -56,8 +57,47 @@ assert(exercisesData.equipmentText('barbell') === '杠铃', '器械文案');
 const search = exercisesData.searchExercises('卧推');
 assert(search.length >= 3 && search[0].name.includes('卧推'), '搜索"卧推"命中 ' + search.length + ' 个');
 
+// ---------- 训练计划库 ----------
+console.log('2. 训练计划库');
+assert(planUtil.plans.length === 3, '共 ' + planUtil.plans.length + ' 套计划');
+const planIds = new Set();
+planUtil.plans.forEach(p => { if (planIds.has(p.id)) dup++; planIds.add(p.id); });
+assert(planIds.size === 3, '计划 id 无重复');
+let planBroken = 0;
+planUtil.plans.forEach(p => {
+  if (!p.name || !p.level || !p.desc || !p.days || p.days.length === 0) planBroken++;
+  p.days.forEach(d => {
+    if (!d.id || !d.name || !d.items || d.items.length === 0) planBroken++;
+    d.items.forEach(it => {
+      if (!exercisesData.getExercise(it.exerciseId)) planBroken++;  // 动作必须存在
+      if (!it.sets || it.sets < 1) planBroken++;
+      if (it.reps !== null && it.reps !== undefined && (typeof it.reps !== 'number' || it.reps < 1)) planBroken++;
+    });
+  });
+});
+assert(planBroken === 0, '全部计划引用动作存在且字段有效');
+
+// 填充逻辑
+const draftA = planUtil.buildDraftFromPlan('beginner-fullbody', 'a');
+assert(draftA.length === 5, '新手A日 5 个动作（实际 ' + draftA.length + '）');
+assert(draftA[0].exerciseId === 'squat' && draftA[0].sets.length === 3, '深蹲 3 组');
+assert(draftA[0].sets[0].reps === 8 && draftA[0].sets[0].weight === '', 'reps 预填 8 / 重量留空');
+assert(draftA[4].note === '平板支撑按秒计，重量留空', '动作级 note 传递');
+
+const draftC = planUtil.buildDraftFromPlan('beginner-fullbody', 'c');
+assert(draftC[2].exerciseId === 'pullup' && draftC[2].sets[0].reps === '', '力竭动作 reps 留空自填');
+
+const draftPush = planUtil.buildDraftFromPlan('ppl', 'push');
+assert(draftPush.length === 6, 'PPL 推日 6 个动作（实际 ' + draftPush.length + '）');
+assert(draftPush[0].sets.length === 4 && draftPush[0].sets[0].reps === 8, '卧推 4×8 预填');
+assert(planUtil.buildDraftFromPlan('ppl', 'nonexist').length === 0, '无效日返回空数组');
+assert(planUtil.buildDraftFromPlan('nonexist', 'a').length === 0, '无效计划返回空数组');
+
+const summaries = planUtil.planSummaries();
+assert(summaries.length === 3 && summaries[0].dayCount === 3, '计划汇总（3 计划 / 新手 3 天）');
+
 // ---------- 知识库 ----------
-console.log('2. 知识库');
+console.log('3. 知识库');
 assert(knowledge.ALL.length === 14, '共 ' + knowledge.ALL.length + ' 篇文章');
 assert(knowledge.CATEGORIES.length === 5, '5 个分类');
 const kIds = new Set();
@@ -77,7 +117,7 @@ assert(glossary && glossary.sections.length >= 4, '术语表 4+ 节');
 assert(knowledge.categoryName('plans') === '分化计划', '分类名映射');
 
 // ---------- 构造测试数据 ----------
-console.log('3. 训练数据计算');
+console.log('4. 训练数据计算');
 const now = Date.now();
 const dayMs = 86400000;
 const thisWeekMon = util.weekStart(now);
@@ -120,7 +160,7 @@ const c2 = util.calcWorkout(w2);
 assert(c2.volume === 40, 'w2 自重动作容量 = 40（实际 ' + c2.volume + '）');
 
 // ---------- 存储 CRUD ----------
-console.log('4. 存储层');
+console.log('5. 存储层');
 store.ensureInit();
 store.saveWorkout(w1);
 store.saveWorkout(w2);
@@ -132,7 +172,7 @@ assert(store.getWorkouts().length === 2, '删除后剩 2 条');
 store.saveWorkout(w2);
 
 // ---------- 统计 ----------
-console.log('5. 统计');
+console.log('6. 统计');
 const all = [w1, w2, w3];
 const cmp = util.weekCompare(all);
 assert(cmp.thisVol === 2600, '本周容量 2600（实际 ' + cmp.thisVol + '）');

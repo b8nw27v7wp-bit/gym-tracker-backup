@@ -25,6 +25,11 @@
   box-shadow: 0 2rpx 12rpx rgba(17, 24, 39, 0.04);
 }
 
+.header-right {
+  display: flex;
+  gap: 16rpx;
+}
+
 .history-arrow {
   margin-left: 8rpx;
   color: #9ca3af;

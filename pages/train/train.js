@@ -2,6 +2,7 @@
 var exercisesData = require('../../data/exercises');
 var store = require('../../utils/store');
 var util = require('../../utils/util');
+var planUtil = require('../../utils/plan');
 
 var timer = null; // 计时器句柄
 
@@ -49,6 +50,28 @@ Page({
       wx.removeStorageSync('pending_exercise');
       this.addExerciseById(pending);
     }
+    // 从计划库跳转来的计划日填充
+    var pendingDay = wx.getStorageSync('pending_plan_day');
+    if (pendingDay) {
+      wx.removeStorageSync('pending_plan_day');
+      this.applyPlanDay(pendingDay);
+    }
+  },
+
+  onGoPlans: function () {
+    wx.navigateTo({ url: '/pages/plans/plans' });
+  },
+
+  // 按计划日填充训练草稿
+  applyPlanDay: function (pending) {
+    var draft = planUtil.buildDraftFromPlan(pending.planId, pending.dayId);
+    if (draft.length === 0) {
+      wx.showToast({ title: '计划数据异常', icon: 'none' });
+      return;
+    }
+    this.setData({ draft: draft, step: 'pick' });
+    this.refreshDraftMeta();
+    wx.showToast({ title: '已按计划填充 ' + draft.length + ' 个动作', icon: 'none' });
   },
 
   onHide: function () {
@@ -202,33 +225,62 @@ Page({
       wx.showToast({ title: '还没有记录任何动作', icon: 'none' });
       return;
     }
-    var mins = Math.max(Math.floor((Date.now() - this.sessionStartTs) / 60000), 1);
-    var workout = {
-      id: store.genId(),
-      ts: Date.now(),
-      date: util.todayStr(),
-      duration: mins,
-      note: this.data.note.trim(),
-      items: draft.map(function (item) {
-        return {
-          exerciseId: item.exerciseId,
-          exerciseName: item.exerciseName,
-          muscle: item.muscle,
-          sets: item.sets.map(function (s) {
-            return {
-              weight: Number(s.weight) || 0,
-              reps: Number(s.reps) || 0
-            };
-          })
-        };
-      })
+    // 统计全空组（重量和次数都没填），保存时自动跳过
+    var emptyCount = 0;
+    draft.forEach(function (item) {
+      item.sets.forEach(function (s) {
+        if ((s.weight === '' || s.weight === undefined) && (s.reps === '' || s.reps === undefined)) emptyCount++;
+      });
+    });
+    var self = this;
+    var doSave = function () {
+      var mins = Math.max(Math.floor((Date.now() - self.sessionStartTs) / 60000), 1);
+      var workout = {
+        id: store.genId(),
+        ts: Date.now(),
+        date: util.todayStr(),
+        duration: mins,
+        note: self.data.note.trim(),
+        items: draft.map(function (item) {
+          var saved = {
+            exerciseId: item.exerciseId,
+            exerciseName: item.exerciseName,
+            muscle: item.muscle,
+            sets: item.sets
+              .filter(function (s) {
+                // 跳过全空组
+                return !((s.weight === '' || s.weight === undefined) && (s.reps === '' || s.reps === undefined));
+              })
+              .map(function (s) {
+                return {
+                  weight: Number(s.weight) || 0,
+                  reps: Number(s.reps) || 0
+                };
+              })
+          };
+          if (item.note) saved.note = item.note;
+          return saved;
+        })
+      };
+      store.saveWorkout(workout);
+      self.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '' });
+      self.refreshDraftMeta();
+      self.sessionStartTs = Date.now();
+      self.setData({ sessionMinutes: 0 });
+      wx.showToast({ title: '已保存 ✅', icon: 'none' });
     };
-    store.saveWorkout(workout);
-    this.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '' });
-    this.refreshDraftMeta();
-    // 重置计时器
-    this.sessionStartTs = Date.now();
-    this.setData({ sessionMinutes: 0 });
-    wx.showToast({ title: '已保存 ✅', icon: 'none' });
+    if (emptyCount > 0) {
+      wx.showModal({
+        title: '有 ' + emptyCount + ' 组未填写',
+        content: '未填写重量和次数的组将自动跳过，继续保存？',
+        confirmText: '保存',
+        cancelText: '返回填写',
+        success: function (res) {
+          if (res.confirm) doSave();
+        }
+      });
+    } else {
+      doSave();
+    }
   }
 });

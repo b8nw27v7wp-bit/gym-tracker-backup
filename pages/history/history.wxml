@@ -17,7 +17,7 @@
     <view wx:if="{{item.expanded}}" class="work-detail">
       <view wx:if="{{item.note}}" class="work-note">{{item.note}}</view>
       <view wx:for="{{item.items}}" wx:for-item="ex" wx:for-index="ei" wx:key="exerciseId" class="detail-ex">
-        <view class="detail-ex-name">{{ex.exerciseName}}</view>
+        <view class="detail-ex-name">{{ex.exerciseName}}<text wx:if="{{ex.note}}" class="detail-ex-note">{{ex.note}}</text></view>
         <view class="detail-sets">
           <text
             wx:for="{{ex.sets}}"
