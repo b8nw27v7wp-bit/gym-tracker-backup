@@ -1,0 +1,38 @@
+<view class="page">
+  <view class="card">
+    <view class="card-title">数据存储说明</view>
+    <view class="sec-text">
+      铁馆日志的所有数据（训练记录、体重记录、设置）均只保存在你手机本机的微信缓存中。本应用不搭建服务器、不采集、不上传、不出售任何个人信息。
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">无网络请求</view>
+    <view class="sec-text">
+      本应用为纯本地工具，运行过程中不发起任何网络请求，不需要你提供手机号、微信昵称、头像等任何信息，无需登录即可使用全部功能。
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">数据与备份</view>
+    <view class="sec-text">
+      数据随微信缓存保留，卸载小程序或清理微信缓存会删除数据。建议定期通过「历史 → 数据管理 → 导出备份」将数据复制保存到本机备忘录或文件中。
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">权限使用</view>
+    <view class="sec-text">
+      仅在「分享训练总结 → 保存到相册」时申请相册写入权限，用于保存你主动生成的分享图片；该权限可随时在微信设置中关闭。
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">联系我们</view>
+    <view class="sec-text">
+      如有任何问题或建议，可通过微信小程序客服或开发者邮箱与我们联系。
+    </view>
+  </view>
+
+  <view class="version">铁馆日志 v2.2.0</view>
+</view>

@@ -1,0 +1,16 @@
+.page {
+  padding-bottom: 60rpx;
+}
+
+.sec-text {
+  font-size: 26rpx;
+  color: #374151;
+  line-height: 1.9;
+}
+
+.version {
+  text-align: center;
+  font-size: 22rpx;
+  color: #d1d5db;
+  margin-top: 40rpx;
+}

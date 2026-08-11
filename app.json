@@ -9,7 +9,8 @@
     "pages/knowledge-detail/knowledge-detail",
     "pages/plans/plans",
     "pages/calculator/calculator",
-    "pages/data/data"
+    "pages/data/data",
+    "pages/privacy/privacy"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",

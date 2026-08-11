@@ -38,5 +38,9 @@
     <view class="btn-primary act-btn" bindtap="onExport">导出备份（复制到剪贴板）</view>
     <view class="btn-ghost act-btn" bindtap="onImport">从剪贴板导入恢复</view>
     <view class="btn-ghost act-btn danger-btn" bindtap="onClear">清空全部数据</view>
+    <view class="link-row" bindtap="onOpenPrivacy">
+      <text>隐私说明</text>
+      <text class="link-arrow">›</text>
+    </view>
   </view>
 </view>

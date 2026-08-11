@@ -95,5 +95,9 @@ Page({
         wx.showToast({ title: '已清空', icon: 'none' });
       }
     });
+  },
+
+  onOpenPrivacy: function () {
+    wx.navigateTo({ url: '/pages/privacy/privacy' });
   }
 });

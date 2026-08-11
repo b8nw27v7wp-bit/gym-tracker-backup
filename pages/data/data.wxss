@@ -47,3 +47,18 @@
   color: #ef4444;
   background: #fef2f2;
 }
+
+.link-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 4rpx;
+  border-top: 1rpx solid #f9fafb;
+  font-size: 26rpx;
+  color: #374151;
+}
+
+.link-arrow {
+  color: #d1d5db;
+  font-size: 32rpx;
+}
