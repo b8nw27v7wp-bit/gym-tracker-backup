@@ -157,15 +157,17 @@ Page({
       muscle: ex.muscle,
       sets: [{ weight: '', reps: '', rpe: '', warmup: false }]
     };
-    draft.push(item);
-    this.setData({ draft: draft });
-    this.enterEdit(draft.length - 1);
+    // 不可变更新：concat 生成新数组，setData 才能 diff 到变化并刷新视图
+    var next = draft.concat([item]);
+    this.setData({ draft: next });
+    this.enterEdit(next.length - 1);
   },
 
   // ---------- 组编辑 ----------
   enterEdit: function (index) {
     var draft = this.data.draft;
-    var editing = draft[index];
+    // 深拷贝编辑对象，与 draft 解耦：编辑期间只改副本，避免共享引用导致渲染层 diff 失效
+    var editing = JSON.parse(JSON.stringify(draft[index]));
     var m = exercisesData.muscleInfo(editing.muscle);
     this.setData({
       step: 'edit',
@@ -180,48 +182,41 @@ Page({
   },
 
   onAddSet: function () {
-    var editing = this.data.editing;
-    editing.sets.push({ weight: '', reps: '', rpe: '', warmup: false });
-    this.setData({ editing: editing });
+    // concat 生成新数组引用，保证 setData diff 生效
+    var sets = this.data.editing.sets.concat([{ weight: '', reps: '', rpe: '', warmup: false }]);
+    this.setData({ 'editing.sets': sets });
   },
 
   onRemoveSet: function (e) {
-    var editing = this.data.editing;
-    if (editing.sets.length <= 1) {
+    var sets = this.data.editing.sets;
+    if (sets.length <= 1) {
       wx.showToast({ title: '至少保留一组', icon: 'none' });
       return;
     }
-    editing.sets.splice(e.currentTarget.dataset.idx, 1);
-    this.setData({ editing: editing });
+    var next = sets.slice();
+    next.splice(e.currentTarget.dataset.idx, 1);
+    this.setData({ 'editing.sets': next });
   },
 
   onWeightInput: function (e) {
-    var editing = this.data.editing;
-    editing.sets[e.currentTarget.dataset.idx].weight = e.detail.value;
-    this.setData({ editing: editing });
+    // 路径更新：只改单个字段，避免整对象替换导致输入光标跳动
+    this.setData({ ['editing.sets[' + e.currentTarget.dataset.idx + '].weight']: e.detail.value });
   },
 
   onRepsInput: function (e) {
-    var editing = this.data.editing;
-    editing.sets[e.currentTarget.dataset.idx].reps = e.detail.value;
-    this.setData({ editing: editing });
+    this.setData({ ['editing.sets[' + e.currentTarget.dataset.idx + '].reps']: e.detail.value });
   },
 
   onRpeInput: function (e) {
-    var editing = this.data.editing;
-    editing.sets[e.currentTarget.dataset.idx].rpe = e.detail.value;
-    this.setData({ editing: editing });
+    this.setData({ ['editing.sets[' + e.currentTarget.dataset.idx + '].rpe']: e.detail.value });
   },
 
   onToggleWarmup: function (e) {
-    var editing = this.data.editing;
     var idx = e.currentTarget.dataset.idx;
-    editing.sets[idx].warmup = !editing.sets[idx].warmup;
-    this.setData({ editing: editing });
+    this.setData({ ['editing.sets[' + idx + '].warmup']: !this.data.editing.sets[idx].warmup });
   },
 
   onDoneEdit: function () {
-    var draft = this.data.draft;
     var editing = this.data.editing;
     // 过滤完全空白的组（保留 rpe/warmup 字段）
     var cleaned = [];
@@ -231,6 +226,8 @@ Page({
     });
     if (cleaned.length === 0) cleaned = [{ weight: '', reps: '', rpe: '', warmup: false }];
     editing.sets = cleaned;
+    // 深拷贝 draft 后写回编辑结果：draft 是新数组引用，渲染层 diff 才能生效
+    var draft = JSON.parse(JSON.stringify(this.data.draft));
     draft[this.data.editingIndex] = editing;
     this.setData({ draft: draft, step: 'pick' });
     this.refreshDraftMeta();
@@ -238,9 +235,9 @@ Page({
   },
 
   onRemoveItem: function (e) {
-    var draft = this.data.draft;
-    draft.splice(e.currentTarget.dataset.index, 1);
-    this.setData({ draft: draft, step: 'pick' });
+    var next = this.data.draft.slice();
+    next.splice(e.currentTarget.dataset.index, 1);
+    this.setData({ draft: next, step: 'pick' });
     this.refreshDraftMeta();
   },
 
@@ -315,8 +312,16 @@ Page({
           };
           if (item.note) saved.note = item.note;
           return saved;
+        }).filter(function (item) {
+          // 过滤组全空的动作，避免残留 sets: [] 的空条目
+          return item.sets.length > 0;
         })
       };
+      // 所有动作的组都为空：不保存
+      if (workout.items.length === 0) {
+        wx.showToast({ title: '没有可保存的有效数据', icon: 'none' });
+        return;
+      }
       store.saveWorkout(workout);
       self.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '' });
       self.refreshDraftMeta();

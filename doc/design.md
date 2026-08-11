@@ -1,6 +1,6 @@
 # 设计文档（Design）
 
-版本：v2.0 | 更新：2026-08-11
+版本：v2.1 | 更新：2026-08-11
 
 ## 1. 技术选型
 
@@ -15,16 +15,19 @@
 
 ```
 ┌─────────────────────────────────────────┐
-│ 页面层 pages/                           │
+│ 页面层 pages/（11 页）                    │
 │  train  exercises  knowledge  stats     │
 │  history  exercise-detail  knowledge-detail │
+│  plans  calculator  data  privacy       │
 ├─────────────────────────────────────────┤
 │ 数据层 data/                            │
 │  exercises/（10 部位模块 + index）       │
 │  knowledge/（3 主题模块 + index）        │
+│  plans.js（5 套训练计划模板）            │
 ├─────────────────────────────────────────┤
 │ 业务层 utils/                           │
-│  store.js（CRUD） util.js（计算）        │
+│  store.js（CRUD+迁移+备份） util.js（计算）│
+│  plan.js（计划草稿） nutrition.js（营养） │
 ├─────────────────────────────────────────┤
 │ 存储层 wx.setStorageSync                │
 └─────────────────────────────────────────┘
@@ -48,15 +51,15 @@
       exerciseId: 'bench',      // 关联动作库 id
       exerciseName: '杠铃卧推',  // 冗余名称（动作库更新不影响历史）
       muscle: 'chest',          // 冗余部位（统计用）
-      sets: [ { weight: 60, reps: 10 } ]  // weight kg，0 表示自重
+      sets: [ { weight: 60, reps: 10, rpe: 8, warmup: false } ]  // rpe 选填 1-10；warmup 热身组不计入统计；weight 0 表示自重
     }
   ]
 }
 ```
 
-存储 key：`gym_workouts`（数组），`gym_inited_v1`（初始化标记）。
+存储 key：`gym_workouts`（数组）、`gym_bodyweight`（数组）、`gym_schema_version`（schema 版本号，v2 起）、`gym_inited_v1`（v1 遗留初始化标记）。
 
-**设计要点**：动作名/部位在保存时冗余进 workout，即使动作库后续改名/删除，历史记录与统计不受影响。
+**设计要点**：动作名/部位在保存时冗余进 workout，即使动作库后续改名/删除，历史记录与统计不受影响。保存前过滤全空组与全空动作条目，保证无 `sets: []` 残留（BUG-004）。
 
 ### 3.2 动作 exercise
 
@@ -111,6 +114,12 @@
 - 最佳单组：该动作所有组 weight×reps 最大值（含日期）
 - 统计页展示 8 个招牌动作（卧推/深蹲/硬拉/推举/引体/哑铃卧推/腿举/划船），仅显示有记录的
 
+### 4.4 1RM 估算与体重趋势
+
+- Epley 公式：`1RM ≈ weight × (1 + reps/30)`，仅对 reps ≤ 20 有效，超出返回 0
+- est1RMHistory：按时间正序取每日最大估算值，热身组排除
+- 体重趋势：最新/累计变化量（最新-最早）/极值，柱状图取最近 8 次并按极值归一化
+
 ## 5. UI 设计规范
 
 浅色极简风（用户偏好）：
@@ -131,6 +140,9 @@
 ```
 tab 页：train / exercises / knowledge / stats
 子页：history（训练页入口）、exercise-detail（动作库入口）、knowledge-detail（知识库入口）
+     plans（训练页入口）、calculator（知识页入口）、data（历史页入口）、privacy（数据管理页入口）
 ```
 
-跨页传递：动作详情"去记录"通过 `wx.setStorageSync('pending_exercise', id)` → `wx.switchTab` → 训练页 onShow 读取并清除。
+跨页传递：
+- 动作详情"去记录"：`wx.setStorageSync('pending_exercise', id)` → `wx.switchTab` → 训练页 onShow 读取并清除
+- 计划库"开始训练"：`wx.setStorageSync('pending_plan_day', {planId, dayId})` → `wx.switchTab` → 训练页 onShow 读取并填充草稿

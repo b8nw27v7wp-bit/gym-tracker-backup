@@ -1,6 +1,6 @@
 # 开发指南（Developer Guide）
 
-版本：v2.0 | 更新：2026-08-11
+版本：v2.1 | 更新：2026-08-11
 
 ## 1. 环境准备
 
@@ -21,13 +21,19 @@ gym-tracker/
 ├── sitemap.json                    搜索收录配置（当前全 disallow）
 ├── data/
 │   ├── exercises/                  动作库（按部位拆 10 文件 + index.js）
-│   └── knowledge/                  知识库（按主题拆 3 文件 + index.js）
+│   ├── knowledge/                  知识库（按主题拆 3 文件 + index.js）
+│   └── plans.js                    训练计划模板（5 套 19 日）
 ├── utils/
-│   ├── store.js                    本地存储 CRUD
-│   └── util.js                     纯函数计算层（容量/周统计/PR）
-├── pages/                          7 个页面（4 tab + 3 子页）
+│   ├── store.js                    本地存储 CRUD + schema 迁移 + 备份导入导出
+│   ├── util.js                     纯函数计算层（容量/周统计/PR/1RM/体重）
+│   ├── plan.js                     计划查询 + 训练草稿生成
+│   └── nutrition.js                营养计算器（纯函数）
+├── pages/                          11 个页面（4 tab + 7 子页）
+│   ├── train  exercises  knowledge  stats          # tab 页
+│   ├── history  exercise-detail  knowledge-detail  # v2.0 子页
+│   └── plans  calculator  data  privacy            # v2.1 子页
 ├── doc/                            项目文档
-└── test.js                         数据层单测
+└── test.js                         数据层单测（85 项断言）
 ```
 
 ## 3. 开发规范
@@ -39,7 +45,13 @@ gym-tracker/
 - **计算层**（utils/）：纯函数，不依赖 wx API，保证可单测
 - **存储层**（utils/store.js）：唯一访问 wx storage 的地方
 
-### 3.2 命名约定
+### 3.2 setData 不可变更新（BUG-003 教训）
+
+- **禁止**"直接修改 this.data 引用对象后再 setData 同一引用"——diff 检测不到变化，视图不刷新
+- 改数组用 `concat`/`slice` 生成新数组；改对象字段用路径更新 `setData({'a.b[i].c': val})`；编辑副本用 `JSON.parse(JSON.stringify(x))` 深拷贝
+- 页面交互逻辑改动后跑 mock Page/wx 冒烟测试（doc/testing.md 第 4 章）
+
+### 3.3 命名约定
 
 | 类型 | 规则 | 示例 |
 |-----|------|------|
@@ -48,7 +60,7 @@ gym-tracker/
 | 变量/函数 | camelCase | calcWorkout |
 | storage key | gym_ 前缀 | gym_workouts |
 
-### 3.3 数据一致性
+### 3.4 数据一致性
 
 - 保存 workout 时冗余存储 exerciseName/muscle，历史数据与动作库解耦
 - 计算一律用 `Number(x) || 0` 防御脏数据
@@ -110,6 +122,7 @@ gym-tracker/
 | 现象 | 原因与解决 |
 |-----|-----------|
 | 编辑器报 "Cannot find module E:\e\ts\..." | 语法检查器的路径误报，实际文件已写入成功，不影响开发者工具运行 |
+| 改了数据但界面不刷新 | setData 传了同一引用（先改了 this.data 再 setData）——diff 检测不到变化，改用深拷贝/路径更新（见 3.2） |
 | 改了动作库不生效 | 检查是否残留旧 `data/exercises.js` 单文件（与目录同名会优先命中） |
 | 统计数字不对 | 检查 workout 的 ts 是否合理；周统计以周一为界 |
 | 审核要求截图 | 开发者工具"预览"生成二维码 → 手机截图，或模拟器截图 |
