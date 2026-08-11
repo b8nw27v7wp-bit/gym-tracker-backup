@@ -267,5 +267,48 @@ assert(!nutrition.calcNutrition({ gender: 'x', age: 25, heightCm: 175, weightKg:
 assert(!nutrition.calcNutrition({ gender: 'male', age: 25, heightCm: 175, weightKg: 70, activity: 9 }).valid, '非法活动水平拦截');
 assert(!nutrition.calcNutrition({ gender: 'male', age: 5, heightCm: 175, weightKg: 70, activity: 3 }).valid, '非法年龄拦截');
 
+// ---------- 数据迁移与备份 ----------
+console.log('9. 数据迁移与备份');
+// 全新安装
+global.wx._store = {};
+store.ensureInit();
+assert(wx.getStorageSync('gym_schema_version') === 2, '全新安装 schema v2');
+assert(Array.isArray(wx.getStorageSync('gym_workouts')), 'workouts 初始化');
+assert(Array.isArray(wx.getStorageSync('gym_bodyweight')), 'bodyweight 初始化');
+
+// 老版本迁移：只有 v1 inited 标记 + 训练数据，无 bodyweight key、无 schema
+global.wx._store = {};
+wx.setStorageSync('gym_inited_v1', true);
+wx.setStorageSync('gym_workouts', [{ id: 'old1', ts: Date.now(), items: [] }]);
+store.ensureInit();
+assert(Array.isArray(wx.getStorageSync('gym_bodyweight')), 'v1 迁移补 bodyweight key');
+assert(wx.getStorageSync('gym_schema_version') === 2, 'v1 迁移到 v2');
+assert(store.getWorkouts().length === 1, '迁移保留原训练数据');
+
+// 导出
+const exp = store.exportData();
+assert(exp.app === 'gym-tracker' && exp.schemaVersion === 2 && exp.workouts.length === 1, '导出结构完整（app/版本/数据）');
+
+// 导入合法数据（含非法项过滤）
+const importObj = {
+  app: 'gym-tracker', schemaVersion: 2, exportedAt: Date.now(),
+  workouts: [{ id: 'ok1', ts: Date.now(), items: [] }, { bad: true }],
+  bodyweight: [{ ts: Date.now(), weight: 70 }, { nope: 1 }]
+};
+const imp = store.importData(importObj);
+assert(imp.ok && imp.workouts === 1 && imp.bodyweight === 1, '导入过滤非法项（' + imp.workouts + '/' + imp.bodyweight + '）');
+assert(store.getWorkouts()[0].id === 'ok1', '导入数据生效');
+
+// 导入非法数据
+assert(!store.importData({ app: 'other' }).ok, '非本应用数据拦截');
+assert(!store.importData({ app: 'gym-tracker', workouts: 'x', bodyweight: [] }).ok, '结构错误拦截');
+assert(!store.importData(null).ok, 'null 拦截');
+
+// 清空 + 容量
+store.clearAll();
+assert(store.getWorkouts().length === 0 && store.getBodyweights().length === 0, '清空全部数据');
+assert(store.formatSize(2048) === '2.0 KB', '容量格式化（实际 ' + store.formatSize(2048) + '）');
+assert(store.dataSizeBytes() >= 0, '容量估算可用');
+
 console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
 process.exit(failed > 0 ? 1 : 0);

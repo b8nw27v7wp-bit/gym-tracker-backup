@@ -1,0 +1,42 @@
+<view class="page">
+  <!-- 数据概况 -->
+  <view class="card">
+    <view class="card-title">数据概况</view>
+    <view class="info-row">
+      <text class="info-label">训练记录</text>
+      <text class="info-value">{{workoutCount}} 条</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">体重记录</text>
+      <text class="info-value">{{bodyweightCount}} 条</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">占用空间</text>
+      <text class="info-value">{{sizeText}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">数据版本</text>
+      <text class="info-value">v{{schemaVersion}}</text>
+    </view>
+    <view class="storage-tip" wx:if="{{sizeBytes > 3 * 1024 * 1024}}">
+      ⚠️ 数据量已超过 3MB，建议导出备份并清理
+    </view>
+  </view>
+
+  <!-- 备份说明 -->
+  <view class="card">
+    <view class="card-title">关于备份</view>
+    <view class="about-text">
+      所有数据仅保存在本机微信缓存中，卸载小程序或更换设备会丢失。
+      建议定期导出备份（复制到剪贴板后粘贴到备忘录/文件保存）。
+    </view>
+  </view>
+
+  <!-- 操作 -->
+  <view class="card">
+    <view class="card-title">操作</view>
+    <view class="btn-primary act-btn" bindtap="onExport">导出备份（复制到剪贴板）</view>
+    <view class="btn-ghost act-btn" bindtap="onImport">从剪贴板导入恢复</view>
+    <view class="btn-ghost act-btn danger-btn" bindtap="onClear">清空全部数据</view>
+  </view>
+</view>

@@ -37,6 +37,10 @@ Page({
     this.setData({ ['list[' + index + '].expanded']: !this.data.list[index].expanded });
   },
 
+  onGoData: function () {
+    wx.navigateTo({ url: '/pages/data/data' });
+  },
+
   onDelete: function (e) {
     var id = e.currentTarget.dataset.id;
     var self = this;
