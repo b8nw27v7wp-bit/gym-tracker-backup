@@ -2,6 +2,45 @@
   padding-bottom: 60rpx;
 }
 
+/* 工具入口 */
+.tool-card {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 20rpx;
+  margin: 24rpx 32rpx 8rpx;
+  padding: 28rpx 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(17, 24, 39, 0.04);
+}
+
+.tool-icon {
+  font-size: 44rpx;
+  margin-right: 20rpx;
+}
+
+.tool-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tool-name {
+  font-size: 29rpx;
+  font-weight: 600;
+  color: #111827;
+}
+
+.tool-desc {
+  font-size: 22rpx;
+  color: #9ca3af;
+  margin-top: 4rpx;
+}
+
+.tool-arrow {
+  color: #d1d5db;
+  font-size: 36rpx;
+}
+
 /* 分类网格 */
 .cat-grid {
   display: flex;

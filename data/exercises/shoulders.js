@@ -103,5 +103,29 @@ module.exports = [
     steps: ['坐姿双手持哑铃', '肘部引领向两侧抬起至肩高', '顶端停顿，缓慢下放'],
     errors: ['身体晃动借力', '耸肩'],
     rest: '45-60 秒', tip: '坐姿杜绝腿部借力，中束孤立更彻底'
+  },
+  {
+    id: 'cable-lateral-raise', name: '绳索侧平举', muscle: 'shoulder', type: 'isolate', mechanic: 'push',
+    equipment: 'cable', difficulty: 2,
+    target: ['三角肌中束'], secondary: [],
+    steps: ['单手或双手握低位滑轮把手，侧身站立', '肘部引领向体侧抬起至肩高', '缓慢下放，全程保持张力'],
+    errors: ['身体侧倾借力', '耸肩'],
+    rest: '45-60 秒', tip: '绳索全程张力，中束持续受力'
+  },
+  {
+    id: 'single-arm-lateral', name: '单臂侧平举', muscle: 'shoulder', type: 'isolate', mechanic: 'push',
+    equipment: 'dumbbell', difficulty: 1,
+    target: ['三角肌中束'], secondary: [],
+    steps: ['单手持哑铃，另一手扶固定物', '肘部引领抬至肩高', '顶端停顿，缓慢下放'],
+    errors: ['借助惯性', '耸肩'],
+    rest: '45-60 秒', tip: '扶墙杜绝借力，可小幅增加重量'
+  },
+  {
+    id: 'machine-shoulder-press', name: '器械推肩', muscle: 'shoulder', type: 'compound', mechanic: 'push',
+    equipment: 'machine', difficulty: 1,
+    target: ['三角肌前束', '三角肌中束'], secondary: ['肱三头肌'],
+    steps: ['坐于推肩机，握把与肩同高', '向上推起至手臂伸直', '缓慢下放至肩部略低'],
+    errors: ['下放过深', '耸肩'],
+    rest: '60-90 秒', tip: '固定轨迹安全，新手学推肩模式首选'
   }
 ];

@@ -7,7 +7,8 @@
     "pages/history/history",
     "pages/exercise-detail/exercise-detail",
     "pages/knowledge-detail/knowledge-detail",
-    "pages/plans/plans"
+    "pages/plans/plans",
+    "pages/calculator/calculator"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",

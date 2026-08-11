@@ -63,5 +63,21 @@ module.exports = [
     steps: ['毛巾搭在单杠上，双手握毛巾两端', '发力上拉至下巴过杠', '缓慢下放'],
     errors: ['握力不足导致脱手', '身体摆动'],
     rest: '90-120 秒', tip: '握力与背部兼练的高阶动作，注意下方垫保护'
+  },
+  {
+    id: 'one-arm-hang', name: '单臂悬垂', muscle: 'forearms', type: 'isolate', mechanic: 'pull',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ['前臂', '握力'], secondary: ['背阔肌'],
+    steps: ['单手握杠悬垂，另一手可辅助', '保持身体稳定 15-30 秒', '换手'],
+    errors: ['耸肩', '身体晃动'],
+    rest: '30-60 秒', tip: '单臂握力进阶，从双手辅助过渡'
+  },
+  {
+    id: 'wrist-roller', name: '腕部卷绳器', muscle: 'forearms', type: 'isolate', mechanic: 'other',
+    equipment: 'other', difficulty: 2,
+    target: ['前臂屈肌', '前臂伸肌'], secondary: [],
+    steps: ['双手持卷绳器于体前，重物悬垂', '交替转动手腕卷起重物', '卷到头后反向放回'],
+    errors: ['借助手臂抬举', '速度过快'],
+    rest: '45-60 秒', tip: '动态握力训练，卷起放下都保持控制'
   }
 ];

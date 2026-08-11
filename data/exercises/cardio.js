@@ -71,5 +71,21 @@ module.exports = [
     steps: ['面对跳箱站立，距离适中', '屈髋屈膝摆臂，爆发起跳', '双脚轻落箱面，站稳后走下'],
     errors: ['膝盖撞箱', '落地不稳', '从高处跳下'],
     rest: '60-90 秒', tip: '下肢爆发力训练，从低箱开始确保安全'
+  },
+  {
+    id: 'battle-ropes', name: '战绳', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'other', difficulty: 2,
+    target: ['心肺功能', '全身'], secondary: ['肩部', '核心', '前臂'],
+    steps: ['双手各握战绳一端，半蹲姿势', '双臂交替快速上下甩动', '持续 20-30 秒为一组'],
+    errors: ['站直甩动', '幅度过小', '肩部耸肩'],
+    rest: '60-90 秒', tip: '20 秒全力 + 40 秒休息，间歇循环燃爆心肺'
+  },
+  {
+    id: 'sled-push', name: '阻力撬推', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'other', difficulty: 2,
+    target: ['心肺功能', '股四头肌', '臀部'], secondary: ['核心'],
+    steps: ['双手推撬杠，身体前倾', '小步快速推动雪橇前进', '推 20-30 米后休息'],
+    errors: ['弯腰弓背', '步幅过大'],
+    rest: '60-90 秒', tip: '全身发力模式训练，膝盖压力小'
   }
 ];

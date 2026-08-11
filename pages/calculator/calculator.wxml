@@ -1,0 +1,72 @@
+<view class="page">
+  <!-- 输入表单 -->
+  <view class="card">
+    <view class="card-title">基础信息</view>
+
+    <view class="form-row">
+      <text class="form-label">性别</text>
+      <view class="sex-row">
+        <view
+          class="sex-btn {{gender === 'male' ? 'sex-active' : ''}}"
+          data-gender="male"
+          bindtap="onPickGender"
+        >男</view>
+        <view
+          class="sex-btn {{gender === 'female' ? 'sex-active' : ''}}"
+          data-gender="female"
+          bindtap="onPickGender"
+        >女</view>
+      </view>
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">年龄</text>
+      <input class="form-input" type="number" value="{{age}}" bindinput="onAgeInput" placeholder="岁" />
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">身高</text>
+      <input class="form-input" type="digit" value="{{heightCm}}" bindinput="onHeightInput" placeholder="cm" />
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">体重</text>
+      <input class="form-input" type="digit" value="{{weightKg}}" bindinput="onWeightInput" placeholder="kg" />
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">活动水平</text>
+      <picker range="{{activityLabels}}" value="{{activityIndex}}" bindchange="onPickActivity">
+        <view class="picker-value">{{activityLabels[activityIndex]}} ▾</view>
+      </picker>
+    </view>
+
+    <view class="btn-primary calc-btn" bindtap="onCalc">计算</view>
+  </view>
+
+  <!-- 结果 -->
+  <view class="card" wx:if="{{result}}">
+    <view class="card-title">计算结果</view>
+    <view class="res-row">
+      <text class="res-label">基础代谢 BMR</text>
+      <text class="res-value">{{result.bmr}} 大卡/天</text>
+    </view>
+    <view class="res-row">
+      <text class="res-label">每日消耗 TDEE</text>
+      <text class="res-value num-accent">{{result.tdee}} 大卡/天</text>
+    </view>
+    <view class="res-row">
+      <text class="res-label">蛋白质需求</text>
+      <text class="res-value">{{result.proteinMin}}-{{result.proteinMax}} g/天</text>
+    </view>
+    <view class="res-row">
+      <text class="res-label">增肌热量（+10%）</text>
+      <text class="res-value">{{result.bulkCal}} 大卡</text>
+    </view>
+    <view class="res-row">
+      <text class="res-label">减脂热量（-18%）</text>
+      <text class="res-value">{{result.cutCal}} 大卡</text>
+    </view>
+    <view class="res-tip">蛋白质建议 1.6-2.2g/kg 体重；增肌/减脂热量以 TDEE 为基准上下浮动</view>
+  </view>
+</view>

@@ -1,0 +1,81 @@
+.page {
+  padding-bottom: 60rpx;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f9fafb;
+}
+
+.form-label {
+  width: 160rpx;
+  font-size: 27rpx;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+.form-input {
+  flex: 1;
+  font-size: 28rpx;
+  text-align: right;
+  color: #111827;
+}
+
+.sex-row {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16rpx;
+}
+
+.sex-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  padding: 10rpx 36rpx;
+}
+
+.sex-active {
+  background: #111827;
+  color: #ffffff;
+}
+
+.picker-value {
+  font-size: 28rpx;
+  color: #111827;
+  text-align: right;
+}
+
+.calc-btn {
+  margin-top: 28rpx;
+}
+
+/* 结果 */
+.res-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f9fafb;
+}
+
+.res-label {
+  font-size: 26rpx;
+  color: #6b7280;
+}
+
+.res-value {
+  font-size: 28rpx;
+  color: #111827;
+  font-weight: 500;
+}
+
+.res-tip {
+  margin-top: 20rpx;
+  font-size: 22rpx;
+  color: #9ca3af;
+  line-height: 1.7;
+}

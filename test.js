@@ -23,7 +23,7 @@ function assert(cond, name) {
 
 // ---------- 动作库 v2 ----------
 console.log('1. 动作库（v2 专业版）');
-assert(exercisesData.ALL.length === 125, '共 ' + exercisesData.ALL.length + ' 个动作');
+assert(exercisesData.ALL.length === 150, '共 ' + exercisesData.ALL.length + ' 个动作');
 assert(exercisesData.MUSCLES.length === 10, '10 个部位');
 // id 唯一
 const ids = new Set();
@@ -59,10 +59,10 @@ assert(search.length >= 3 && search[0].name.includes('卧推'), '搜索"卧推"�
 
 // ---------- 训练计划库 ----------
 console.log('2. 训练计划库');
-assert(planUtil.plans.length === 3, '共 ' + planUtil.plans.length + ' 套计划');
+assert(planUtil.plans.length === 5, '共 ' + planUtil.plans.length + ' 套计划');
 const planIds = new Set();
 planUtil.plans.forEach(p => { if (planIds.has(p.id)) dup++; planIds.add(p.id); });
-assert(planIds.size === 3, '计划 id 无重复');
+assert(planIds.size === 5, '计划 id 无重复');
 let planBroken = 0;
 planUtil.plans.forEach(p => {
   if (!p.name || !p.level || !p.desc || !p.days || p.days.length === 0) planBroken++;
@@ -94,7 +94,17 @@ assert(planUtil.buildDraftFromPlan('ppl', 'nonexist').length === 0, '无效日�
 assert(planUtil.buildDraftFromPlan('nonexist', 'a').length === 0, '无效计划返回空数组');
 
 const summaries = planUtil.planSummaries();
-assert(summaries.length === 3 && summaries[0].dayCount === 3, '计划汇总（3 计划 / 新手 3 天）');
+assert(summaries.length === 5 && summaries[0].dayCount === 3, '计划汇总（5 计划 / 新手 3 天）');
+
+// 新计划专项
+const homePlan = planUtil.getPlan('home-workout');
+assert(homePlan && homePlan.days.length === 3, '居家计划 3 个训练日');
+const homePush = planUtil.buildDraftFromPlan('home-workout', 'push-day');
+assert(homePush.length === 5 && homePush[0].exerciseId === 'pushup', '居家推日 5 动作，俯卧撑打头');
+const fatLoss = planUtil.getPlan('fat-loss');
+assert(fatLoss && fatLoss.days.length === 4, '减脂计划 4 个训练日');
+const hiitDraft = planUtil.buildDraftFromPlan('fat-loss', 'hiit');
+assert(hiitDraft.length === 5 && hiitDraft[0].exerciseId === 'burpee', 'HIIT 日 5 动作，波比打头');
 
 // ---------- 知识库 ----------
 console.log('3. 知识库');
@@ -236,6 +246,26 @@ const trend = util.bodyweightTrend(bwList);
 assert(trend.latest === 70.5 && trend.delta === 0.5, '体重 最新70.5 / 变化+0.5（实际 ' + trend.latest + '/' + trend.delta + '）');
 assert(trend.points.length === 3 && trend.min === 70 && trend.max === 71.5, '体重序列极值正确');
 assert(util.bodyweightTrend([]).latest === 0, '空体重列表安全');
+
+// ---------- 营养计算 ----------
+console.log('8. 营养计算器');
+const nutrition = require('./utils/nutrition');
+// 男 25 岁 175cm 70kg 中度活动（3）
+const n1 = nutrition.calcNutrition({ gender: 'male', age: 25, heightCm: 175, weightKg: 70, activity: 3 });
+// BMR = 10*70 + 6.25*175 - 5*25 + 5 = 700 + 1093.75 - 125 + 5 = 1673.75 → 1674
+assert(n1.valid && n1.bmr === 1674, 'BMR 1674（实际 ' + n1.bmr + '）');
+// TDEE = 1674 * 1.55 = 2594.7 → 2595
+assert(n1.tdee === 2595, 'TDEE 2595（实际 ' + n1.tdee + '）');
+assert(n1.proteinMin === 112 && n1.proteinMax === 154, '蛋白质 112-154g（实际 ' + n1.proteinMin + '-' + n1.proteinMax + '）');
+assert(n1.bulkCal === 2855 && n1.cutCal === 2128, '增肌 2855 / 减脂 2128（实际 ' + n1.bulkCal + '/' + n1.cutCal + '）');
+// 女 30 岁 160cm 55kg 轻度（2）
+const n2 = nutrition.calcNutrition({ gender: 'female', age: 30, heightCm: 160, weightKg: 55, activity: 2 });
+// BMR = 10*55 + 6.25*160 - 5*30 - 161 = 550 + 1000 - 150 - 161 = 1239
+assert(n2.valid && n2.bmr === 1239, '女性 BMR 1239（实际 ' + n2.bmr + '）');
+// 校验边界
+assert(!nutrition.calcNutrition({ gender: 'x', age: 25, heightCm: 175, weightKg: 70, activity: 3 }).valid, '非法性别拦截');
+assert(!nutrition.calcNutrition({ gender: 'male', age: 25, heightCm: 175, weightKg: 70, activity: 9 }).valid, '非法活动水平拦截');
+assert(!nutrition.calcNutrition({ gender: 'male', age: 5, heightCm: 175, weightKg: 70, activity: 3 }).valid, '非法年龄拦截');
 
 console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
 process.exit(failed > 0 ? 1 : 0);

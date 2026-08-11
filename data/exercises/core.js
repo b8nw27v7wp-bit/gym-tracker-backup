@@ -103,5 +103,21 @@ module.exports = [
     steps: ['仰卧，双臂过头，双腿伸直抬起', '腰部压实地面，全身呈弧形', '保持 20-40 秒'],
     errors: ['腰部离地', '憋气'],
     rest: '30-60 秒', tip: '体操核心基础动作，腰椎始终贴地'
+  },
+  {
+    id: 'v-up', name: 'V 字卷腹', muscle: 'core', type: 'compound', mechanic: 'core',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ['腹直肌', '髋屈肌'], secondary: ['腹斜肌'],
+    steps: ['仰卧，双臂过头双腿伸直', '同时抬起上身和双腿，手触脚尖呈 V 形', '控制下放'],
+    errors: ['借惯性甩起', '下放失控'],
+    rest: '45-60 秒', tip: '上下腹同时收缩，速度放慢感受控制'
+  },
+  {
+    id: 'cable-rotation', name: '绳索转体', muscle: 'core', type: 'isolate', mechanic: 'core',
+    equipment: 'cable', difficulty: 2,
+    target: ['腹斜肌'], secondary: ['腹横肌'],
+    steps: ['侧对滑轮，双手握柄于胸前', '躯干旋转带动手臂横拉过身体', '控制还原'],
+    errors: ['只转手臂', '髋部跟着转动'],
+    rest: '45-60 秒', tip: '髋部固定只转躯干，侧腹旋转力专项'
   }
 ];

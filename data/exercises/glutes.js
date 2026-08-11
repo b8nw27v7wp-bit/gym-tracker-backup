@@ -79,5 +79,21 @@ module.exports = [
     steps: ['双手握壶铃，双脚略宽于肩', '屈髋将壶铃后摆（不是下蹲）', '臀部爆发伸髋将壶铃甩至胸口高度', '让壶铃自然回落重复'],
     errors: ['做成深蹲模式', '用手臂上抬壶铃', '弓背'],
     rest: '60-90 秒', tip: '髋部爆发力动作，手臂只是挂绳'
+  },
+  {
+    id: 'weighted-glute-bridge', name: '负重臀桥', muscle: 'glutes', type: 'compound', mechanic: 'hinge',
+    equipment: 'plate', difficulty: 1,
+    target: ['臀大肌'], secondary: ['腘绳肌'],
+    steps: ['仰卧屈膝，杠铃片置于髋部', '脚跟发力挺髋至躯干与大腿呈直线', '顶端夹臀停顿 2 秒'],
+    errors: ['腰部代偿', '臀部顶端未收紧'],
+    rest: '45-60 秒', tip: '臀桥的进阶版，居家可用杠铃片加载'
+  },
+  {
+    id: 'hip-extension-machine', name: '臀举机', muscle: 'glutes', type: 'isolate', mechanic: 'hinge',
+    equipment: 'machine', difficulty: 1,
+    target: ['臀大肌'], secondary: ['腘绳肌'],
+    steps: ['俯卧于臀举机，滚轴置于髋部', '臀部发力向后伸展至顶端', '顶端夹臀停顿，缓慢还原'],
+    errors: ['腰部过度后仰', '幅度过小'],
+    rest: '45-60 秒', tip: '固定轨迹孤立臀大肌，训练收尾神器'
   }
 ];

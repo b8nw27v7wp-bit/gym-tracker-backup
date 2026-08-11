@@ -119,5 +119,37 @@ module.exports = [
     steps: ['双手距离为肩宽 1.5 倍撑地', '屈肘下放身体', '胸部发力推起'],
     errors: ['肘部外展过大', '身体晃动'],
     rest: '45-60 秒', tip: '宽距更多刺激胸大肌外侧'
+  },
+  {
+    id: 'db-fly', name: '哑铃飞鸟', muscle: 'chest', type: 'isolate', mechanic: 'push',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ['胸大肌'], secondary: ['三角肌前束'],
+    steps: ['仰卧于凳，双手持哑铃于胸上方，掌心相对', '手臂微屈固定肘角，向两侧展开至胸部有拉伸', '胸部发力沿弧线合拢至胸前'],
+    errors: ['手臂完全伸直变成卧推', '下放过深拉伤胸肩', '借助惯性甩动'],
+    rest: '45-60 秒', tip: '肘角固定是关键，想象"抱大树"的轨迹'
+  },
+  {
+    id: 'low-cable-fly', name: '低位绳索夹胸', muscle: 'chest', type: 'isolate', mechanic: 'push',
+    equipment: 'cable', difficulty: 2,
+    target: ['胸大肌上部'], secondary: ['三角肌前束'],
+    steps: ['滑轮调至低位，双手握柄', '身体前倾，沿弧线向上向内夹紧', '顶峰收缩后缓慢还原'],
+    errors: ['变成推举动作', '还原时耸肩'],
+    rest: '45-60 秒', tip: '低位拉向高位，重点刺激上胸'
+  },
+  {
+    id: 'incline-pushup', name: '上斜俯卧撑', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ['胸大肌下部', '胸大肌'], secondary: ['肱三头肌'],
+    steps: ['双手撑在凳或台阶上，身体呈直线', '屈肘下放胸部至接近支撑面', '推起还原'],
+    errors: ['塌腰', '幅度过小'],
+    rest: '45-60 秒', tip: '比标准俯卧撑轻松，新手进阶过渡首选'
+  },
+  {
+    id: 'decline-db-press', name: '下斜哑铃卧推', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ['胸大肌下部'], secondary: ['肱三头肌'],
+    steps: ['下斜凳固定双脚，手持哑铃于胸侧', '沿下斜轨迹推起至手臂伸直', '缓慢下放至胸部两侧'],
+    errors: ['哑铃轨迹偏离', '下放过深'],
+    rest: '60-90 秒', tip: '下胸专项，肩部不适者改用双杠'
   }
 ];

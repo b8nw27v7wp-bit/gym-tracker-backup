@@ -1,4 +1,14 @@
 <view class="page">
+  <!-- 工具入口 -->
+  <view class="tool-card" bindtap="onOpenCalculator">
+    <view class="tool-icon">🧮</view>
+    <view class="tool-info">
+      <view class="tool-name">营养计算器</view>
+      <view class="tool-desc">BMR / 每日消耗 / 蛋白质需求 / 增肌减脂热量</view>
+    </view>
+    <text class="tool-arrow">›</text>
+  </view>
+
   <!-- 分类卡片 -->
   <view class="cat-grid">
     <view

@@ -47,5 +47,21 @@ module.exports = [
     steps: ['双手握绳，前脚掌着地', '小幅度跳跃让绳通过', '持续 1-3 分钟'],
     errors: ['全脚掌着地', '跳跃过高'],
     rest: '60-90 秒', tip: '既是小腿训练也是高效燃脂有氧'
+  },
+  {
+    id: 'step-calf-raise', name: '台阶提踵', muscle: 'calves', type: 'isolate', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ['腓肠肌'], secondary: [],
+    steps: ['前脚掌踩台阶边缘，脚跟悬空', '脚跟下放至最大拉伸', '踮起至最高点停顿 2 秒'],
+    errors: ['幅度过小', '借助弹跳'],
+    rest: '45-60 秒', tip: '台阶让脚跟行程更大，居家练小腿首选'
+  },
+  {
+    id: 'single-seated-calf', name: '单腿坐姿提踵', muscle: 'calves', type: 'isolate', mechanic: 'other',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ['比目鱼肌'], secondary: [],
+    steps: ['坐姿，单膝压哑铃，前脚掌踩踏板', '脚跟下放至拉伸位', '单腿踮起至最高点停顿'],
+    errors: ['幅度过小', '借助身体晃动'],
+    rest: '45-60 秒', tip: '单腿坐姿行程更深，比目鱼肌针对性更强'
   }
 ];

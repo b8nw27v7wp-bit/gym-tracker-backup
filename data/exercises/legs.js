@@ -135,5 +135,21 @@ module.exports = [
     steps: ['单脚站立，另一只脚前伸', '屈髋屈膝下蹲至单腿全蹲', '单腿发力站起'],
     errors: ['下蹲时身体过度前倾', '脚跟着地不稳'],
     rest: '60-90 秒', tip: '自重单腿深蹲，对平衡和柔韧性要求极高'
+  },
+  {
+    id: 'box-squat', name: '箱式深蹲', muscle: 'legs', type: 'compound', mechanic: 'squat',
+    equipment: 'barbell', difficulty: 2,
+    target: ['股四头肌', '臀大肌'], secondary: ['腘绳肌', '核心'],
+    steps: ['身后放箱凳，杠铃置于斜方肌上', '下蹲至臀部轻触箱面，完全卸力', '停稳后蹬地站起'],
+    errors: ['坐箱后直接弹起', '下蹲时弓背'],
+    rest: '120-180 秒', tip: '箱上停顿消除弹性借力，深蹲底部力量专项'
+  },
+  {
+    id: 'sumo-squat', name: '相扑深蹲', muscle: 'legs', type: 'compound', mechanic: 'squat',
+    equipment: 'dumbbell', difficulty: 1,
+    target: ['股四头肌', '臀大肌', '大腿内收肌'], secondary: ['核心'],
+    steps: ['宽站距脚尖外展 45°，双手持哑铃于体前', '挺胸下蹲至大腿平行地面', '脚跟发力站起'],
+    errors: ['膝盖内扣', '重心前移'],
+    rest: '60-90 秒', tip: '宽站距更多臀部参与，兼练大腿内侧'
   }
 ];

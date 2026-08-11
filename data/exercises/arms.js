@@ -135,5 +135,29 @@ module.exports = [
     steps: ['宽握直杆面对滑轮', '大臂固定，下压至手臂伸直', '缓慢还原'],
     errors: ['大臂晃动', '身体前倾'],
     rest: '45-60 秒', tip: '宽握强调长头，与窄握形成不同刺激'
+  },
+  {
+    id: 'cable-hammer-curl', name: '绳索锤式弯举', muscle: 'arms', type: 'isolate', mechanic: 'pull',
+    equipment: 'cable', difficulty: 1,
+    target: ['肱肌', '肱桡肌'], secondary: ['肱二头肌'],
+    steps: ['面对低位滑轮，双手握绳索中立握', '大臂固定，屈肘弯举至顶峰', '缓慢下放'],
+    errors: ['身体后仰借力', '大臂前移'],
+    rest: '45-60 秒', tip: '中立握+绳索张力，肱肌刺激更持续'
+  },
+  {
+    id: 'bench-dips', name: '凳上臂屈伸', muscle: 'arms', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ['肱三头肌'], secondary: ['胸大肌下部'],
+    steps: ['双手撑凳沿，双脚前伸', '屈肘下放身体至大臂平行地面', '三头发力撑起'],
+    errors: ['耸肩', '下放过深'],
+    rest: '45-60 秒', tip: '居家练三头首选，可把脚垫高增加难度'
+  },
+  {
+    id: 'reverse-pushdown', name: '反握绳索下压', muscle: 'arms', type: 'isolate', mechanic: 'push',
+    equipment: 'cable', difficulty: 1,
+    target: ['肱三头肌内侧头'], secondary: ['前臂'],
+    steps: ['反握（掌心朝上）握短杆面对滑轮', '大臂贴紧身体，下压至手臂伸直', '缓慢还原'],
+    errors: ['大臂外展', '手腕弯曲'],
+    rest: '45-60 秒', tip: '反握强化三头内侧头，兼练前臂'
   }
 ];

@@ -135,5 +135,29 @@ module.exports = [
     steps: ['窄握 V 形把手坐稳', '身体微微后仰，将把手拉向胸口', '顶端夹紧背阔肌，缓慢还原'],
     errors: ['身体后仰角度过大', '用二头代偿'],
     rest: '60-90 秒', tip: '窄握下拉行程更长，重点刺激背阔肌下部'
+  },
+  {
+    id: 'reverse-grip-row', name: '反握杠铃划船', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'barbell', difficulty: 2,
+    target: ['背阔肌下部', '菱形肌'], secondary: ['肱二头肌'],
+    steps: ['反握杠铃与肩同宽，屈髋俯身', '背部平直，将杠铃拉向下腹部', '顶端停顿，缓慢下放'],
+    errors: ['弓背', '借力摆动'],
+    rest: '90-120 秒', tip: '反握缩短了二头到杠铃的距离，下背阔刺激更强'
+  },
+  {
+    id: 'seal-row', name: '海豹划船', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'barbell', difficulty: 2,
+    target: ['背阔肌', '斜方肌中部'], secondary: ['肱二头肌'],
+    steps: ['俯卧于高凳或海豹凳，胸口贴凳面', '双手握杠自然下垂', '肩胛后缩将杠铃拉向胸口下方'],
+    errors: ['腰部借力抬起', '耸肩'],
+    rest: '60-90 秒', tip: '俯卧支撑杜绝借力，背部孤立划船'
+  },
+  {
+    id: 'wide-seated-row', name: '宽握坐姿划船', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'cable', difficulty: 1,
+    target: ['斜方肌中部', '菱形肌'], secondary: ['背阔肌'],
+    steps: ['宽握横杆坐姿划船位', '挺胸沉肩，将横杆拉向胸口', '肩胛充分后缩，缓慢还原'],
+    errors: ['含胸', '用手臂代偿'],
+    rest: '60-90 秒', tip: '宽握更侧重中背厚度，与窄握划船互补'
   }
 ];

@@ -42,5 +42,9 @@ Page({
     wx.navigateTo({
       url: '/pages/knowledge-detail/knowledge-detail?id=' + e.currentTarget.dataset.id
     });
+  },
+
+  onOpenCalculator: function () {
+    wx.navigateTo({ url: '/pages/calculator/calculator' });
   }
 });
