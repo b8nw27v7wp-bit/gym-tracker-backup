@@ -216,5 +216,26 @@ assert(sorted[0].id === 'bench', '常用动作置顶（bench 排第一，实际 
 assert(util.fmtDuration(55) === '55分钟', '时长 55 分钟');
 assert(util.fmtDuration(80) === '1小时20分', '时长 1小时20分');
 
+// ---------- 1RM 估算与体重 ----------
+console.log('7. 1RM 估算与体重');
+assert(util.epley1RM(100, 10) === 133, 'Epley 100×10 → 1RM 133（实际 ' + util.epley1RM(100, 10) + '）');
+assert(util.epley1RM(80, 5) === 93, 'Epley 80×5 → 1RM 93（实际 ' + util.epley1RM(80, 5) + '）');
+assert(util.epley1RM(100, 30) === 0, 'reps>20 不估算');
+assert(util.epley1RM(0, 10) === 0, '重量 0 不估算');
+
+const estHist = util.est1RMHistory('bench', all);
+assert(estHist.length === 2, '卧推 1RM 历史 2 个点（实际 ' + estHist.length + '）');
+assert(estHist[1].est === 93, '最新估算 1RM 93（实际 ' + estHist[1].est + '）');
+
+const bwList = [
+  { ts: thisWeekMon - 10 * dayMs, weight: 70 },
+  { ts: thisWeekMon - 5 * dayMs, weight: 71.5 },
+  { ts: thisWeekMon - 1 * dayMs, weight: 70.5 }
+];
+const trend = util.bodyweightTrend(bwList);
+assert(trend.latest === 70.5 && trend.delta === 0.5, '体重 最新70.5 / 变化+0.5（实际 ' + trend.latest + '/' + trend.delta + '）');
+assert(trend.points.length === 3 && trend.min === 70 && trend.max === 71.5, '体重序列极值正确');
+assert(util.bodyweightTrend([]).latest === 0, '空体重列表安全');
+
 console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
 process.exit(failed > 0 ? 1 : 0);

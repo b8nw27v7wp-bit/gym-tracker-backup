@@ -3,11 +3,13 @@ var util = require('./util');
 
 var KEY_WORKOUTS = 'gym_workouts';
 var KEY_INIT = 'gym_inited_v1';
+var KEY_BODYWEIGHT = 'gym_bodyweight';
 
 function ensureInit() {
   var inited = wx.getStorageSync(KEY_INIT);
   if (!inited) {
     wx.setStorageSync(KEY_WORKOUTS, []);
+    wx.setStorageSync(KEY_BODYWEIGHT, []);
     wx.setStorageSync(KEY_INIT, true);
   }
 }
@@ -51,11 +53,25 @@ function genId() {
   return 'w_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
 }
 
+// ---------- 体重记录 ----------
+function getBodyweights() {
+  return wx.getStorageSync(KEY_BODYWEIGHT) || [];
+}
+
+function addBodyweight(weight) {
+  var list = getBodyweights();
+  list.push({ ts: Date.now(), weight: weight });
+  wx.setStorageSync(KEY_BODYWEIGHT, list);
+  return list;
+}
+
 module.exports = {
   ensureInit: ensureInit,
   getWorkouts: getWorkouts,
   getWorkout: getWorkout,
   saveWorkout: saveWorkout,
   removeWorkout: removeWorkout,
-  genId: genId
+  genId: genId,
+  getBodyweights: getBodyweights,
+  addBodyweight: addBodyweight
 };

@@ -1,4 +1,27 @@
 <view class="page">
+  <!-- 本周简报 -->
+  <view class="card" wx:if="{{hasData}}">
+    <view class="card-title">本周简报</view>
+    <view class="brief-row">
+      <view class="brief-item">
+        <text class="brief-num">{{weekCount}}</text>
+        <text class="brief-label">训练次数</text>
+      </view>
+      <view class="brief-item">
+        <text class="brief-num">{{weekVolume}}</text>
+        <text class="brief-label">容量 kg</text>
+      </view>
+      <view class="brief-item">
+        <text class="brief-num">{{prBreakCount}}</text>
+        <text class="brief-label">打破纪录</text>
+      </view>
+      <view class="brief-item" wx:if="{{bodyDeltaText}}">
+        <text class="brief-num {{bodyDeltaClass}}">{{bodyDeltaText}}</text>
+        <text class="brief-label">体重变化</text>
+      </view>
+    </view>
+  </view>
+
   <!-- 本周概览 -->
   <view class="card hero-card">
     <view class="card-sub">本周训练容量</view>
@@ -71,8 +94,36 @@
       </view>
       <view class="pr-right">
         <text class="pr-max">{{item.maxWeight}} <text class="pr-unit">kg</text></text>
-        <text class="pr-best">最佳单组 {{item.bestSet}} kg</text>
+        <text class="pr-best">最佳单组 {{item.bestSet}} kg<text wx:if="{{item.est1rm}}"> · 1RM≈{{item.est1rm}}</text></text>
       </view>
+    </view>
+  </view>
+
+  <!-- 体重趋势 -->
+  <view class="card" wx:if="{{hasBodyData}}">
+    <view class="bw-head">
+      <view>
+        <view class="card-title" style="margin-bottom: 4rpx;">体重趋势</view>
+        <view class="bw-summary">当前 {{bwLatest}} kg · 累计 {{bwDeltaText}}</view>
+      </view>
+      <view class="bw-add" bindtap="onAddBodyweight">＋ 记录</view>
+    </view>
+    <view class="bars">
+      <view wx:for="{{bwPoints}}" wx:key="index" class="bar-col">
+        <view class="bar-track">
+          <view class="bar-fill bw-fill" style="height: {{item.height}}%;"></view>
+        </view>
+        <text class="bar-label">{{item.label}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 体重空态 -->
+  <view class="card" wx:if="{{!hasBodyData && hasData}}">
+    <view class="card-title">体重趋势</view>
+    <view class="bw-empty">
+      <text>记录体重，追踪增肌/减脂进度</text>
+      <view class="btn-ghost bw-add-btn" bindtap="onAddBodyweight">＋ 记录体重</view>
     </view>
   </view>
 </view>

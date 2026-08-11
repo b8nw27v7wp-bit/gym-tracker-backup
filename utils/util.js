@@ -166,7 +166,7 @@ function weekCompare(workouts) {
   return { thisVol: thisVol, lastVol: lastVol, delta: delta, pct: pct };
 }
 
-// 动作历史最佳：{ maxWeight 最大重量, bestSet 最佳单组容量, bestDate }
+// 动作历史最佳：{ maxWeight 最大重量, bestSetVol 最佳单组容量, bestDate }
 function exercisePR(exerciseId, workouts) {
   var maxWeight = 0;
   var bestSetVol = 0;
@@ -183,6 +183,57 @@ function exercisePR(exerciseId, workouts) {
     });
   });
   return { maxWeight: maxWeight, bestSetVol: bestSetVol, bestDate: bestDate };
+}
+
+// ---------- 1RM 估算 ----------
+// Epley 公式：1RM ≈ weight × (1 + reps/30)，仅对 reps <= 20 有效，体重单位 kg
+function epley1RM(weight, reps) {
+  var w = Number(weight) || 0;
+  var r = Number(reps) || 0;
+  if (w <= 0 || r <= 0 || r > 20) return 0;
+  return Math.round(w * (1 + r / 30));
+}
+
+// 某动作的历史估算 1RM 序列：[{ ts, est, weight, reps }]（按时间正序，每组取当日最大估算）
+function est1RMHistory(exerciseId, workouts) {
+  var result = [];
+  (workouts || []).slice().sort(function (a, b) { return a.ts - b.ts; }).forEach(function (w) {
+    var best = null;
+    (w.items || []).forEach(function (item) {
+      if (item.exerciseId !== exerciseId) return;
+      (item.sets || []).forEach(function (s) {
+        if (isWarmup(s)) return;
+        var est = epley1RM(s.weight, s.reps);
+        if (est > 0 && (!best || est > best.est)) {
+          best = { ts: w.ts, est: est, weight: Number(s.weight), reps: Number(s.reps) };
+        }
+      });
+    });
+    if (best) result.push(best);
+  });
+  return result;
+}
+
+// ---------- 体重 ----------
+// 体重序列 [{ ts, weight }]，时间正序；返回变化量（最新-最早）与最新值
+function bodyweightTrend(list) {
+  var sorted = (list || []).slice().sort(function (a, b) { return a.ts - b.ts; });
+  if (sorted.length === 0) return { latest: 0, delta: 0, min: 0, max: 0, points: [] };
+  var latest = Number(sorted[sorted.length - 1].weight) || 0;
+  var first = Number(sorted[0].weight) || 0;
+  var min = latest, max = latest;
+  sorted.forEach(function (p) {
+    var v = Number(p.weight) || 0;
+    if (v < min) min = v;
+    if (v > max) max = v;
+  });
+  return {
+    latest: latest,
+    delta: Math.round((latest - first) * 10) / 10,
+    min: min,
+    max: max,
+    points: sorted.map(function (p) { return { ts: p.ts, weight: Number(p.weight) || 0 }; })
+  };
 }
 
 module.exports = {
@@ -202,5 +253,8 @@ module.exports = {
   volumeByMuscle: volumeByMuscle,
   weeklyVolume: weeklyVolume,
   weekCompare: weekCompare,
-  exercisePR: exercisePR
+  exercisePR: exercisePR,
+  epley1RM: epley1RM,
+  est1RMHistory: est1RMHistory,
+  bodyweightTrend: bodyweightTrend
 };

@@ -17,6 +17,13 @@ Page({
     avgPerWeek: 0,
     coveredCount: 0,
     coveredMuscles: [],
+    prBreakCount: 0,
+    bodyDeltaText: '',
+    bodyDeltaClass: '',
+    hasBodyData: false,
+    bwLatest: 0,
+    bwDeltaText: '',
+    bwPoints: [],
     weekly: [],
     muscleDist: [],
     prs: []
@@ -29,7 +36,7 @@ Page({
   loadStats: function () {
     var workouts = store.getWorkouts();
     if (workouts.length === 0) {
-      this.setData({ hasData: false });
+      this.setData({ hasData: false, bwLatest: 0, hasBodyData: false });
       return;
     }
 
@@ -93,20 +100,51 @@ Page({
 
     // PR：只看有记录的招牌动作
     var prs = [];
+    var prBreakCount = 0;
     PR_EXERCISES.forEach(function (id) {
       var ex = exercisesData.getExercise(id);
       if (!ex) return;
       var pr = util.exercisePR(id, workouts);
       if (pr.maxWeight > 0) {
+        // 破纪录判断：最佳成绩产生于本周
+        if (pr.bestDate >= thisWeekStart) prBreakCount += 1;
+        // 最新估算 1RM
+        var hist = util.est1RMHistory(id, workouts);
+        var est1rm = hist.length > 0 ? hist[hist.length - 1].est : 0;
         prs.push({
           id: id,
           name: ex.name,
           maxWeight: pr.maxWeight,
           bestSet: Math.round(pr.bestSetVol),
-          dateText: pr.bestDate ? util.fmtDate(pr.bestDate) : ''
+          dateText: pr.bestDate ? util.fmtDate(pr.bestDate) : '',
+          est1rm: est1rm
         });
       }
     });
+
+    // 体重趋势
+    var bws = store.getBodyweights();
+    var trend = util.bodyweightTrend(bws);
+    var hasBodyData = trend.points.length > 0;
+    var bodyDeltaText = '';
+    var bodyDeltaClass = '';
+    if (hasBodyData) {
+      if (trend.delta > 0) { bodyDeltaText = '+' + trend.delta; bodyDeltaClass = 'delta-up'; }
+      else if (trend.delta < 0) { bodyDeltaText = '' + trend.delta; bodyDeltaClass = 'delta-down'; }
+      else { bodyDeltaText = '±0'; bodyDeltaClass = 'delta-flat'; }
+    }
+    var bwPoints = [];
+    if (hasBodyData) {
+      var recent = trend.points.slice(-8);
+      var range = (trend.max - trend.min) || 1;
+      bwPoints = recent.map(function (p) {
+        var d = new Date(p.ts);
+        return {
+          label: (d.getMonth() + 1) + '/' + d.getDate(),
+          height: Math.max(Math.round(((p.weight - trend.min) / range) * 100), 8)
+        };
+      });
+    }
 
     this.setData({
       hasData: true,
@@ -118,9 +156,38 @@ Page({
       avgPerWeek: avgPerWeek,
       coveredCount: coveredMuscles.length,
       coveredMuscles: coveredMuscles,
+      prBreakCount: prBreakCount,
+      bodyDeltaText: bodyDeltaText,
+      bodyDeltaClass: bodyDeltaClass,
+      hasBodyData: hasBodyData,
+      bwLatest: trend.latest,
+      bwDeltaText: bodyDeltaText ? '变化 ' + bodyDeltaText + ' kg' : '',
+      bwPoints: bwPoints,
       weekly: weekly,
       muscleDist: muscleDist,
       prs: prs
+    });
+  },
+
+  // 记录体重
+  onAddBodyweight: function () {
+    var self = this;
+    wx.showModal({
+      title: '记录体重',
+      editable: true,
+      placeholderText: '如 65.5（kg）',
+      confirmText: '保存',
+      success: function (res) {
+        if (!res.confirm) return;
+        var v = parseFloat(res.content);
+        if (!v || v < 20 || v > 300) {
+          wx.showToast({ title: '请输入有效体重（20-300kg）', icon: 'none' });
+          return;
+        }
+        store.addBodyweight(Math.round(v * 10) / 10);
+        self.loadStats();
+        wx.showToast({ title: '已记录', icon: 'success' });
+      }
     });
   }
 });

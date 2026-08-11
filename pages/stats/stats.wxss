@@ -92,6 +92,69 @@
   color: #9ca3af;
 }
 
+/* 本周简报 */
+.brief-row {
+  display: flex;
+  padding: 10rpx 0 4rpx;
+}
+
+.brief-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.brief-num {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #111827;
+}
+
+.brief-label {
+  font-size: 21rpx;
+  color: #9ca3af;
+  margin-top: 6rpx;
+}
+
+/* 体重 */
+.bw-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bw-summary {
+  font-size: 23rpx;
+  color: #9ca3af;
+}
+
+.bw-add {
+  background: #111827;
+  color: #ffffff;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  padding: 10rpx 26rpx;
+}
+
+.bw-fill {
+  background: #10b981;
+}
+
+.bw-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 0 8rpx;
+  font-size: 25rpx;
+  color: #9ca3af;
+}
+
+.bw-add-btn {
+  margin-top: 20rpx;
+  width: 60%;
+}
+
 /* 柱状图 */
 .bars {
   display: flex;
