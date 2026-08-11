@@ -39,6 +39,13 @@ Page({
     this.refresh();
   },
 
+  onShareAppMessage: function () {
+    return {
+      title: '铁馆日志 · 150 个动作的健身动作库',
+      path: '/pages/exercises/exercises'
+    };
+  },
+
   onSearchInput: function (e) {
     this.setData({ keyword: e.detail.value });
     this.refresh();

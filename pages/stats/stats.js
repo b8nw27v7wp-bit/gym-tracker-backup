@@ -33,6 +33,13 @@ Page({
     this.loadStats();
   },
 
+  onShareAppMessage: function () {
+    return {
+      title: '铁馆日志 · 我的训练数据',
+      path: '/pages/stats/stats'
+    };
+  },
+
   loadStats: function () {
     var workouts = store.getWorkouts();
     if (workouts.length === 0) {

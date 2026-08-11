@@ -16,6 +16,13 @@ Page({
     this.refresh();
   },
 
+  onShareAppMessage: function () {
+    return {
+      title: '铁馆日志 · 健身知识库与训练记录',
+      path: '/pages/knowledge/knowledge'
+    };
+  },
+
   onPickCat: function (e) {
     this.setData({ currentCat: e.currentTarget.dataset.key });
     this.refresh();

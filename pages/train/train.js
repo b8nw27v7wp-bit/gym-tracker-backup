@@ -32,6 +32,13 @@ Page({
     this.refreshExerciseList();
   },
 
+  onShareAppMessage: function () {
+    return {
+      title: '铁馆日志 · 记录每一次训练',
+      path: '/pages/train/train'
+    };
+  },
+
   onShow: function () {
     var d = new Date();
     var label = (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + util.weekdayCN(d.getTime());

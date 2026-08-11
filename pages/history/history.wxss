@@ -109,3 +109,66 @@
   color: #ef4444;
   background: #fef2f2;
 }
+
+.share-row {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 10rpx;
+}
+
+.share-btn {
+  flex: 1;
+}
+
+/* 分享弹层 */
+.share-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(17, 24, 39, 0.6);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-panel {
+  width: 600rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.share-canvas {
+  width: 540rpx;
+  height: 720rpx;
+  border-radius: 16rpx;
+  background: #ffffff;
+}
+
+.share-actions {
+  width: 100%;
+  margin-top: 24rpx;
+}
+
+.share-save {
+  background: #111827;
+  color: #ffffff;
+  border-radius: 14rpx;
+  font-size: 28rpx;
+  padding: 20rpx 0;
+  text-align: center;
+}
+
+.share-cancel {
+  margin-top: 14rpx;
+  color: #9ca3af;
+  font-size: 26rpx;
+  padding: 16rpx 0;
+  text-align: center;
+}

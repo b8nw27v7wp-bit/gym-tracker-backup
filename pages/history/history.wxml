@@ -32,7 +32,21 @@
           >{{s.warmup ? '热身 ' : ''}}{{s.weight}}kg×{{s.reps}}{{s.rpe ? ' @RPE' + s.rpe : ''}}</text>
         </view>
       </view>
-      <view class="btn-ghost danger-btn" data-id="{{item.id}}" bindtap="onDelete">删除本次记录</view>
+      <view class="share-row">
+        <view class="btn-ghost share-btn" data-id="{{item.id}}" bindtap="onShareWorkout">分享训练总结</view>
+        <view class="btn-ghost danger-btn" data-id="{{item.id}}" bindtap="onDelete">删除本次记录</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分享弹层 -->
+  <view class="share-mask" wx:if="{{showShare}}" bindtap="onCloseShare">
+    <view class="share-panel" catchtap="noop">
+      <canvas type="2d" id="shareCanvas" class="share-canvas"></canvas>
+      <view class="share-actions">
+        <view class="share-save" bindtap="onSaveShare">保存图片到相册</view>
+        <view class="share-cancel" bindtap="onCloseShare">取消</view>
+      </view>
     </view>
   </view>
 </view>
