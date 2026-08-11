@@ -1,0 +1,84 @@
+.page {
+  padding-bottom: 60rpx;
+}
+
+.work-card {
+  padding: 28rpx 32rpx;
+}
+
+.work-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.work-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.work-date {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #111827;
+}
+
+.work-sub {
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-top: 6rpx;
+}
+
+.arrow {
+  color: #d1d5db;
+  font-size: 28rpx;
+  padding: 12rpx;
+}
+
+.work-detail {
+  margin-top: 20rpx;
+  border-top: 1rpx solid #f3f4f6;
+  padding-top: 20rpx;
+}
+
+.work-note {
+  background: #f9fafb;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  color: #6b7280;
+  padding: 16rpx 20rpx;
+  margin-bottom: 16rpx;
+  line-height: 1.6;
+}
+
+.detail-ex {
+  margin-bottom: 20rpx;
+}
+
+.detail-ex-name {
+  font-size: 27rpx;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 10rpx;
+}
+
+.detail-sets {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.detail-set {
+  background: #f9fafb;
+  border-radius: 10rpx;
+  font-size: 23rpx;
+  color: #6b7280;
+  padding: 8rpx 18rpx;
+  margin-right: 14rpx;
+  margin-bottom: 10rpx;
+}
+
+.danger-btn {
+  margin-top: 10rpx;
+  color: #ef4444;
+  background: #fef2f2;
+}

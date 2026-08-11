@@ -1,0 +1,175 @@
+.page {
+  padding-bottom: 160rpx;
+}
+
+.hero {
+  padding: 48rpx 40rpx 16rpx;
+}
+
+.hero-name {
+  font-size: 52rpx;
+  font-weight: 700;
+  color: #111827;
+}
+
+.hero-tags {
+  margin-top: 16rpx;
+}
+
+.hero-tag {
+  display: inline-block;
+  background: #ffffff;
+  color: #374151;
+  border-radius: 12rpx;
+  font-size: 23rpx;
+  padding: 8rpx 20rpx;
+  margin-right: 12rpx;
+  box-shadow: 0 2rpx 12rpx rgba(17, 24, 39, 0.04);
+}
+
+.info-card {
+  padding: 24rpx 32rpx;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #f9fafb;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  width: 150rpx;
+  font-size: 25rpx;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.info-tags {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.info-tag {
+  background: #f9fafb;
+  border-radius: 10rpx;
+  font-size: 23rpx;
+  color: #6b7280;
+  padding: 6rpx 16rpx;
+  margin-right: 12rpx;
+  margin-bottom: 6rpx;
+}
+
+.info-tag-primary {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.info-value {
+  font-size: 25rpx;
+  color: #374151;
+}
+
+/* 步骤 */
+.step-row {
+  display: flex;
+  padding: 14rpx 0;
+}
+
+.step-no {
+  width: 48rpx;
+  height: 48rpx;
+  background: #111827;
+  color: #ffffff;
+  border-radius: 50%;
+  font-size: 24rpx;
+  text-align: center;
+  line-height: 48rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.step-text {
+  flex: 1;
+  font-size: 27rpx;
+  color: #374151;
+  line-height: 1.7;
+}
+
+/* 错误 */
+.err-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 12rpx 0;
+}
+
+.err-icon {
+  margin-right: 14rpx;
+  font-size: 26rpx;
+}
+
+.err-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+/* 贴士 */
+.tip-card {
+  background: #fffbeb;
+  border: 1rpx solid #fde68a;
+  box-shadow: none;
+}
+
+.tip-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.tip-icon {
+  margin-right: 10rpx;
+}
+
+.tip-title {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.tip-text {
+  font-size: 26rpx;
+  color: #78350f;
+  line-height: 1.7;
+}
+
+/* 底部按钮 */
+.footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -2rpx 12rpx rgba(17, 24, 39, 0.05);
+}
+
+.save-btn {
+  background: #111827;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 16rpx;
+  padding: 24rpx 0;
+  text-align: center;
+}
+
+.save-btn:active {
+  opacity: 0.85;
+}

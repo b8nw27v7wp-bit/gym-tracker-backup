@@ -1,0 +1,22 @@
+<view class="page" wx:if="{{article}}">
+  <view class="hero">
+    <view class="hero-cat">{{article.catName}}</view>
+    <view class="hero-title">{{article.title}}</view>
+    <view class="hero-summary">{{article.summary}}</view>
+  </view>
+
+  <view class="body">
+    <view wx:for="{{article.sections}}" wx:key="index" class="section">
+      <view class="section-h">{{item.h}}</view>
+      <view wx:if="{{item.type === 'para'}}" class="section-para">{{item.content}}</view>
+      <view wx:if="{{item.type === 'list'}}" class="section-list">
+        <view wx:for="{{item.items}}" wx:for-item="li" wx:key="index" class="list-row">
+          <text class="list-dot">•</text>
+          <text class="list-text">{{li}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="end-note">坚持记录，比任何计划都重要 💪</view>
+</view>

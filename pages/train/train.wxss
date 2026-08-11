@@ -1,0 +1,257 @@
+.page {
+  padding-bottom: 200rpx;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 48rpx 48rpx 16rpx;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-entry {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 14rpx 24rpx;
+  font-size: 26rpx;
+  color: #374151;
+  box-shadow: 0 2rpx 12rpx rgba(17, 24, 39, 0.04);
+}
+
+.history-arrow {
+  margin-left: 8rpx;
+  color: #9ca3af;
+  font-size: 32rpx;
+}
+
+.timer-bar {
+  display: flex;
+  align-items: center;
+  margin: 8rpx 32rpx 0;
+  background: #fef3c7;
+  border-radius: 16rpx;
+  padding: 16rpx 24rpx;
+}
+
+.timer-icon {
+  margin-right: 12rpx;
+}
+
+.timer-text {
+  font-size: 25rpx;
+  color: #92400e;
+}
+
+.date {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #111827;
+}
+
+.sub {
+  font-size: 26rpx;
+  color: #9ca3af;
+  margin-top: 8rpx;
+}
+
+/* 部位 chips */
+.muscle-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.muscle-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 152rpx;
+  height: 128rpx;
+  border-radius: 20rpx;
+  background: #f3f4f6;
+  margin-right: 20rpx;
+  margin-bottom: 20rpx;
+  font-size: 26rpx;
+  color: #374151;
+}
+
+.muscle-chip.chip-active {
+  background: #111827;
+  color: #ffffff;
+}
+
+.muscle-icon {
+  font-size: 40rpx;
+  margin-bottom: 6rpx;
+}
+
+/* 动作网格 */
+.exercise-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 8rpx;
+}
+
+.exercise-item {
+  width: 31%;
+  margin-right: 2%;
+  margin-bottom: 20rpx;
+  background: #f9fafb;
+  border-radius: 16rpx;
+  padding: 20rpx 0;
+  text-align: center;
+  font-size: 25rpx;
+  color: #111827;
+}
+
+.exercise-item:active {
+  background: #e5e7eb;
+}
+
+/* 组编辑 */
+.edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.set-head {
+  display: flex;
+  padding: 12rpx 0;
+  color: #9ca3af;
+  font-size: 22rpx;
+}
+
+.set-row {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #f3f4f6;
+}
+
+.set-col {
+  width: 22%;
+  text-align: center;
+}
+
+.set-no {
+  font-size: 26rpx;
+  color: #9ca3af;
+}
+
+.set-input {
+  background: #f9fafb;
+  border-radius: 12rpx;
+  padding: 14rpx 0;
+  font-size: 30rpx;
+  text-align: center;
+  height: auto;
+  min-height: 48rpx;
+}
+
+.set-x {
+  color: #9ca3af;
+  font-size: 24rpx;
+}
+
+.set-del {
+  color: #d1d5db;
+  font-size: 30rpx;
+  padding: 8rpx;
+}
+
+/* 已添加动作 */
+.added-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f3f4f6;
+}
+
+.added-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.added-name {
+  font-size: 28rpx;
+  color: #111827;
+}
+
+.added-sub {
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-top: 4rpx;
+}
+
+.added-del {
+  color: #d1d5db;
+  font-size: 32rpx;
+  padding: 12rpx;
+}
+
+/* 备注输入 */
+.note-wrap {
+  margin-top: 24rpx;
+}
+
+.note-input {
+  width: 100%;
+  background: #f9fafb;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  font-size: 26rpx;
+  color: #111827;
+  min-height: 80rpx;
+  box-sizing: border-box;
+}
+
+/* 底部保存栏 */
+.footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -2rpx 12rpx rgba(17, 24, 39, 0.05);
+}
+
+.footer-summary {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-vol {
+  font-size: 40rpx;
+}
+
+.footer-sub {
+  font-size: 22rpx;
+  color: #9ca3af;
+}
+
+.save-btn {
+  background: #111827;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 16rpx;
+  padding: 22rpx 64rpx;
+}
+
+.save-btn:active {
+  opacity: 0.85;
+}

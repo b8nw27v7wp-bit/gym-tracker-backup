@@ -1,0 +1,109 @@
+/* 浅色极简主题：白底、无边框卡片、大留白 */
+page {
+  background: #f7f7f8;
+  color: #111827;
+  font-size: 28rpx;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 卡片：白底 + 大圆角 + 轻投影，无边框 */
+.card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin: 24rpx 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(17, 24, 39, 0.04);
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 16rpx;
+}
+
+.card-sub {
+  font-size: 24rpx;
+  color: #9ca3af;
+}
+
+/* 主按钮：黑底白字 */
+.btn-primary {
+  background: #111827;
+  color: #ffffff;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  padding: 24rpx 0;
+  text-align: center;
+}
+
+.btn-primary:active {
+  opacity: 0.85;
+}
+
+.btn-primary[disabled] {
+  background: #e5e7eb;
+  color: #9ca3af;
+}
+
+/* 次按钮：浅灰 */
+.btn-ghost {
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  padding: 16rpx 0;
+  text-align: center;
+}
+
+.btn-ghost:active {
+  opacity: 0.85;
+}
+
+/* 标签 */
+.tag {
+  display: inline-block;
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  padding: 8rpx 20rpx;
+  margin-right: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.tag-active {
+  background: #111827;
+  color: #ffffff;
+}
+
+/* 空态 */
+.empty {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 26rpx;
+  padding: 120rpx 40rpx;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
+}
+
+/* 数字强调 */
+.num {
+  font-weight: 600;
+  color: #111827;
+}
+
+.num-accent {
+  font-weight: 700;
+  color: #111827;
+}
+
+/* 删除按钮文字 */
+.danger {
+  color: #ef4444;
+}

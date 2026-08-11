@@ -1,0 +1,78 @@
+<view class="page">
+  <!-- 本周概览 -->
+  <view class="card hero-card">
+    <view class="card-sub">本周训练容量</view>
+    <view class="big-num">{{weekVolume}} <text class="big-unit">kg</text></view>
+    <view class="delta {{deltaClass}}">{{deltaText}}</view>
+  </view>
+
+  <!-- 训练频率 -->
+  <view class="card" wx:if="{{hasData}}">
+    <view class="card-title">训练频率</view>
+    <view class="freq-row">
+      <view class="freq-item">
+        <text class="freq-num">{{weekCount}}</text>
+        <text class="freq-label">本周训练</text>
+      </view>
+      <view class="freq-divider"></view>
+      <view class="freq-item">
+        <text class="freq-num">{{totalCount}}</text>
+        <text class="freq-label">累计训练</text>
+      </view>
+      <view class="freq-divider"></view>
+      <view class="freq-item">
+        <text class="freq-num">{{avgPerWeek}}</text>
+        <text class="freq-label">周均次数</text>
+      </view>
+      <view class="freq-divider"></view>
+      <view class="freq-item">
+        <text class="freq-num">{{coveredCount}}</text>
+        <text class="freq-label">本周部位</text>
+      </view>
+    </view>
+    <view class="coverage-bar">
+      <view wx:for="{{coveredMuscles}}" wx:key="*this" class="cov-chip">{{item}}</view>
+      <text wx:if="{{coveredCount === 0}}" class="cov-empty">本周还没有训练</text>
+    </view>
+  </view>
+
+  <!-- 近 8 周容量 -->
+  <view class="card" wx:if="{{hasData}}">
+    <view class="card-title">近 8 周容量</view>
+    <view class="bars">
+      <view wx:for="{{weekly}}" wx:key="weekStart" class="bar-col">
+        <view class="bar-track">
+          <view class="bar-fill {{item.volume > 0 ? '' : 'bar-empty'}}" style="height: {{item.height}}%;"></view>
+        </view>
+        <text class="bar-label">{{item.label}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 部位分布 -->
+  <view class="card" wx:if="{{hasData}}">
+    <view class="card-title">部位训练分布</view>
+    <view wx:for="{{muscleDist}}" wx:key="key" class="dist-row">
+      <text class="dist-name">{{item.icon}} {{item.name}}</text>
+      <view class="dist-track">
+        <view class="dist-fill" style="width: {{item.pct}}%;"></view>
+      </view>
+      <text class="dist-val">{{item.volume}} kg</text>
+    </view>
+  </view>
+
+  <!-- 个人纪录 -->
+  <view class="card" wx:if="{{prs.length > 0}}">
+    <view class="card-title">个人纪录 PR</view>
+    <view wx:for="{{prs}}" wx:key="id" class="pr-row">
+      <view class="pr-left">
+        <text class="pr-name">{{item.name}}</text>
+        <text class="pr-date">{{item.dateText}}</text>
+      </view>
+      <view class="pr-right">
+        <text class="pr-max">{{item.maxWeight}} <text class="pr-unit">kg</text></text>
+        <text class="pr-best">最佳单组 {{item.bestSet}} kg</text>
+      </view>
+    </view>
+  </view>
+</view>

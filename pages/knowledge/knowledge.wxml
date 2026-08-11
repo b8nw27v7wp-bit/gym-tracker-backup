@@ -1,0 +1,37 @@
+<view class="page">
+  <!-- 分类卡片 -->
+  <view class="cat-grid">
+    <view
+      wx:for="{{categories}}"
+      wx:key="key"
+      class="cat-card {{currentCat === item.key ? 'cat-active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onPickCat"
+    >
+      <text class="cat-icon">{{item.icon}}</text>
+      <text class="cat-name">{{item.name}}</text>
+      <text class="cat-desc">{{item.desc}}</text>
+    </view>
+  </view>
+
+  <!-- 文章列表 -->
+  <view wx:if="{{list.length === 0}}" class="empty">
+    <view class="empty-icon">📚</view>
+    <view>该分类暂无文章</view>
+  </view>
+
+  <view
+    wx:for="{{list}}"
+    wx:key="id"
+    class="card art-card"
+    data-id="{{item.id}}"
+    bindtap="onOpenArticle"
+  >
+    <view class="art-head">
+      <text class="art-cat">{{item.catName}}</text>
+      <text class="art-title">{{item.title}}</text>
+    </view>
+    <view class="art-summary">{{item.summary}}</view>
+    <view class="art-meta">{{item.sectionCount}} 节内容</view>
+  </view>
+</view>

@@ -1,0 +1,34 @@
+<view class="page">
+  <view wx:if="{{list.length === 0}}" class="empty">
+    <view class="empty-icon">🏋️</view>
+    <view>还没有训练记录</view>
+    <view style="font-size: 24rpx; margin-top: 12rpx;">去「训练」页记录第一练吧</view>
+  </view>
+
+  <view wx:for="{{list}}" wx:key="id" class="card work-card">
+    <view class="work-head" data-index="{{index}}" bindtap="onToggle">
+      <view class="work-info">
+        <view class="work-date">{{item.dateLabel}} · {{item.timeLabel}}</view>
+        <view class="work-sub">{{item.volume}} kg · {{item.sets}} 组 · {{item.exerciseCount}} 个动作<text wx:if="{{item.durationText}}"> · {{item.durationText}}</text></view>
+      </view>
+      <text class="arrow">{{item.expanded ? '▾' : '▸'}}</text>
+    </view>
+
+    <view wx:if="{{item.expanded}}" class="work-detail">
+      <view wx:if="{{item.note}}" class="work-note">{{item.note}}</view>
+      <view wx:for="{{item.items}}" wx:for-item="ex" wx:for-index="ei" wx:key="exerciseId" class="detail-ex">
+        <view class="detail-ex-name">{{ex.exerciseName}}</view>
+        <view class="detail-sets">
+          <text
+            wx:for="{{ex.sets}}"
+            wx:for-item="s"
+            wx:for-index="si"
+            wx:key="index"
+            class="detail-set"
+          >{{s.weight}}kg × {{s.reps}}</text>
+        </view>
+      </view>
+      <view class="btn-ghost danger-btn" data-id="{{item.id}}" bindtap="onDelete">删除本次记录</view>
+    </view>
+  </view>
+</view>

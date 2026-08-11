@@ -1,0 +1,89 @@
+.page {
+  padding-bottom: 60rpx;
+}
+
+/* 分类网格 */
+.cat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 24rpx 24rpx 8rpx;
+}
+
+.cat-card {
+  width: 31%;
+  margin: 0 1.5% 20rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 24rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2rpx 12rpx rgba(17, 24, 39, 0.04);
+  box-sizing: border-box;
+}
+
+.cat-active {
+  background: #111827;
+}
+
+.cat-active .cat-name,
+.cat-active .cat-desc {
+  color: #ffffff;
+}
+
+.cat-icon {
+  font-size: 44rpx;
+  margin-bottom: 10rpx;
+}
+
+.cat-name {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: #111827;
+}
+
+.cat-desc {
+  font-size: 20rpx;
+  color: #9ca3af;
+  margin-top: 4rpx;
+  line-height: 1.4;
+}
+
+/* 文章卡片 */
+.art-card {
+  padding: 28rpx 32rpx;
+  margin: 16rpx 32rpx;
+}
+
+.art-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.art-cat {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 21rpx;
+  border-radius: 8rpx;
+  padding: 4rpx 14rpx;
+  margin-right: 14rpx;
+  flex-shrink: 0;
+}
+
+.art-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #111827;
+}
+
+.art-summary {
+  font-size: 25rpx;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.art-meta {
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: #9ca3af;
+}

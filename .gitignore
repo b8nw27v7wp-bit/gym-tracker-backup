@@ -1,0 +1,14 @@
+# 微信开发者工具
+project.private.config.json
+project.private.config.json.backup
+
+# 依赖
+node_modules/
+
+# 系统
+.DS_Store
+Thumbs.db
+*.log
+
+# 本地测试临时产物
+/tmp/

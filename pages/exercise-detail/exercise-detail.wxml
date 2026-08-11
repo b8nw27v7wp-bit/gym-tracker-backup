@@ -1,0 +1,64 @@
+<view class="page" wx:if="{{ex}}">
+  <!-- 标题区 -->
+  <view class="hero">
+    <view class="hero-name">{{ex.name}}</view>
+    <view class="hero-tags">
+      <text class="hero-tag">{{ex.muscleName}}部</text>
+      <text class="hero-tag">{{ex.typeText}}</text>
+      <text class="hero-tag">{{ex.diffText}}</text>
+      <text class="hero-tag">{{ex.equipText}}</text>
+    </view>
+  </view>
+
+  <!-- 基本信息 -->
+  <view class="card info-card">
+    <view class="info-row">
+      <text class="info-label">目标肌群</text>
+      <view class="info-tags">
+        <text wx:for="{{ex.target}}" wx:for-item="t" wx:key="*this" class="info-tag info-tag-primary">{{t}}</text>
+      </view>
+    </view>
+    <view class="info-row" wx:if="{{ex.secondary.length > 0}}">
+      <text class="info-label">辅助肌群</text>
+      <view class="info-tags">
+        <text wx:for="{{ex.secondary}}" wx:for-item="s" wx:key="*this" class="info-tag">{{s}}</text>
+      </view>
+    </view>
+    <view class="info-row">
+      <text class="info-label">组间休息</text>
+      <text class="info-value">{{ex.rest}}</text>
+    </view>
+  </view>
+
+  <!-- 动作要领 -->
+  <view class="card">
+    <view class="card-title">动作要领</view>
+    <view wx:for="{{ex.steps}}" wx:key="index" class="step-row">
+      <text class="step-no">{{index + 1}}</text>
+      <text class="step-text">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 常见错误 -->
+  <view class="card">
+    <view class="card-title">常见错误</view>
+    <view wx:for="{{ex.errors}}" wx:key="index" class="err-row">
+      <text class="err-icon">⚠️</text>
+      <text class="err-text">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 小贴士 -->
+  <view class="card tip-card">
+    <view class="tip-head">
+      <text class="tip-icon">💡</text>
+      <text class="tip-title">训练要点</text>
+    </view>
+    <text class="tip-text">{{ex.tip}}</text>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="footer">
+    <view class="save-btn" bindtap="onRecord">去记录这个动作</view>
+  </view>
+</view>

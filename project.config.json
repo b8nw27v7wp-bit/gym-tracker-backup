@@ -1,0 +1,15 @@
+{
+  "desc": "铁馆日志 - 健身训练记录小程序",
+  "projectname": "gym-tracker",
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "libVersion": "3.4.0",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": false
+  },
+  "condition": {}
+}

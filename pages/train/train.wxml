@@ -1,0 +1,121 @@
+<view class="page">
+  <!-- 页头 -->
+  <view class="header">
+    <view class="header-left">
+      <view class="date">{{todayLabel}}</view>
+      <view class="sub">今天练了什么？记录下来</view>
+    </view>
+    <view class="history-entry" bindtap="onGoHistory">
+      <text>历史记录</text>
+      <text class="history-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 训练计时 -->
+  <view class="timer-bar" wx:if="{{sessionStarted}}">
+    <text class="timer-icon">⏱️</text>
+    <text class="timer-text">本次训练已进行 {{sessionMinutes}} 分钟</text>
+  </view>
+
+  <!-- 选部位 + 选动作 -->
+  <view class="card" wx:if="{{step === 'pick'}}">
+    <view class="card-title">选择训练部位</view>
+    <view class="muscle-row">
+      <view
+        wx:for="{{muscles}}"
+        wx:key="key"
+        class="muscle-chip {{currentMuscle === item.key ? 'chip-active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onPickMuscle"
+      >
+        <text class="muscle-icon">{{item.icon}}</text>
+        <text>{{item.name}}</text>
+      </view>
+    </view>
+    <view class="card-title" style="margin-top: 24rpx;">选择动作</view>
+    <view class="exercise-grid">
+      <view
+        wx:for="{{exerciseList}}"
+        wx:key="id"
+        class="exercise-item"
+        data-id="{{item.id}}"
+        bindtap="onAddExercise"
+      >{{item.name}}</view>
+    </view>
+  </view>
+
+  <!-- 组编辑卡片 -->
+  <view class="card" wx:if="{{step === 'edit'}}">
+    <view class="edit-head">
+      <text class="card-title">{{editing.exerciseName}}</text>
+      <text class="tag" style="margin:0;">{{editingMuscleName}}</text>
+    </view>
+    <view class="set-head">
+      <text class="set-col">组</text>
+      <text class="set-col">重量 (kg)</text>
+      <text class="set-col">次数</text>
+      <text class="set-col"></text>
+    </view>
+    <view wx:for="{{editing.sets}}" wx:key="index" class="set-row">
+      <text class="set-col set-no">{{index + 1}}</text>
+      <input
+        class="set-col set-input"
+        type="digit"
+        value="{{item.weight}}"
+        data-idx="{{index}}"
+        bindinput="onWeightInput"
+        placeholder="0"
+      />
+      <text class="set-col set-x">×</text>
+      <input
+        class="set-col set-input"
+        type="number"
+        value="{{item.reps}}"
+        data-idx="{{index}}"
+        bindinput="onRepsInput"
+        placeholder="0"
+      />
+      <text class="set-col set-del" data-idx="{{index}}" bindtap="onRemoveSet">✕</text>
+    </view>
+    <view class="btn-ghost" bindtap="onAddSet">＋ 添加一组</view>
+    <view class="btn-primary" style="margin-top: 20rpx;" bindtap="onDoneEdit">完成该动作</view>
+  </view>
+
+  <!-- 本次已添加动作 -->
+  <view class="card" wx:if="{{draft.length > 0}}">
+    <view class="card-title">本次训练</view>
+    <view
+      wx:for="{{draft}}"
+      wx:key="exerciseId"
+      class="added-row"
+      data-index="{{index}}"
+      bindtap="onEditItem"
+    >
+      <view class="added-info">
+        <text class="added-name">{{item.exerciseName}}</text>
+        <text class="added-sub">{{item.sets.length}} 组 · {{itemVolumes[index]}} kg</text>
+      </view>
+      <text class="added-del" data-index="{{index}}" catchtap="onRemoveItem">✕</text>
+    </view>
+    <view class="btn-ghost" bindtap="onBackToPick">＋ 继续添加动作</view>
+    <view class="note-wrap">
+      <textarea
+        class="note-input"
+        value="{{note}}"
+        bindinput="onNoteInput"
+        placeholder="训练备注（可选）：今天状态如何？哪里练得好？"
+        maxlength="200"
+        auto-height
+      ></textarea>
+    </view>
+  </view>
+
+  <!-- 底部保存栏 -->
+  <view class="footer" wx:if="{{draft.length > 0}}">
+    <view class="footer-summary">
+      <text class="num-accent footer-vol">{{totalVolume}} kg</text>
+      <text class="footer-sub">{{totalSets}} 组 · {{sessionMinutes}} 分钟</text>
+    </view>
+    <view class="save-btn" bindtap="onSave">保存训练</view>
+  </view>
+</view>
