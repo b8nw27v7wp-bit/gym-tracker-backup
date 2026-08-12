@@ -41,6 +41,14 @@
 - 修复：items 生成后 filter 掉 sets 长度为 0 的动作；所有动作都空时 toast 拦截不保存
 - 验证：冒烟测试覆盖（全空动作被过滤、仅有效动作入库）
 
+### BUG-005 | 2026-08-12 | S1 | 已关闭
+- 模块：统计页部位分布（v2.2 文档核对时发现）
+- 描述：stats.js 调用 `exercisesData.muscleName(k)` 取部位名，但 data/exercises/index.js 从未导出该函数，有训练数据时统计页部位分布渲染直接抛 TypeError 崩溃（白屏）
+- 复现步骤：训练页保存任意记录 → 切到统计页（有数据）→ 崩
+- 根因：index.js 导出了 muscleInfo 但无 muscleName；stats.js 按旧接口名调用，重构动作库时接口未同步
+- 修复：index.js 导出 `muscleName: muscleInfo` 兼容别名
+- 验证：`node test.js` 新增 muscleName 别名断言 + 统计页冒烟（109 项全绿）
+
 ---
 
 ## 记录模板
