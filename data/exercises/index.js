@@ -132,70 +132,77 @@ var MUSCLE_ARTICLES = {
 // groups: [{ name 分区名, tips 分区训练要点, exercises: [动作 id] }]；动作 id 必须真实存在于 ALL
 var MUSCLE_GROUPS = {
   chest: [
-    { name: '上胸（锁骨部）', tips: '上斜 30-45° 角度，优先刺激上胸', exercises: ['incline-bench', 'incline-db', 'incline-pushup', 'incline-cable-fly', 'landmine-press'] },
-    { name: '中胸（胸骨部）', tips: '平板推类主打，杠铃优先加重', exercises: ['bench', 'db-bench', 'pushup', 'chest-press-machine', 'smith-bench', 'svend-press', 'floor-press', 'band-pushup'] },
-    { name: '下胸（肋骨部）', tips: '下斜角度与双杠臂屈伸刺激下胸', exercises: ['decline-press', 'decline-db-press', 'dips', 'low-cable-fly', 'wide-pushup'] },
-    { name: '胸缝与夹胸', tips: '夹胸类孤立动作收尾，肩胛骨稳定不耸肩', exercises: ['pec-deck', 'cable-fly', 'cable-crossover', 'db-fly'] }
+    { name: '上胸（锁骨部）', rec: '每周 1-2 次 · 3-4 组 × 8-12 次', tips: ['上斜 30-45° 优先刺激上胸', '上胸薄弱者把上斜动作放在训练首位'], exercises: ['incline-bench', 'incline-db', 'incline-pushup', 'incline-cable-fly', 'landmine-press'] },
+    { name: '中胸（胸骨部）', rec: '每周 2 次 · 4-6 组 × 6-10 次', tips: ['平板推类主打，杠铃优先加重', '推胸时肩胛后缩下沉，肘部 45° 左右'], exercises: ['bench', 'db-bench', 'pushup', 'chest-press-machine', 'smith-bench', 'svend-press', 'floor-press', 'band-pushup'] },
+    { name: '下胸（肋骨部）', rec: '每周 1-2 次 · 3 组 × 8-12 次', tips: ['双杠臂屈伸是下胸最佳复合动作', '身体前倾角度越大越偏下胸'], exercises: ['decline-press', 'decline-db-press', 'dips', 'low-cable-fly', 'wide-pushup'] },
+    { name: '胸缝与夹胸', rec: '训练末尾 · 2-3 组 × 12-15 次', tips: ['夹胸类孤立动作放最后收尾', '顶峰收缩停顿 1-2 秒，不要耸肩'], exercises: ['pec-deck', 'cable-fly', 'cable-crossover', 'db-fly'] }
   ],
   back: [
-    { name: '背阔肌（宽度）', tips: '下拉/引体类练宽度，握距越宽越练外沿', exercises: ['pullup', 'chinup', 'lat-pulldown', 'single-arm-pulldown', 'close-grip-pulldown', 'straight-arm', 'pullover', 'lat-prayer'] },
-    { name: '上背（厚度）', tips: '划船类练厚度，肩胛后缩发力不要用腰代偿', exercises: ['bb-row', 'db-row', 'seated-row', 't-bar-row', 'chest-supported-row', 'reverse-grip-row', 'seal-row', 'wide-seated-row', 'meadow-row'] },
-    { name: '下背（竖脊肌）', tips: '髋铰链模式主导，保持脊柱中立', exercises: ['deadlift', 'rack-pull', 'back-extension'] },
-    { name: '肩胛稳定', tips: '小重量高次数打磨肩胛控制', exercises: ['shrug', 'face-pull-back', 'inverted-row'] }
+    { name: '背阔肌（宽度）', rec: '每周 2 次 · 4-5 组 × 6-10 次', tips: ['下拉/引体类练宽度，握距越宽越练外沿', '背阔肌发力靠肘部下拉，不是用手拽'], exercises: ['pullup', 'chinup', 'lat-pulldown', 'single-arm-pulldown', 'close-grip-pulldown', 'straight-arm', 'pullover', 'lat-prayer'] },
+    { name: '上背（厚度）', rec: '每周 2 次 · 3-4 组 × 8-12 次', tips: ['划船类练厚度，肩胛后缩发力不要用腰代偿', '划船时肘部贴身体向后拉，别往外飘'], exercises: ['bb-row', 'db-row', 'seated-row', 't-bar-row', 'chest-supported-row', 'reverse-grip-row', 'seal-row', 'wide-seated-row', 'meadow-row'] },
+    { name: '下背（竖脊肌）', rec: '每周 1-2 次 · 3 组 × 5-8 次', tips: ['髋铰链模式主导，保持脊柱中立', '硬拉类动作优先保证姿势再加重'], exercises: ['deadlift', 'rack-pull', 'back-extension'] },
+    { name: '肩胛稳定', rec: '小重量高次数 · 2-3 组 × 15-20 次', tips: ['打磨肩胛控制，预防圆肩', '耸肩到顶停顿 1 秒，缓慢下放'], exercises: ['shrug', 'face-pull-back', 'inverted-row'] }
   ],
   legs: [
-    { name: '股四头肌', tips: '膝主导动作（蹲/腿举/腿屈伸）练四头', exercises: ['squat', 'front-squat', 'goblet-squat', 'leg-press', 'hack-squat', 'leg-ext', 'sissy-squat', 'box-squat', 'sumo-squat', 'wall-sit'] },
-    { name: '腘绳肌', tips: '髋主导（硬拉类）与膝屈（腿弯举）结合', exercises: ['leg-curl', 'rdl', 'good-morning', 'nordic-curl', 'sumo-deadlift'] },
-    { name: '单腿与内收', tips: '单腿动作纠偏双侧不平衡，内收机补大腿内侧', exercises: ['lunge', 'bulgarian-split', 'walking-lunge', 'step-up', 'pistol-squat', 'reverse-lunge', 'adductor-machine'] }
+    { name: '股四头肌', rec: '每周 1-2 次 · 4-6 组 × 6-12 次', tips: ['膝主导动作（蹲/腿举/腿屈伸）练四头', '深蹲到底时膝盖对准脚尖方向'], exercises: ['squat', 'front-squat', 'goblet-squat', 'leg-press', 'hack-squat', 'leg-ext', 'sissy-squat', 'box-squat', 'sumo-squat', 'wall-sit'] },
+    { name: '腘绳肌', rec: '每周 1-2 次 · 3-4 组 × 8-12 次', tips: ['髋主导（硬拉类）与膝屈（腿弯举）结合', '罗马尼亚硬拉先推髋，弯腿只是辅助'], exercises: ['leg-curl', 'rdl', 'good-morning', 'nordic-curl', 'sumo-deadlift'] },
+    { name: '单腿与内收', rec: '辅助日 · 3 组 × 8-12 次', tips: ['单腿动作纠偏双侧不平衡', '内收机补大腿内侧，动作放慢控制'], exercises: ['lunge', 'bulgarian-split', 'walking-lunge', 'step-up', 'pistol-squat', 'reverse-lunge', 'adductor-machine'] }
   ],
   glutes: [
-    { name: '臀大肌（髋伸）', tips: '髋伸动作是臀部增长核心，顶端停顿夹臀', exercises: ['hip-thrust', 'glute-bridge', 'barbell-hip-hinge', 'weighted-glute-bridge', 'single-leg-hip-thrust', 'hip-extension-machine', 'cable-pull-through'] },
-    { name: '臀中肌（外展）', tips: '侧向动作练臀中肌，改善稳定与体态', exercises: ['side-lying-abduction', 'band-lateral-walk', 'cable-kickback'] },
-    { name: '复合与爆发', tips: '摆荡/单腿类动作兼顾臀腿协调', exercises: ['kettlebell-swing', 'curtsy-lunge', 'frog-pump', 'single-leg-rdl', 'band-glute-bridge'] }
+    { name: '臀大肌（髋伸）', rec: '每周 2-3 次 · 4-5 组 × 8-12 次', tips: ['髋伸动作是臀部增长核心，顶端停顿夹臀', '臀推时下巴微收，肋骨不要外翻'], exercises: ['hip-thrust', 'glute-bridge', 'barbell-hip-hinge', 'weighted-glute-bridge', 'single-leg-hip-thrust', 'hip-extension-machine', 'cable-pull-through'] },
+    { name: '臀中肌（外展）', rec: '每周 2-3 次 · 3 组 × 15-20 次', tips: ['侧向动作练臀中肌，改善稳定与体态', '蚌式/侧卧外展幅度不用大，感受侧臀发力'], exercises: ['side-lying-abduction', 'band-lateral-walk', 'cable-kickback'] },
+    { name: '复合与爆发', rec: '每周 1-2 次 · 3 组 × 8-10 次', tips: ['摆荡/单腿类动作兼顾臀腿协调', '壶铃摆荡用髋发力，手臂只是挂钩'], exercises: ['kettlebell-swing', 'curtsy-lunge', 'frog-pump', 'single-leg-rdl', 'band-glute-bridge'] }
   ],
   shoulder: [
-    { name: '三角肌前束', tips: '推举类练前中束，前平举孤立前束', exercises: ['ohp', 'db-shoulder-press', 'arnold-press', 'front-raise', 'plate-front-raise', 'push-press', 'machine-shoulder-press', 'handstand-pushup', 'cable-front-raise'] },
-    { name: '三角肌中束', tips: '侧平举是主菜，肩峰下空间紧张就小幅外展', exercises: ['lat-raise', 'seated-db-lateral', 'cable-lateral-raise', 'single-arm-lateral', 'upright-row', 'db-y-raise'] },
-    { name: '三角肌后束', tips: '后束是多数人短板，俯身飞鸟/面拉小重量高次数', exercises: ['rear-delt-fly', 'cable-rear-fly', 'face-pull', 'machine-rear-delt'] }
+    { name: '三角肌前束', rec: '每周 2 次 · 3-4 组 × 8-12 次', tips: ['推举类练前中束，前平举孤立前束', '推举时手腕中立，不要过度后仰'], exercises: ['ohp', 'db-shoulder-press', 'arnold-press', 'front-raise', 'plate-front-raise', 'push-press', 'machine-shoulder-press', 'handstand-pushup', 'cable-front-raise'] },
+    { name: '三角肌中束', rec: '每周 2 次 · 4-5 组 × 12-15 次', tips: ['侧平举是主菜，肩峰下空间紧张就小幅外展', '中束吃容量，小重量高次数更有效'], exercises: ['lat-raise', 'seated-db-lateral', 'cable-lateral-raise', 'single-arm-lateral', 'upright-row', 'db-y-raise'] },
+    { name: '三角肌后束', rec: '每周 2-3 次 · 3 组 × 12-20 次', tips: ['后束是多数人短板，俯身飞鸟/面拉小重量高次数', '面拉练后束还顺手改善圆肩体态'], exercises: ['rear-delt-fly', 'cable-rear-fly', 'face-pull', 'machine-rear-delt'] }
   ],
   arms: [
-    { name: '肱二头肌', tips: '弯举类练二头，避免借力摆荡', exercises: ['bb-curl', 'db-curl', 'hammer-curl', 'incline-curl', 'preacher-curl', 'cable-curl', 'ez-bar-curl', 'concentration-curl', 'spider-curl', 'cable-hammer-curl', 'reverse-curl'] },
-    { name: '肱三头肌', tips: '三头占手臂 2/3 体积，推类复合+下压孤立结合', exercises: ['pushdown', 'overhead-ext', 'skull-crusher', 'close-grip-bench', 'dips-triceps', 'kickback', 'tricep-machine', 'bench-dips', 'reverse-pushdown', 'cable-overhead-pull', 'single-arm-pushdown'] }
+    { name: '肱二头肌', rec: '每周 1-2 次 · 3 组 × 8-12 次', tips: ['弯举类练二头，避免借力摆荡', '上臂固定贴住身体，只动前臂'], exercises: ['bb-curl', 'db-curl', 'hammer-curl', 'incline-curl', 'preacher-curl', 'cable-curl', 'ez-bar-curl', 'concentration-curl', 'spider-curl', 'cable-hammer-curl', 'reverse-curl'] },
+    { name: '肱三头肌', rec: '每周 2 次 · 3-4 组 × 8-12 次', tips: ['三头占手臂 2/3 体积，推类复合+下压孤立结合', '下压最后 1/3 行程做满，充分伸展三头'], exercises: ['pushdown', 'overhead-ext', 'skull-crusher', 'close-grip-bench', 'dips-triceps', 'kickback', 'tricep-machine', 'bench-dips', 'reverse-pushdown', 'cable-overhead-pull', 'single-arm-pushdown'] }
   ],
   core: [
-    { name: '上腹（卷腹）', tips: '脊柱屈曲类动作练上腹，感受腹肌缩短', exercises: ['crunch', 'cable-crunch', 'v-up', 'bicycle-crunch', 'ab-wheel'] },
-    { name: '下腹（抬腿）', tips: '骨盆后倾抬腿练下腹，腰部贴地', exercises: ['hanging-leg-raise', 'leg-raise-floor', 'captain-chair', 'windshield-wiper', 'flutter-kick'] },
-    { name: '侧腹与旋转', tips: '抗旋转与转体练腹斜肌', exercises: ['russian-twist', 'side-bend', 'cable-rotation', 'side-plank'] },
-    { name: '深层稳定', tips: '静力支撑练腹横肌，配合呼吸', exercises: ['plank', 'dead-bug', 'hollow-hold', 'mountain-climber'] }
+    { name: '上腹（卷腹）', rec: '每周 2-3 次 · 3 组 × 12-20 次', tips: ['脊柱屈曲类动作练上腹，感受腹肌缩短', '卷腹用腹肌卷起，不要用脖子发力'], exercises: ['crunch', 'cable-crunch', 'v-up', 'bicycle-crunch', 'ab-wheel'] },
+    { name: '下腹（抬腿）', rec: '每周 2-3 次 · 3 组 × 10-15 次', tips: ['骨盆后倾抬腿练下腹，腰部贴地', '抬腿时膝盖微屈，下放慢一点'], exercises: ['hanging-leg-raise', 'leg-raise-floor', 'captain-chair', 'windshield-wiper', 'flutter-kick'] },
+    { name: '侧腹与旋转', rec: '每周 2 次 · 3 组 × 10-12 次/侧', tips: ['抗旋转与转体练腹斜肌', '转体动作骨盆稳定，只转胸椎'], exercises: ['russian-twist', 'side-bend', 'cable-rotation', 'side-plank'] },
+    { name: '深层稳定', rec: '可每日 · 2-3 组 × 30-60 秒', tips: ['静力支撑练腹横肌，配合呼吸', '平板支撑塌腰就停，质量优先于时长'], exercises: ['plank', 'dead-bug', 'hollow-hold', 'mountain-climber'] }
   ],
   calves: [
-    { name: '腓肠肌（站姿）', tips: '站姿提踵练腓肠肌，膝伸直顶端停顿', exercises: ['standing-calf', 'donkey-calf', 'single-leg-calf', 'step-calf-raise', 'weighted-step-calf', 'smith-calf', 'jump-rope-calf'] },
-    { name: '比目鱼肌（坐姿）', tips: '坐姿屈膝提踵练深层比目鱼肌', exercises: ['seated-calf', 'single-seated-calf', 'calf-press', 'calf-press-single'] },
-    { name: '胫骨前肌', tips: '胫骨前肌容易被忽略，预防小腿失衡', exercises: ['tibialis-raise'] }
+    { name: '腓肠肌（站姿）', rec: '每周 2-3 次 · 4 组 × 12-20 次', tips: ['站姿提踵练腓肠肌，膝伸直顶端停顿', '底端充分拉伸再发力，幅度做满'], exercises: ['standing-calf', 'donkey-calf', 'single-leg-calf', 'step-calf-raise', 'weighted-step-calf', 'smith-calf', 'jump-rope-calf'] },
+    { name: '比目鱼肌（坐姿）', rec: '每周 2-3 次 · 3-4 组 × 12-20 次', tips: ['坐姿屈膝提踵练深层比目鱼肌', '比目鱼肌耐力强，可以高次数冲击'], exercises: ['seated-calf', 'single-seated-calf', 'calf-press', 'calf-press-single'] },
+    { name: '胫骨前肌', rec: '每周 2 次 · 2-3 组 × 15-20 次', tips: ['胫骨前肌容易被忽略，预防小腿失衡', '勾脚尖训练放训练末尾即可'], exercises: ['tibialis-raise'] }
   ],
   cardio: [
-    { name: '匀速耐力', tips: '中低强度持续 30 分钟以上，燃脂打底', exercises: ['treadmill', 'bike', 'elliptical', 'rowing', 'stair-climber'] },
-    { name: '间歇爆发', tips: 'HIIT 20 分钟约等于匀速 40 分钟，每周 2-3 次', exercises: ['hiit-interval', 'burpee', 'box-jump', 'jumping-jack', 'battle-ropes', 'shadow-boxing', 'stair-run', 'sled-push'] }
+    { name: '匀速耐力', rec: '每周 2-4 次 · 30-60 分钟', tips: ['中低强度持续 30 分钟以上，燃脂打底', '能边运动边说话的心率是燃脂区'], exercises: ['treadmill', 'bike', 'elliptical', 'rowing', 'stair-climber'] },
+    { name: '间歇爆发', rec: '每周 2-3 次 · 20 分钟', tips: ['HIIT 20 分钟约等于匀速 40 分钟', '间歇期保证动作质量，力竭就停'], exercises: ['hiit-interval', 'burpee', 'box-jump', 'jumping-jack', 'battle-ropes', 'shadow-boxing', 'stair-run', 'sled-push'] }
   ],
   swimming: [
-    { name: '拉主导（自由泳/仰泳）', tips: '高肘划水发力来自背阔肌，练背与三头', exercises: ['swimming', 'freestyle', 'backstroke'] },
-    { name: '推主导（蛙泳/蝶泳）', tips: '抱水推水发力来自胸肩，进阶泳姿强度高', exercises: ['breaststroke', 'butterfly'] },
-    { name: '腿部与基本功', tips: '打腿是一切泳姿的地基，先练打腿再配手', exercises: ['kick-drill', 'water-jogging'] }
+    { name: '拉主导（自由泳/仰泳）', rec: '每周 2-3 次 · 30-45 分钟', tips: ['高肘划水发力来自背阔肌，练背与三头', '换气向侧面转体，不要抬头'], exercises: ['swimming', 'freestyle', 'backstroke'] },
+    { name: '推主导（蛙泳/蝶泳）', rec: '进阶者 · 每次 20-30 分钟', tips: ['抱水推水发力来自胸肩，进阶泳姿强度高', '蝶泳先练好身体波浪再加速'], exercises: ['breaststroke', 'butterfly'] },
+    { name: '腿部与基本功', rec: '每次下水先练 10 分钟', tips: ['打腿是一切泳姿的地基，先练打腿再配手', '打腿幅度小频率快，髋部带动'], exercises: ['kick-drill', 'water-jogging'] }
   ]
 };
-
 // 返回某部位肌肉发力分区（带动作详情，供 muscle-detail 页渲染）
-// 返回 [{ name, tips, exercises: [{ id, name, difficulty }] }]
+// 返回 [{ name, rec, tips: [..], exercises: [{ id, name, difficulty, typeText, equipText }] }]
 function muscleGroups(key) {
   var groups = MUSCLE_GROUPS[key];
   if (!groups) return [];
-  return groups.map(function (g) {
+  return groups.map(function (g, gi) {
     return {
       name: g.name,
-      tips: g.tips,
+      rec: g.rec || '',
+      tips: g.tips || [],
+      order: gi + 1,
       exercises: g.exercises.map(function (id) {
         var e = getExercise(id);
-        return { id: id, name: e ? e.name : id, difficulty: e ? e.difficulty : 1 };
+        return {
+          id: id,
+          name: e ? e.name : id,
+          difficulty: e ? e.difficulty : 1,
+          typeText: e ? typeText(e.type) : '',
+          equipText: e ? equipmentText(e.equipment) : ''
+        };
       })
     };
   });

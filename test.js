@@ -111,6 +111,21 @@ exercisesData.MUSCLES.forEach(m => {
 });
 assert(groupCount === 31, '全部部位共 31 个肌肉分区（实际 ' + groupCount + '）');
 assert(groupBad === 0, '分区名称/要点/动作引用全部有效');
+// 分区细化字段（v2.5 增强）：训练处方/顺序/动作行扩展信息
+let recBad = 0, orderBad = 0, exMetaBad = 0;
+exercisesData.MUSCLES.forEach(m => {
+  exercisesData.muscleGroups(m.key).forEach((g, gi) => {
+    if (!g.rec) { recBad++; console.log('  缺 rec:', m.key, g.name); }
+    if (g.order !== gi + 1) orderBad++;
+    g.exercises.forEach(e => {
+      if (!e.typeText) exMetaBad++;
+      if (!e.equipText) exMetaBad++;
+    });
+  });
+});
+assert(recBad === 0, '31 个分区全部带训练处方 rec');
+assert(orderBad === 0, '分区顺序号连续正确');
+assert(exMetaBad === 0, '动作行类型/器械文案完整');
 // 全部动作都被分区覆盖
 const coveredIds = {};
 exercisesData.MUSCLES.forEach(m => exercisesData.muscleGroups(m.key).forEach(g => g.exercises.forEach(e => { coveredIds[e.id] = true; })));
@@ -579,6 +594,36 @@ assert(legsPage.data.muscle.name === '腿' && legsPage.data.articles.length === 
 const badPage = instantiate(pageCfg);
 badPage.onLoad({ id: 'nope' });
 assert(badPage.data.ex === null, '不存在动作显示空态');
+
+// ---------- 部位训练页冒烟（v2.5 肌肉发力分区） ----------
+console.log('10b. 部位训练页冒烟');
+require('./pages/muscle-detail/muscle-detail.js');
+const md = instantiate(pageCfg);
+md.onLoad({ key: 'chest' });
+assert(md.data.current && md.data.current.name === '胸', '部位训练页加载（chest → 胸）');
+assert(md.data.groups.length === 4, '胸部 4 个肌肉分区（实际 ' + md.data.groups.length + '）');
+assert(md.data.groups[0].rec.length > 0 && md.data.groups[0].order === 1, '分区训练处方与顺序号');
+assert(md.data.groups[0].tips.length >= 2, '分区要点 ≥2 条');
+assert(md.data.groups[0].exercises[0].typeText && md.data.groups[0].exercises[0].equipText, '动作行类型/器械文案');
+// 非法 key 兜底
+const mdBad = instantiate(pageCfg);
+mdBad.onLoad({ key: 'nonexistent' });
+assert(mdBad.data.currentKey === 'chest' && mdBad.data.groups.length === 4, '非法 key 兜底回胸部');
+// 已移除部位兜底（forearms 无分区数据）
+const mdLegacy = instantiate(pageCfg);
+mdLegacy.onLoad({ key: 'forearms' });
+assert(mdLegacy.data.currentKey === 'chest', '已移除部位兜底回胸部');
+// 无参数默认
+const mdNone = instantiate(pageCfg);
+mdNone.onLoad({});
+assert(mdNone.data.currentKey === 'chest', '无参数默认胸部');
+// 页内切换
+md.onPickMuscle({ currentTarget: { dataset: { key: 'swimming' } } });
+assert(md.data.currentKey === 'swimming' && md.data.groups.length === 3, '切换游泳部位（3 个分区）');
+assert(md.data.groups[0].exercises[0].id === 'swimming', '游泳拉主导分区动作正确');
+// 动作跳转
+md.onOpenExercise({ currentTarget: { dataset: { id: 'freestyle' } } });
+assert(navLog[navLog.length - 1] === '/pages/exercise-detail/exercise-detail?id=freestyle', '点击动作跳详情');
 
 // ---------- 自建计划页冒烟（v2.3） ----------
 console.log('11. 自建计划页冒烟');

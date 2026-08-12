@@ -83,14 +83,31 @@
 
 .group-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+}
+
+.group-left {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .group-name {
   font-size: 30rpx;
   font-weight: 600;
   color: #1d1d1f;
+}
+
+.group-rec {
+  font-size: 21rpx;
+  color: #4f46e5;
+  margin-top: 8rpx;
+  background: #eef2ff;
+  border-radius: 10rpx;
+  padding: 6rpx 16rpx;
+  display: inline-block;
+  align-self: flex-start;
 }
 
 .group-count {
@@ -100,12 +117,35 @@
   border-radius: 999rpx;
   padding: 6rpx 18rpx;
   font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  margin-left: 16rpx;
 }
 
-.group-tip {
+.group-tips {
+  margin-top: 16rpx;
+  background: #f9fafb;
+  border-radius: 14rpx;
+  padding: 16rpx 20rpx;
+}
+
+.group-tip-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 4rpx 0;
+}
+
+.group-tip-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: #c4c8cf;
+  margin: 12rpx 12rpx 0 0;
+  flex-shrink: 0;
+}
+
+.group-tip-text {
   font-size: 22rpx;
   color: #6b7280;
-  margin: 12rpx 0 8rpx;
   line-height: 1.6;
 }
 
@@ -125,11 +165,23 @@
   border-radius: 12rpx;
 }
 
-.group-ex-name {
+.group-ex-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.group-ex-name {
   font-size: 27rpx;
   color: #1d1d1f;
   font-weight: 500;
+}
+
+.group-ex-meta {
+  font-size: 20rpx;
+  color: #9ca3af;
+  margin-top: 4rpx;
 }
 
 .dots {

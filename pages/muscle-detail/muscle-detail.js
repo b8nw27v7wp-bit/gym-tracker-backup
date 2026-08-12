@@ -12,10 +12,7 @@ Page({
 
   onLoad: function (options) {
     this.setData({ muscles: exercisesData.MUSCLES });
-    var key = options && options.key ? options.key : 'chest';
-    // 兜底：非法 key 回胸部
-    if (exercisesData.muscleInfo(key).name === key && key !== 'chest') key = 'chest';
-    this.selectMuscle(key);
+    this.selectMuscle((options && options.key) || 'chest');
   },
 
   onPickMuscle: function (e) {
@@ -23,8 +20,13 @@ Page({
   },
 
   selectMuscle: function (key) {
-    var info = exercisesData.muscleInfo(key);
+    // 兜底：非法 key / 已移除部位（无分区数据）回胸部，避免空页
     var groups = exercisesData.muscleGroups(key);
+    if (groups.length === 0 && key !== 'chest') {
+      key = 'chest';
+      groups = exercisesData.muscleGroups(key);
+    }
+    var info = exercisesData.muscleInfo(key);
     this.setData({ currentKey: key, current: info, groups: groups });
     wx.setNavigationBarTitle({ title: info.name + '部训练' });
   },
