@@ -1,17 +1,17 @@
-// 动作库索引：合并 10 个部位模块 + 部位知识
-// muscle 部位: chest 胸 / back 背 / legs 腿 / glutes 臀 / shoulder 肩 / arms 手臂 / forearms 前臂 / core 核心 / calves 小腿 / cardio 有氧
+// 动作库索引：合并 9 个部位模块 + 部位知识
+// muscle 部位: chest 胸 / back 背 / legs 腿 / glutes 臀 / shoulder 肩 / arms 手臂 / core 核心 / calves 小腿 / cardio 有氧
+// 注：前臂（forearms）模块已移除（v2.4 用户要求）；历史训练记录中 muscle='forearms' 的统计显示由 LEGACY_MUSCLES 兜底
 var chest = require('./chest');
 var back = require('./back');
 var legs = require('./legs');
 var glutes = require('./glutes');
 var shoulders = require('./shoulders');
 var arms = require('./arms');
-var forearms = require('./forearms');
 var core = require('./core');
 var calves = require('./calves');
 var cardio = require('./cardio');
 
-var ALL = chest.concat(back, legs, glutes, shoulders, arms, forearms, core, calves, cardio);
+var ALL = chest.concat(back, legs, glutes, shoulders, arms, core, calves, cardio);
 
 // 部位定义 + 训练知识
 var MUSCLES = [
@@ -52,12 +52,6 @@ var MUSCLES = [
     recommended: ['close-grip-bench', 'pushdown', 'bb-curl', 'hammer-curl', 'skull-crusher']
   },
   {
-    key: 'forearms', name: '前臂', icon: '🤛', freq: '每周 2-3 次',
-    desc: '握力肌群，耐受度高可高频训练',
-    tips: ['硬拉/引体/农夫行走已经在练握力', '腕弯举类动作放在训练最后', '前臂增长慢，坚持 3 个月以上才有明显变化'],
-    recommended: ['farmer-carry', 'wrist-curl', 'dead-hang', 'reverse-wrist-curl']
-  },
-  {
     key: 'core', name: '核心', icon: '🧘', freq: '每周 2-3 次',
     desc: '腹横肌等深层肌群可每日轻度训练',
     tips: ['平板类练稳定，卷腹类练腹肌，转体类练侧腹', '深蹲硬拉时核心已经在参与，别过度叠加', '下腹薄弱者优先悬垂举腿和仰卧举腿'],
@@ -90,6 +84,11 @@ function getExercise(id) {
   return null;
 }
 
+// 已移除部位的历史记录兜底（统计页部位分布显示用，无动作数据）
+var LEGACY_MUSCLES = {
+  forearms: { name: '前臂', icon: '' }
+};
+
 function muscleInfo(key) {
   for (var i = 0; i < MUSCLES.length; i++) {
     if (MUSCLES[i].key === key) {
@@ -100,6 +99,10 @@ function muscleInfo(key) {
         articleIds: MUSCLE_ARTICLES[m.key] || []
       };
     }
+  }
+  var legacy = LEGACY_MUSCLES[key];
+  if (legacy) {
+    return { key: key, name: legacy.name, icon: legacy.icon, freq: '', desc: '', tips: [], recommended: [], articleIds: [] };
   }
   return { key: key, name: key, icon: '', freq: '', desc: '', tips: [], recommended: [], articleIds: [] };
 }
@@ -112,7 +115,6 @@ var MUSCLE_ARTICLES = {
   glutes: ['frequency-guide', 'progressive-overload'],
   shoulder: ['rm-rir-rpe', 'rest-interval'],
   arms: ['rm-rir-rpe', 'volume-intensity'],
-  forearms: ['tracking-guide', 'frequency-guide'],
   core: ['frequency-guide', 'rm-rir-rpe'],
   calves: ['tracking-guide', 'rest-interval'],
   cardio: ['fat-loss', 'tracking-guide']

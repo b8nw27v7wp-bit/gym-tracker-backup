@@ -206,7 +206,6 @@ module.exports = [
         items: [
           { exerciseId: 'pullup', sets: 4, reps: null, note: '力竭组，次数自填' },
           { exerciseId: 'inverted-row', sets: 3, reps: null, note: '力竭组，次数自填' },
-          { exerciseId: 'dead-hang', sets: 3, reps: 30, note: '悬垂按秒计，次数自填' },
           { exerciseId: 'v-up', sets: 3, reps: 12 },
           { exerciseId: 'russian-twist', sets: 3, reps: 20 }
         ]

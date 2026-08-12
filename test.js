@@ -24,8 +24,8 @@ function assert(cond, name) {
 
 // ---------- 动作库 v2 ----------
 console.log('1. 动作库（v2 专业版）');
-assert(exercisesData.ALL.length === 180, '共 ' + exercisesData.ALL.length + ' 个动作');
-assert(exercisesData.MUSCLES.length === 10, '10 个部位');
+assert(exercisesData.ALL.length === 167, '共 ' + exercisesData.ALL.length + ' 个动作');
+assert(exercisesData.MUSCLES.length === 9, '9 个部位');
 // id 唯一
 const ids = new Set();
 let dup = 0;
@@ -54,7 +54,7 @@ let noArticle = 0;
 exercisesData.MUSCLES.forEach(m => {
   if (!exercisesData.muscleInfo(m.key).articleIds || exercisesData.muscleInfo(m.key).articleIds.length === 0) noArticle++;
 });
-assert(noArticle === 0, '10 个部位都有关联知识文章');
+assert(noArticle === 0, '9 个部位都有关联知识文章');
 const chestArts = chest.articleIds;
 assert(chestArts.indexOf('volume-intensity') >= 0, '胸部关联训练原理文章');
 assert(knowledge.getArticle(chestArts[0]) !== null, '关联文章 id 在知识库中真实存在');
@@ -67,6 +67,15 @@ assert(exercisesData.getExercise('squat').name === '杠铃深蹲', 'getExercise 
 assert(exercisesData.difficultyText(2) === '进阶', '难度文案');
 assert(exercisesData.typeText('compound') === '复合', '类型文案');
 assert(exercisesData.equipmentText('barbell') === '杠铃', '器械文案');
+
+// 前臂模块移除（v2.4）：部位不在列表、动作不在库、历史记录兜底名保留
+assert(exercisesData.MUSCLES.every(function (m) { return m.key !== 'forearms'; }), '前臂部位已从模块移除');
+assert(exercisesData.getExercise('dead-hang') === null && exercisesData.getExercise('wrist-curl') === null, '前臂动作已移出动作库');
+assert(exercisesData.muscleInfo('forearms').name === '前臂', '历史记录前臂兜底名（统计显示）');
+assert(exercisesData.muscleInfo('nonexistent-muscle').name === 'nonexistent-muscle', '未知部位兜底为 key');
+// 划船机 / 游泳（有氧部位）仍可用
+assert(exercisesData.getExercise('rowing') && exercisesData.getExercise('rowing').name === '划船机', '划船机动作存在');
+assert(exercisesData.getExercise('swimming') && exercisesData.getExercise('swimming').steps.length >= 2, '游泳动作存在且字段完整');
 
 // 搜索
 const search = exercisesData.searchExercises('卧推');

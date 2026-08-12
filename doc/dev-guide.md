@@ -84,7 +84,7 @@ gym-tracker/
 2. 校验约束：
    - `id` 全局唯一（test.js 自动检查）
    - `steps` ≥ 2 条，`errors` ≥ 2 条，`target` ≥ 1 个
-   - `difficulty` ∈ {1,2,3}，`muscle` ∈ 10 个部位 key
+   - `difficulty` ∈ {1,2,3}，`muscle` ∈ 9 个部位 key
    - 新部位需同时：新建 `data/exercises/<key>.js`、在 `index.js` 的 MUSCLES 加部位知识、require 合并
 3. 跑 `node test.js` 验证通过后提交
 
