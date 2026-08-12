@@ -9,6 +9,8 @@ var timer = null; // 计时器句柄
 Page({
   data: {
     todayLabel: '',
+    todayDate: '',
+    todayWeek: '',
     muscles: exercisesData.MUSCLES,
     currentMuscle: 'chest',
     exerciseList: [],
@@ -43,7 +45,11 @@ Page({
   onShow: function () {
     var d = new Date();
     var label = (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + util.weekdayCN(d.getTime());
-    this.setData({ todayLabel: label });
+    this.setData({
+      todayLabel: label,
+      todayDate: (d.getMonth() + 1) + '月' + d.getDate() + '日',
+      todayWeek: util.weekdayCN(d.getTime())
+    });
     // 启动本次训练计时（从页面展示开始）
     if (!this.data.sessionStarted) {
       this.setData({ sessionStarted: true });
@@ -252,6 +258,16 @@ Page({
     var volumes = [];
     var total = 0;
     var sets = 0;
+    // 补 muscleName（动作行显示部位标签）
+    var withNames = draft.map(function (item) {
+      if (item.muscleName) return item;
+      var m = exercisesData.muscleInfo(item.muscle);
+      return Object.assign({}, item, { muscleName: m ? m.name : '' });
+    });
+    if (withNames.length !== draft.length || withNames.some(function (it, i) { return it !== draft[i]; })) {
+      draft = withNames;
+      this.setData({ draft: draft });
+    }
     draft.forEach(function (item) {
       var v = 0;
       item.sets.forEach(function (s) {

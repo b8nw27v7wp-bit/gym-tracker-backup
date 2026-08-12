@@ -2,7 +2,10 @@
   <!-- 页头 -->
   <view class="header">
     <view class="header-left">
-      <view class="date">{{todayLabel}}</view>
+      <view class="date-row">
+        <text class="date">{{todayDate}}</text>
+        <text class="week-badge">{{todayWeek}}</text>
+      </view>
       <view class="sub">今天练了什么？记录下来</view>
     </view>
     <view class="header-right">
@@ -81,7 +84,10 @@
   <view class="card" wx:if="{{step === 'edit'}}">
     <view class="edit-head">
       <text class="card-title">{{editing.exerciseName}}</text>
-      <text class="tag" style="margin:0;">{{editingMuscleName}}</text>
+      <view class="edit-head-right">
+        <text class="tag" style="margin:0;">{{editingMuscleName}}</text>
+        <text class="edit-close" bindtap="onBackToPick">✕</text>
+      </view>
     </view>
     <view class="set-head">
       <text class="set-col set-c-no">组</text>
@@ -133,7 +139,10 @@
 
   <!-- 本次已添加动作 -->
   <view class="card" wx:if="{{draft.length > 0}}">
-    <view class="card-title">本次训练</view>
+    <view class="draft-head">
+      <view class="card-title" style="margin:0;">本次训练</view>
+      <text class="draft-count">{{draft.length}} 个动作</text>
+    </view>
     <view
       wx:for="{{draft}}"
       wx:key="exerciseId"
@@ -141,11 +150,15 @@
       data-index="{{index}}"
       bindtap="onEditItem"
     >
+      <view class="added-index">{{index + 1}}</view>
       <view class="added-info">
         <text class="added-name">{{item.exerciseName}}</text>
-        <text class="added-sub">{{item.sets.length}} 组 · {{itemVolumes[index]}} kg</text>
+        <text class="added-sub">{{item.sets.length}} 组 · 容量 {{itemVolumes[index]}} kg</text>
       </view>
-      <text class="added-del" data-index="{{index}}" catchtap="onRemoveItem">✕</text>
+      <view class="added-right">
+        <text class="added-tag">{{item.muscleName}}</text>
+        <text class="added-del" data-index="{{index}}" catchtap="onRemoveItem">✕</text>
+      </view>
     </view>
     <view class="btn-ghost" bindtap="onBackToPick">＋ 继续添加动作</view>
     <view class="note-wrap">
