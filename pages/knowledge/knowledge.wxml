@@ -7,6 +7,13 @@
     </view>
     <text class="tool-arrow">›</text>
   </view>
+  <view class="tool-card" bindtap="onOpenFood">
+    <view class="tool-info">
+      <view class="tool-name">食物热量查询</view>
+      <view class="tool-desc">70 种常见食物热量，按份量快速计算</view>
+    </view>
+    <text class="tool-arrow">›</text>
+  </view>
 
   <!-- 分类卡片 -->
   <view class="cat-grid">

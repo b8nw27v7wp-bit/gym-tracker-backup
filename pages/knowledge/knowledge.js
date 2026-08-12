@@ -60,5 +60,9 @@ Page({
 
   onOpenCalculator: function () {
     wx.navigateTo({ url: '/pages/calculator/calculator' });
+  },
+
+  onOpenFood: function () {
+    wx.navigateTo({ url: '/pages/food/food' });
   }
 });

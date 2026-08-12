@@ -1,0 +1,93 @@
+// 食物热量数据库（每 100g kcal，参考中国食物成分表常见值）
+// 字段：id/name/cat/kcal(每100g)/size(默认份量g)/sizeLabel
+// 计算：热量 = kcal × 克数 / 100
+module.exports = {
+  CATEGORIES: [
+    { key: 'staple', name: '主食' },
+    { key: 'meat', name: '肉蛋海鲜' },
+    { key: 'veg', name: '蔬菜' },
+    { key: 'fruit', name: '水果' },
+    { key: 'dairy', name: '奶豆坚果' },
+    { key: 'drink', name: '饮品' },
+    { key: 'snack', name: '快餐零食' }
+  ],
+  ITEMS: [
+    // 主食
+    { id: 'rice', name: '米饭', cat: 'staple', kcal: 116, size: 150, sizeLabel: '1 碗' },
+    { id: 'congee', name: '白粥', cat: 'staple', kcal: 46, size: 250, sizeLabel: '1 碗' },
+    { id: 'noodle', name: '煮面条', cat: 'staple', kcal: 110, size: 200, sizeLabel: '1 碗' },
+    { id: 'dumpling', name: '水饺', cat: 'staple', kcal: 240, size: 120, sizeLabel: '6 个' },
+    { id: 'baozi', name: '肉包子', cat: 'staple', kcal: 227, size: 90, sizeLabel: '1 个' },
+    { id: 'mantou', name: '馒头', cat: 'staple', kcal: 223, size: 100, sizeLabel: '1 个' },
+    { id: 'bread', name: '全麦面包', cat: 'staple', kcal: 246, size: 35, sizeLabel: '1 片' },
+    { id: 'white-bread', name: '白吐司', cat: 'staple', kcal: 283, size: 35, sizeLabel: '1 片' },
+    { id: 'sweet-potato', name: '红薯', cat: 'staple', kcal: 86, size: 200, sizeLabel: '1 个' },
+    { id: 'potato', name: '土豆', cat: 'staple', kcal: 77, size: 150, sizeLabel: '1 个' },
+    { id: 'corn', name: '玉米', cat: 'staple', kcal: 112, size: 200, sizeLabel: '1 根' },
+    { id: 'oats', name: '燕麦片', cat: 'staple', kcal: 367, size: 40, sizeLabel: '1 份' },
+    // 肉蛋海鲜
+    { id: 'chicken-breast', name: '鸡胸肉', cat: 'meat', kcal: 133, size: 150, sizeLabel: '1 块' },
+    { id: 'chicken-wing', name: '鸡翅', cat: 'meat', kcal: 194, size: 100, sizeLabel: '2 个' },
+    { id: 'egg', name: '鸡蛋', cat: 'meat', kcal: 144, size: 50, sizeLabel: '1 个' },
+    { id: 'beef-lean', name: '瘦牛肉', cat: 'meat', kcal: 106, size: 150, sizeLabel: '1 份' },
+    { id: 'pork-lean', name: '瘦猪肉', cat: 'meat', kcal: 143, size: 150, sizeLabel: '1 份' },
+    { id: 'pork-belly', name: '五花肉', cat: 'meat', kcal: 508, size: 100, sizeLabel: '1 份' },
+    { id: 'lamb', name: '羊肉', cat: 'meat', kcal: 203, size: 150, sizeLabel: '1 份' },
+    { id: 'salmon', name: '三文鱼', cat: 'meat', kcal: 139, size: 150, sizeLabel: '1 块' },
+    { id: 'tilapia', name: '罗非鱼', cat: 'meat', kcal: 98, size: 150, sizeLabel: '1 条' },
+    { id: 'shrimp', name: '虾仁', cat: 'meat', kcal: 93, size: 100, sizeLabel: '1 份' },
+    { id: 'crab-stick', name: '蟹棒', cat: 'meat', kcal: 95, size: 100, sizeLabel: '5 根' },
+    { id: 'sausage', name: '火腿肠', cat: 'meat', kcal: 212, size: 60, sizeLabel: '1 根' },
+    // 蔬菜
+    { id: 'broccoli', name: '西兰花', cat: 'veg', kcal: 34, size: 150, sizeLabel: '1 份' },
+    { id: 'cabbage', name: '卷心菜', cat: 'veg', kcal: 24, size: 150, sizeLabel: '1 份' },
+    { id: 'spinach', name: '菠菜', cat: 'veg', kcal: 24, size: 150, sizeLabel: '1 份' },
+    { id: 'carrot', name: '胡萝卜', cat: 'veg', kcal: 39, size: 100, sizeLabel: '1 根' },
+    { id: 'cucumber', name: '黄瓜', cat: 'veg', kcal: 16, size: 150, sizeLabel: '1 根' },
+    { id: 'tomato', name: '番茄', cat: 'veg', kcal: 20, size: 150, sizeLabel: '1 个' },
+    { id: 'eggplant', name: '茄子', cat: 'veg', kcal: 23, size: 150, sizeLabel: '1 份' },
+    { id: 'mushroom', name: '香菇', cat: 'veg', kcal: 26, size: 100, sizeLabel: '1 份' },
+    { id: 'tofu', name: '豆腐', cat: 'veg', kcal: 84, size: 150, sizeLabel: '1 块' },
+    { id: 'corn-veg', name: '玉米粒', cat: 'veg', kcal: 112, size: 100, sizeLabel: '1 份' },
+    // 水果
+    { id: 'apple', name: '苹果', cat: 'fruit', kcal: 53, size: 200, sizeLabel: '1 个' },
+    { id: 'banana', name: '香蕉', cat: 'fruit', kcal: 93, size: 120, sizeLabel: '1 根' },
+    { id: 'orange', name: '橙子', cat: 'fruit', kcal: 48, size: 150, sizeLabel: '1 个' },
+    { id: 'grape', name: '葡萄', cat: 'fruit', kcal: 44, size: 150, sizeLabel: '1 串' },
+    { id: 'watermelon', name: '西瓜', cat: 'fruit', kcal: 31, size: 300, sizeLabel: '1 块' },
+    { id: 'strawberry', name: '草莓', cat: 'fruit', kcal: 32, size: 150, sizeLabel: '1 盒' },
+    { id: 'blueberry', name: '蓝莓', cat: 'fruit', kcal: 57, size: 100, sizeLabel: '1 盒' },
+    { id: 'kiwi', name: '猕猴桃', cat: 'fruit', kcal: 61, size: 100, sizeLabel: '1 个' },
+    { id: 'mango', name: '芒果', cat: 'fruit', kcal: 35, size: 200, sizeLabel: '1 个' },
+    { id: 'avocado', name: '牛油果', cat: 'fruit', kcal: 171, size: 100, sizeLabel: '1 个' },
+    // 奶豆坚果
+    { id: 'milk', name: '纯牛奶', cat: 'dairy', kcal: 65, size: 250, sizeLabel: '1 盒' },
+    { id: 'yogurt', name: '无糖酸奶', cat: 'dairy', kcal: 72, size: 150, sizeLabel: '1 杯' },
+    { id: 'greek-yogurt', name: '希腊酸奶', cat: 'dairy', kcal: 97, size: 150, sizeLabel: '1 杯' },
+    { id: 'soy-milk', name: '无糖豆浆', cat: 'dairy', kcal: 31, size: 300, sizeLabel: '1 杯' },
+    { id: 'cheese', name: '芝士片', cat: 'dairy', kcal: 328, size: 20, sizeLabel: '1 片' },
+    { id: 'almond', name: '巴旦木', cat: 'dairy', kcal: 579, size: 30, sizeLabel: '1 把' },
+    { id: 'walnut', name: '核桃', cat: 'dairy', kcal: 654, size: 20, sizeLabel: '2 个' },
+    { id: 'peanut', name: '花生', cat: 'dairy', kcal: 567, size: 30, sizeLabel: '1 把' },
+    { id: 'peanut-butter', name: '花生酱', cat: 'dairy', kcal: 588, size: 15, sizeLabel: '1 勺' },
+    // 饮品
+    { id: 'cola', name: '可乐', cat: 'drink', kcal: 43, size: 330, sizeLabel: '1 罐' },
+    { id: 'orange-juice', name: '橙汁', cat: 'drink', kcal: 45, size: 250, sizeLabel: '1 杯' },
+    { id: 'milk-tea', name: '珍珠奶茶', cat: 'drink', kcal: 80, size: 500, sizeLabel: '1 杯' },
+    { id: 'latte', name: '拿铁咖啡', cat: 'drink', kcal: 45, size: 350, sizeLabel: '1 杯' },
+    { id: 'americano', name: '美式咖啡', cat: 'drink', kcal: 3, size: 350, sizeLabel: '1 杯' },
+    { id: 'beer', name: '啤酒', cat: 'drink', kcal: 43, size: 330, sizeLabel: '1 瓶' },
+    { id: 'sports-drink', name: '运动饮料', cat: 'drink', kcal: 25, size: 500, sizeLabel: '1 瓶' },
+    // 快餐零食
+    { id: 'hamburger', name: '汉堡', cat: 'snack', kcal: 295, size: 200, sizeLabel: '1 个' },
+    { id: 'fried-chicken', name: '炸鸡', cat: 'snack', kcal: 279, size: 150, sizeLabel: '1 份' },
+    { id: 'french-fries', name: '炸薯条', cat: 'snack', kcal: 298, size: 120, sizeLabel: '1 份' },
+    { id: 'pizza', name: '披萨', cat: 'snack', kcal: 235, size: 200, sizeLabel: '2 片' },
+    { id: 'instant-noodle', name: '方便面', cat: 'snack', kcal: 473, size: 90, sizeLabel: '1 包' },
+    { id: 'chips', name: '薯片', cat: 'snack', kcal: 548, size: 40, sizeLabel: '1 小包' },
+    { id: 'chocolate', name: '巧克力', cat: 'snack', kcal: 586, size: 25, sizeLabel: '1 块' },
+    { id: 'cookie', name: '曲奇饼干', cat: 'snack', kcal: 546, size: 30, sizeLabel: '3 块' },
+    { id: 'ice-cream', name: '冰淇淋', cat: 'snack', kcal: 127, size: 100, sizeLabel: '1 球' },
+    { id: 'biscuit', name: '苏打饼干', cat: 'snack', kcal: 408, size: 30, sizeLabel: '1 包' }
+  ]
+};

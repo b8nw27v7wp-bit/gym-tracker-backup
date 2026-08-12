@@ -11,6 +11,7 @@
     "pages/plans/plans",
     "pages/plan-edit/plan-edit",
     "pages/calculator/calculator",
+    "pages/food/food",
     "pages/data/data",
     "pages/privacy/privacy"
   ],

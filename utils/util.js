@@ -337,6 +337,35 @@ function weeklyPlanProgress(workouts, plan, weekStartTs) {
   };
 }
 
+// ---------- 运动消耗估算 ----------
+// MET 法：kcal = MET × 3.5 × 体重kg × 分钟 / 200
+// 力量训练 MET 5.0；有氧/游泳 7.0（按本次训练涉及的最高 MET 计）
+var MET_BY_MUSCLE = { cardio: 7, swimming: 7 };
+function workoutCalories(workout, weightKg) {
+  var wt = Number(weightKg) || 60;
+  var met = 5;
+  (workout && workout.items || []).forEach(function (item) {
+    var m = MET_BY_MUSCLE[item.muscle];
+    if (m && m > met) met = m;
+  });
+  var minutes = Number(workout && workout.duration) || 45;
+  return Math.round(met * 3.5 * wt * minutes / 200);
+}
+
+// 一段时间内的训练消耗汇总：{ total, sessions: [{ ts, kcal }] }
+// fromTs 为空则统计全部；weightKg 缺省 60
+function workoutCaloriesSum(workouts, weightKg, fromTs) {
+  var total = 0;
+  var sessions = [];
+  (workouts || []).forEach(function (w) {
+    if (fromTs && w.ts < fromTs) return;
+    var kcal = workoutCalories(w, weightKg);
+    total += kcal;
+    sessions.push({ ts: w.ts, kcal: kcal });
+  });
+  return { total: total, sessions: sessions };
+}
+
 // ---------- 图表坐标 ----------
 // 将数值序列归一化为绘图坐标（canvas 用）
 // 返回 { points: [{i, value, y, h}], max, baseline, innerH }
@@ -415,6 +444,8 @@ module.exports = {
   planDayStatus: planDayStatus,
   planDayCompletion: planDayCompletion,
   weeklyPlanProgress: weeklyPlanProgress,
+  workoutCalories: workoutCalories,
+  workoutCaloriesSum: workoutCaloriesSum,
   scaleSeries: scaleSeries,
   fmtCompact: fmtCompact,
   bodyweightTrend: bodyweightTrend

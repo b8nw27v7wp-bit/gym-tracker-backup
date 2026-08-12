@@ -1,0 +1,228 @@
+.page {
+  padding-bottom: 80rpx;
+}
+
+/* 搜索 */
+.search-wrap {
+  display: flex;
+  align-items: center;
+  margin: 20rpx 32rpx 0;
+  background: #ffffff;
+  border: 1rpx solid #f1f2f4;
+  border-radius: 20rpx;
+  padding: 0 28rpx;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 27rpx;
+  padding: 20rpx 0;
+  height: auto;
+  min-height: 44rpx;
+}
+
+.search-clear {
+  color: #9ca3af;
+  font-size: 28rpx;
+  padding: 12rpx;
+}
+
+/* 分类 chips */
+.cat-scroll {
+  white-space: nowrap;
+  padding: 20rpx 24rpx 0;
+}
+
+.chip {
+  display: inline-block;
+  padding: 12rpx 28rpx;
+  margin-right: 14rpx;
+  background: #ffffff;
+  border: 1rpx solid #f1f2f4;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: #6b7280;
+}
+
+.chip-active {
+  background: #1d1d1f;
+  border-color: #1d1d1f;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* 食物行 */
+.food-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26rpx 32rpx;
+  margin: 16rpx 32rpx;
+}
+
+.food-hover {
+  background: #f7f7f8;
+}
+
+.food-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.food-name {
+  font-size: 29rpx;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.food-meta {
+  font-size: 21rpx;
+  color: #9ca3af;
+  margin-top: 6rpx;
+}
+
+.food-right {
+  display: flex;
+  align-items: baseline;
+}
+
+.food-kcal {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+  font-variant-numeric: tabular-nums;
+}
+
+.food-unit {
+  font-size: 20rpx;
+  color: #9ca3af;
+  margin-left: 6rpx;
+}
+
+/* 计算面板 */
+.calc-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+}
+
+.calc-panel {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(17, 24, 39, 0.06), 0 16rpx 48rpx rgba(17, 24, 39, 0.12);
+}
+
+.calc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28rpx;
+}
+
+.calc-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.calc-sub {
+  font-size: 22rpx;
+  color: #9ca3af;
+  margin-top: 6rpx;
+}
+
+.calc-close {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.calc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.calc-btn {
+  padding: 16rpx 28rpx;
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 14rpx;
+  font-size: 26rpx;
+  flex-shrink: 0;
+}
+
+.calc-btn:active {
+  background: #e5e7eb;
+}
+
+.calc-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  border-radius: 14rpx;
+  padding: 12rpx 20rpx;
+}
+
+.calc-input {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+  text-align: center;
+  width: 160rpx;
+  height: auto;
+  min-height: 56rpx;
+}
+
+.calc-unit {
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-left: 8rpx;
+}
+
+.calc-result {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin: 32rpx 0 28rpx;
+}
+
+.calc-result-num {
+  font-size: 72rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+  font-variant-numeric: tabular-nums;
+}
+
+.calc-result-unit {
+  font-size: 26rpx;
+  color: #9ca3af;
+  margin-left: 10rpx;
+}
+
+.calc-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.calc-actions .btn-ghost,
+.calc-actions .btn-primary {
+  flex: 1;
+}

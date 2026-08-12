@@ -1,5 +1,6 @@
 // 营养计算器页：Mifflin-St Jeor 公式
 var nutrition = require('../../utils/nutrition');
+var store = require('../../utils/store');
 
 Page({
   data: {
@@ -37,5 +38,26 @@ Page({
       return;
     }
     this.setData({ result: res });
+    // 保存身体资料，供统计页热量板块使用
+    store.setProfile({
+      gender: this.data.gender,
+      age: Number(this.data.age),
+      heightCm: Number(this.data.heightCm),
+      weightKg: Number(this.data.weightKg),
+      activity: this.data.activityIndex + 1
+    });
+  },
+
+  // 回显已保存的资料（从统计页跳来时直接可用）
+  onLoad: function () {
+    var p = store.getProfile();
+    if (!p) return;
+    this.setData({
+      gender: p.gender || 'male',
+      age: p.age !== undefined ? String(p.age) : '',
+      heightCm: p.heightCm !== undefined ? String(p.heightCm) : '',
+      weightKg: p.weightKg !== undefined ? String(p.weightKg) : '',
+      activityIndex: (p.activity || 2) - 1
+    });
   }
 });

@@ -445,6 +445,44 @@ assert(util.fmtCompact(123456) === '12.3万', 'fmtCompact 万缩写（实际 ' +
 assert(util.fmtCompact(100000) === '10万', 'fmtCompact 整十万');
 assert(util.fmtCompact(0) === '0', 'fmtCompact 零');
 
+// ---------- 运动消耗估算（v2.6 热量） ----------
+console.log('7c. 运动消耗估算');
+const wPower = { id: 'cal1', ts: monTs + dayMs, date: util.dateStr(monTs + dayMs), duration: 60,
+  items: [{ exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 60, reps: 8 }] }] };
+assert(util.workoutCalories(wPower, 60) === 315, '力量训练 60kg×60min = 315 kcal（实际 ' + util.workoutCalories(wPower, 60) + '）');
+const wCardio = { id: 'cal2', ts: monTs + 2 * dayMs, date: util.dateStr(monTs + 2 * dayMs), duration: 30,
+  items: [{ exerciseId: 'rowing', exerciseName: '划船机', muscle: 'cardio', sets: [] }] };
+assert(util.workoutCalories(wCardio, 60) === 221, '有氧 60kg×30min = 221 kcal（实际 ' + util.workoutCalories(wCardio, 60) + '）');
+const wSwim = { id: 'cal3', ts: monTs + 3 * dayMs, date: util.dateStr(monTs + 3 * dayMs), duration: 45,
+  items: [{ exerciseId: 'freestyle', exerciseName: '自由泳', muscle: 'swimming', sets: [] }] };
+assert(util.workoutCalories(wSwim, 70) === 386, '游泳 70kg×45min = 386 kcal（实际 ' + util.workoutCalories(wSwim, 70) + '）');
+const wNoDur = { id: 'cal4', ts: monTs, date: util.dateStr(monTs), items: [{ exerciseId: 'squat', exerciseName: '深蹲', muscle: 'legs', sets: [] }] };
+assert(util.workoutCalories(wNoDur, 60) === 236, '无时长默认 45min = 236 kcal');
+const wMix = { id: 'cal5', ts: monTs, date: util.dateStr(monTs), duration: 60,
+  items: [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [] }, { exerciseId: 'rowing', exerciseName: '划船机', muscle: 'cardio', sets: [] }] };
+assert(util.workoutCalories(wMix, 60) === 441, '混合训练取最高 MET 7');
+const calSum = util.workoutCaloriesSum([wPower, wCardio, wSwim], 60, monTs);
+assert(calSum.sessions.length === 3 && calSum.total === 315 + 221 + 331, '周内汇总 3 次共 867（实际 ' + calSum.total + '）');
+assert(util.workoutCaloriesSum([wPower, wNoDur], 60).total === 315 + 236, '不传时间统计全部');
+assert(util.workoutCalories(null, 60) === 236 && util.workoutCaloriesSum([], 60).total === 0, '空数据安全');
+
+// ---------- 食物热量库（v2.6） ----------
+console.log('7d. 食物热量库');
+const foods = require('./data/foods');
+assert(foods.ITEMS.length >= 60, '食物库 ≥60 项（实际 ' + foods.ITEMS.length + '）');
+const foodIds = new Set();
+let foodBad = 0;
+foods.ITEMS.forEach(f => {
+  if (foodIds.has(f.id)) foodBad++;
+  foodIds.add(f.id);
+  if (!f.name || !f.cat || !f.kcal || f.kcal <= 0 || !f.size || f.size <= 0 || !f.sizeLabel) foodBad++;
+});
+assert(foodBad === 0, '食物 id 唯一且字段完整');
+const catKeys = foods.CATEGORIES.map(c => c.key);
+assert(foods.ITEMS.every(f => catKeys.indexOf(f.cat) >= 0), '食物分类均合法');
+const rice = foods.ITEMS.filter(f => f.id === 'rice')[0];
+assert(rice.kcal === 116 && Math.round(rice.kcal * rice.size / 100) === 174, '米饭 116 kcal/100g，1 碗约 174 kcal');
+
 // ---------- 营养计算 ----------
 console.log('8. 营养计算器');
 const nutrition = require('./utils/nutrition');
@@ -624,6 +662,68 @@ assert(md.data.groups[0].exercises[0].id === 'swimming', '游泳拉主导分区�
 // 动作跳转
 md.onOpenExercise({ currentTarget: { dataset: { id: 'freestyle' } } });
 assert(navLog[navLog.length - 1] === '/pages/exercise-detail/exercise-detail?id=freestyle', '点击动作跳详情');
+
+// ---------- 营养计算器冒烟（v2.6 保存身体资料） ----------
+console.log('10c. 营养计算器冒烟');
+require('./pages/calculator/calculator.js');
+const calPage = instantiate(pageCfg);
+calPage.onLoad({});
+calPage.onPickGender({ currentTarget: { dataset: { gender: 'male' } } });
+calPage.onAgeInput({ detail: { value: '25' } });
+calPage.onHeightInput({ detail: { value: '175' } });
+calPage.onWeightInput({ detail: { value: '70' } });
+calPage.onCalc();
+assert(calPage.data.result && calPage.data.result.bmr === 1674, '计算器 BMR 1674');
+assert(store.getProfile() && store.getProfile().weightKg === 70, '计算后保存身体资料');
+const calPage2 = instantiate(pageCfg);
+calPage2.onLoad({});
+assert(calPage2.data.age === '25' && calPage2.data.activityIndex === 2, '已保存资料回显（活动指数 3-1）');
+
+// ---------- 统计页热量冒烟（v2.6） ----------
+console.log('10d. 统计页热量冒烟');
+wx.createSelectorQuery = () => ({ select: () => ({ fields: () => ({ exec: cb => cb([]) }) }) });
+wx.getSystemInfoSync = () => ({ pixelRatio: 2 });
+require('./pages/stats/stats.js');
+wx._store.gym_workouts = [wPower, wCardio];
+wx._store.gym_bodyweight = []; // 清体重记录，让热量卡用 profile 体重 70kg
+const stPage = instantiate(pageCfg);
+stPage.loadStats();
+assert(stPage.data.calHas === true && stPage.data.calBmr === 1674, '热量卡基础代谢 1674');
+assert(stPage.data.calTdee === 2595, '每日消耗 2595');
+assert(stPage.data.calWeekKcal === 368 + 257, '本周运动消耗 70kg 计 625（实际 ' + stPage.data.calWeekKcal + '）');
+assert(stPage.data.calBulk === 2855 && stPage.data.calCut === 2128, '增肌 2855 / 减脂 2128');
+wx.removeStorageSync('gym_user_profile');
+const stPage2 = instantiate(pageCfg);
+stPage2.loadStats();
+assert(stPage2.data.calHas === false, '无资料显示引导卡');
+wx._store.gym_workouts = [];
+
+// ---------- 食物热量页冒烟（v2.6） ----------
+console.log('10e. 食物热量页冒烟');
+require('./pages/food/food.js');
+const fdPage = instantiate(pageCfg);
+fdPage.onLoad({});
+assert(fdPage.data.list.length >= 60, '食物列表加载 ' + fdPage.data.list.length + ' 项');
+fdPage.onSearchInput({ detail: { value: '鸡胸' } });
+assert(fdPage.data.list.length === 1 && fdPage.data.list[0].id === 'chicken-breast', '搜索鸡胸命中');
+fdPage.onClearSearch();
+assert(fdPage.data.list.length >= 60, '清除搜索恢复全部');
+fdPage.onPickCat({ currentTarget: { dataset: { key: 'fruit' } } });
+assert(fdPage.data.list.length >= 8 && fdPage.data.list.every(f => f.cat === 'fruit'), '水果分类过滤');
+fdPage.onPickCat({ currentTarget: { dataset: { key: 'all' } } });
+fdPage.onCalcFood({ currentTarget: { dataset: { id: 'rice' } } });
+assert(fdPage.data.calc && fdPage.data.calc.kcal === 116 && fdPage.data.calc.grams === 150, '打开米饭计算（默认 150g）');
+assert(fdPage.data.calc.total === 174, '默认份量 174 kcal');
+fdPage.onGramsInput({ detail: { value: '300' } });
+assert(fdPage.data.calc.total === 348, '300g → 348 kcal');
+fdPage.onQuickGrams({ currentTarget: { dataset: { d: 50 } } });
+assert(fdPage.data.calc.grams === 350 && fdPage.data.calc.total === 406, '快捷 +50g → 406 kcal');
+fdPage.onQuickGrams({ currentTarget: { dataset: { d: -500 } } });
+assert(fdPage.data.calc.grams === 0 && fdPage.data.calc.total === 0, '克数不低于 0');
+fdPage.onResetGrams();
+assert(fdPage.data.calc.grams === 150, '恢复默认份量');
+fdPage.onCloseCalc();
+assert(fdPage.data.calc === null, '关闭计算面板');
 
 // ---------- 自建计划页冒烟（v2.3） ----------
 console.log('11. 自建计划页冒烟');

@@ -6,6 +6,115 @@
   padding: 40rpx 32rpx;
 }
 
+/* 每日热量 */
+.cal-card {
+  padding: 28rpx 32rpx;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cal-edit {
+  font-size: 22rpx;
+  color: #4f46e5;
+  background: #eef2ff;
+  border-radius: 999rpx;
+  padding: 8rpx 22rpx;
+}
+
+.cal-grid {
+  display: flex;
+  margin-top: 24rpx;
+}
+
+.cal-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cal-num {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-accent {
+  color: #4f46e5;
+}
+
+.cal-label {
+  font-size: 21rpx;
+  color: #9ca3af;
+  margin-top: 6rpx;
+}
+
+.cal-bar {
+  display: flex;
+  align-items: center;
+  margin-top: 24rpx;
+  background: #f9fafb;
+  border-radius: 14rpx;
+  padding: 16rpx 8rpx;
+}
+
+.cal-suggest {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cal-suggest-label {
+  font-size: 20rpx;
+  color: #9ca3af;
+}
+
+.cal-suggest-num {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-top: 4rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-divider {
+  width: 1rpx;
+  height: 40rpx;
+  background: #e5e7eb;
+}
+
+.cal-tip {
+  font-size: 20rpx;
+  color: #c4c8cf;
+  margin-top: 16rpx;
+  text-align: center;
+}
+
+.cal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 0 8rpx;
+}
+
+.cal-empty-text {
+  font-size: 24rpx;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.7;
+}
+
+.cal-empty-btn {
+  margin-top: 24rpx;
+  width: 320rpx;
+}
+
 .big-num {
   font-size: 88rpx;
   font-weight: 700;

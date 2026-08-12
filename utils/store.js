@@ -5,6 +5,7 @@ var KEY_BODYWEIGHT = 'gym_bodyweight';
 var KEY_SCHEMA = 'gym_schema_version'; // 当前 schema 版本
 var KEY_CUSTOM_PLANS = 'gym_custom_plans'; // 用户自建计划
 var KEY_WEEKLY_PLAN = 'gym_weekly_plan';   // 本周计划打卡设置 { planId, weekStart }
+var KEY_PROFILE = 'gym_user_profile';      // 用户身体资料 { gender, age, heightCm, weightKg, activity }
 
 var SCHEMA_VERSION = 3;
 
@@ -159,6 +160,16 @@ function clearWeeklyPlan() {
   wx.removeStorageSync(KEY_WEEKLY_PLAN);
 }
 
+// ---------- 用户身体资料（热量计算用）----------
+// { gender, age, heightCm, weightKg, activity: 1-5 }；未设置返回 null
+function getProfile() {
+  return wx.getStorageSync(KEY_PROFILE) || null;
+}
+
+function setProfile(profile) {
+  wx.setStorageSync(KEY_PROFILE, profile);
+}
+
 // ---------- 备份导出 / 导入 ----------
 // 导出结构：{ app: 'gym-tracker', schemaVersion, exportedAt, workouts, bodyweight, customPlans }
 function exportData() {
@@ -202,6 +213,7 @@ function clearAll() {
   wx.setStorageSync(KEY_BODYWEIGHT, []);
   wx.setStorageSync(KEY_CUSTOM_PLANS, []);
   clearWeeklyPlan();
+  wx.removeStorageSync(KEY_PROFILE);
 }
 
 // 当前数据量估算（字节）
@@ -238,6 +250,8 @@ module.exports = {
   getWeeklyPlan: getWeeklyPlan,
   setWeeklyPlan: setWeeklyPlan,
   clearWeeklyPlan: clearWeeklyPlan,
+  getProfile: getProfile,
+  setProfile: setProfile,
   exportData: exportData,
   importData: importData,
   clearAll: clearAll,

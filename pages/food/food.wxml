@@ -1,0 +1,76 @@
+<view class="page">
+  <!-- 搜索 -->
+  <view class="search-wrap">
+    <input
+      class="search-input"
+      value="{{keyword}}"
+      bindinput="onSearchInput"
+      placeholder="搜索食物名称"
+      confirm-type="search"
+    />
+    <text wx:if="{{keyword}}" class="search-clear" bindtap="onClearSearch">✕</text>
+  </view>
+
+  <!-- 分类 -->
+  <scroll-view class="cat-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+    <view
+      class="chip {{currentCat === 'all' ? 'chip-active' : ''}}"
+      data-key="all"
+      bindtap="onPickCat"
+    >全部</view>
+    <view
+      wx:for="{{categories}}"
+      wx:key="key"
+      class="chip {{currentCat === item.key ? 'chip-active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onPickCat"
+    >{{item.name}}</view>
+  </scroll-view>
+
+  <!-- 列表 -->
+  <empty-state wx:if="{{list.length === 0}}" text="没有找到匹配的食物" />
+  <view class="card food-card" wx:for="{{list}}" wx:key="id" data-id="{{item.id}}" bindtap="onCalcFood" hover-class="food-hover">
+    <view class="food-left">
+      <text class="food-name">{{item.name}}</text>
+      <text class="food-meta">{{item.sizeLabel}}约 {{item.kcal * item.size / 100}} kcal</text>
+    </view>
+    <view class="food-right">
+      <text class="food-kcal">{{item.kcal}}</text>
+      <text class="food-unit">kcal/100g</text>
+    </view>
+  </view>
+
+  <!-- 计算面板 -->
+  <view class="calc-mask" wx:if="{{calc}}" bindtap="onCloseCalc">
+    <view class="calc-panel" catchtap="noop">
+      <view class="calc-head">
+        <view>
+          <view class="calc-name">{{calc.name}}</view>
+          <view class="calc-sub">{{calc.kcal}} kcal/100g · 默认约 {{calc.sizeLabel}}</view>
+        </view>
+        <view class="calc-close" bindtap="onCloseCalc">✕</view>
+      </view>
+      <view class="calc-row">
+        <view class="calc-btn" data-d="-50" bindtap="onQuickGrams">−50</view>
+        <view class="calc-input-wrap">
+          <input
+            class="calc-input"
+            type="digit"
+            value="{{calc.grams}}"
+            bindinput="onGramsInput"
+          />
+          <text class="calc-unit">克</text>
+        </view>
+        <view class="calc-btn" data-d="50" bindtap="onQuickGrams">+50</view>
+      </view>
+      <view class="calc-result">
+        <text class="calc-result-num">{{calc.total}}</text>
+        <text class="calc-result-unit">kcal</text>
+      </view>
+      <view class="calc-actions">
+        <view class="btn-ghost" bindtap="onResetGrams">恢复默认</view>
+        <view class="btn-primary" bindtap="onCloseCalc">完成</view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -22,6 +22,56 @@
     </view>
   </view>
 
+  <!-- 每日热量 -->
+  <view class="card cal-card" wx:if="{{calHas}}">
+    <view class="cal-head">
+      <view class="card-title" style="margin:0;">每日热量</view>
+      <text class="cal-edit" bindtap="onOpenCalculator">修改资料</text>
+    </view>
+    <view class="cal-grid">
+      <view class="cal-item">
+        <text class="cal-num">{{calBmr}}</text>
+        <text class="cal-label">基础代谢</text>
+      </view>
+      <view class="cal-item">
+        <text class="cal-num cal-accent">{{calTdee}}</text>
+        <text class="cal-label">每日消耗</text>
+      </view>
+      <view class="cal-item">
+        <text class="cal-num">{{calWeekKcal}}</text>
+        <text class="cal-label">本周运动消耗</text>
+      </view>
+    </view>
+    <view class="cal-bar">
+      <view class="cal-suggest">
+        <text class="cal-suggest-label">减脂建议</text>
+        <text class="cal-suggest-num">{{calCut}}</text>
+      </view>
+      <view class="cal-divider"></view>
+      <view class="cal-suggest">
+        <text class="cal-suggest-label">维持</text>
+        <text class="cal-suggest-num">{{calTdee}}</text>
+      </view>
+      <view class="cal-divider"></view>
+      <view class="cal-suggest">
+        <text class="cal-suggest-label">增肌建议</text>
+        <text class="cal-suggest-num">{{calBulk}}</text>
+      </view>
+    </view>
+    <view class="cal-tip">Mifflin-St Jeor 估算 · 运动消耗按 MET × 体重 × 时长估算</view>
+  </view>
+
+  <!-- 热量未设置引导 -->
+  <view class="card cal-card" wx:else>
+    <view class="cal-head">
+      <view class="card-title" style="margin:0;">每日热量</view>
+    </view>
+    <view class="cal-empty">
+      <text class="cal-empty-text">设置身体资料后，查看基础代谢、每日消耗与训练消耗热量</text>
+      <view class="btn-primary cal-empty-btn" bindtap="onOpenCalculator">去设置</view>
+    </view>
+  </view>
+
   <!-- 本周概览 -->
   <view class="card hero-card">
     <view class="card-sub">本周训练容量</view>

@@ -1,6 +1,7 @@
-// 统计页：周容量趋势 / 部位分布 / 个人纪录
+// 统计页：周容量趋势 / 部位分布 / 个人纪录 / 热量
 var store = require('../../utils/store');
 var util = require('../../utils/util');
+var nutrition = require('../../utils/nutrition');
 var exercisesData = require('../../data/exercises/index');
 
 // 展示 PR 的招牌动作
@@ -31,7 +32,14 @@ Page({
     prs: [],
     chartVisible: false,
     chartName: '',
-    chartEst: 0
+    chartEst: 0,
+    calHas: false,
+    calBmr: 0,
+    calTdee: 0,
+    calActivity: '',
+    calWeekKcal: 0,
+    calBulk: 0,
+    calCut: 0
   },
 
   onShow: function () {
@@ -55,6 +63,8 @@ Page({
 
   loadStats: function () {
     var workouts = store.getWorkouts();
+    // 热量板块（不依赖训练记录，无训练也显示）
+    this.calcCalories(workouts);
     if (workouts.length === 0) {
       this.setData({ hasData: false, bwLatest: 0, hasBodyData: false });
       return;
@@ -219,6 +229,39 @@ Page({
     // 等 canvas 挂载后绘制容量图
     var self = this;
     setTimeout(function () { self.drawVolumeChart(); }, 80);
+  },
+
+  // ---------- 热量板块 ----------
+  // 基础代谢 BMR / 每日消耗 TDEE（Mifflin-St Jeor）/ 本周运动消耗（MET 估算）
+  calcCalories: function (workouts) {
+    var profile = store.getProfile();
+    if (!profile || !profile.age || !profile.heightCm || !profile.weightKg) {
+      this.setData({ calHas: false });
+      return;
+    }
+    var res = nutrition.calcNutrition(profile);
+    if (!res.valid) {
+      this.setData({ calHas: false });
+      return;
+    }
+    var weight = Number(profile.weightKg);
+    // 运动消耗体重优先取最新体重记录（更贴近当前）
+    var bws = store.getBodyweights();
+    if (bws.length > 0) weight = Number(bws[bws.length - 1].weight) || weight;
+    var weekKcal = util.workoutCaloriesSum(workouts, weight, util.weekStart(Date.now())).total;
+    this.setData({
+      calHas: true,
+      calBmr: res.bmr,
+      calTdee: res.tdee,
+      calActivity: res.activityLabel,
+      calWeekKcal: weekKcal,
+      calBulk: res.bulkCal,
+      calCut: res.cutCal
+    });
+  },
+
+  onOpenCalculator: function () {
+    wx.navigateTo({ url: '/pages/calculator/calculator' });
   },
 
   // ---------- 图表绘制（canvas 2d）----------
