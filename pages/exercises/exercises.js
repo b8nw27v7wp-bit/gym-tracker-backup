@@ -23,6 +23,13 @@ Page({
     list: []
   },
 
+  onShow: function () {
+    // 自定义 tabBar 选中态同步（动作库 = 1）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 1 });
+    }
+  },
+
   onLoad: function () {
     var muscles = exercisesData.MUSCLES.map(function (m) {
       return {

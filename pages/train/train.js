@@ -43,6 +43,10 @@ Page({
   },
 
   onShow: function () {
+    // 自定义 tabBar 选中态同步（训练 = 0）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 0 });
+    }
     var d = new Date();
     var label = (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + util.weekdayCN(d.getTime());
     this.setData({

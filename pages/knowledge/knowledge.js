@@ -8,6 +8,13 @@ Page({
     list: []
   },
 
+  onShow: function () {
+    // 自定义 tabBar 选中态同步（知识 = 2）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 2 });
+    }
+  },
+
   onLoad: function () {
     var cats = knowledge.CATEGORIES.map(function (c) {
       return { key: c.key, name: c.name, icon: c.icon, desc: c.desc };

@@ -32,6 +32,10 @@ Page({
   },
 
   onShow: function () {
+    // 自定义 tabBar 选中态同步（统计 = 3）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 3 });
+    }
     this.loadStats();
   },
 
