@@ -10,7 +10,12 @@ Page({
     var article = knowledge.getArticle(options.id);
     if (!article) {
       wx.showToast({ title: '文章不存在', icon: 'none' });
-      setTimeout(function () { wx.navigateBack(); }, 800);
+      setTimeout(function () {
+        // 兜底：直达页 navigateBack 失败 → 切回知识库 tab
+        wx.navigateBack({
+          fail: function () { wx.switchTab({ url: '/pages/knowledge/knowledge' }); }
+        });
+      }, 800);
       return;
     }
     this.setData({

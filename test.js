@@ -579,7 +579,11 @@ let pageCfg = null;
 const navLog = [];
 global.Page = cfg => { pageCfg = cfg; };
 const wxNav = wx.navigateTo;
-wx.navigateTo = o => navLog.push(o.url);
+const wxRedirect = wx.redirectTo;
+wx.navigateTo = o => navLog.push('nav:' + o.url);
+wx.redirectTo = o => navLog.push('redir:' + o.url);
+const wxSwitchTab = wx.switchTab;
+wx.switchTab = o => navLog.push('tab:' + o.url);
 const wxToast = wx.showToast;
 wx.showToast = () => {};
 wx.setNavigationBarTitle = () => {};
@@ -618,10 +622,10 @@ assert(exPage.data.articles.every(a => a.title && a.summary && a.catName), '关�
 
 // 推荐动作跳转
 exPage.onRelatedTap({ currentTarget: { dataset: { id: 'db-bench' } } });
-assert(navLog[navLog.length - 1] === '/pages/exercise-detail/exercise-detail?id=db-bench', '推荐动作跳转');
+assert(navLog[navLog.length - 1] === 'redir:/pages/exercise-detail/exercise-detail?id=db-bench', '推荐动作跳转（redirectTo 防栈溢出）');
 // 关联文章跳转
 exPage.onArticleTap({ currentTarget: { dataset: { id: 'progressive-overload' } } });
-assert(navLog[navLog.length - 1] === '/pages/knowledge-detail/knowledge-detail?id=progressive-overload', '关联文章跳转');
+assert(navLog[navLog.length - 1] === 'nav:/pages/knowledge-detail/knowledge-detail?id=progressive-overload', '关联文章跳转');
 
 // 其他部位动作的关联知识（抽查腿部）
 const legsPage = instantiate(pageCfg);
@@ -632,6 +636,11 @@ assert(legsPage.data.muscle.name === '腿' && legsPage.data.articles.length === 
 const badPage = instantiate(pageCfg);
 badPage.onLoad({ id: 'nope' });
 assert(badPage.data.ex === null, '不存在动作显示空态');
+
+// 直达详情页无返回栈兜底（BUG 修复）：navigateBack fail → 切回动作库 tab
+let fallbackChecked = false;
+const wxBack = wx.navigateBack;
+wx.navigateBack = o => { if (o && o.fail) { fallbackChecked = true; o.fail(); } };
 
 // ---------- 部位训练页冒烟（v2.5 肌肉发力分区） ----------
 console.log('10b. 部位训练页冒烟');
@@ -661,7 +670,7 @@ assert(md.data.currentKey === 'swimming' && md.data.groups.length === 3, '切换
 assert(md.data.groups[0].exercises[0].id === 'swimming', '游泳拉主导分区动作正确');
 // 动作跳转
 md.onOpenExercise({ currentTarget: { dataset: { id: 'freestyle' } } });
-assert(navLog[navLog.length - 1] === '/pages/exercise-detail/exercise-detail?id=freestyle', '点击动作跳详情');
+assert(navLog[navLog.length - 1] === 'nav:/pages/exercise-detail/exercise-detail?id=freestyle', '点击动作跳详情');
 
 // ---------- 营养计算器冒烟（v2.6 保存身体资料） ----------
 console.log('10c. 营养计算器冒烟');
@@ -811,10 +820,15 @@ assert(store.getCustomPlans().length === 0, '删除计划生效');
 store.clearAll();
 store.ensureInit();
 
-// 恢复 wx 原始函数
+// 恢复 wx 原始函数（navigateBack/switchTab 保持 fallback mock，badPage 的 800ms 定时器在异步阶段触发）
 wx.navigateTo = wxNav;
+wx.redirectTo = wxRedirect || undefined;
 wx.showToast = wxToast;
 wx.showModal = wxModal;
 
-console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
-process.exit(failed > 0 ? 1 : 0);
+// 异步兜底验证：badPage 的 800ms 定时器先触发 navigateBack fail → 断言兜底切 tab
+setTimeout(function () {
+  assert(fallbackChecked === true, '直达详情页无返回栈时兜底切回动作库 tab');
+  console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
+  process.exit(failed > 0 ? 1 : 0);
+}, 1300);

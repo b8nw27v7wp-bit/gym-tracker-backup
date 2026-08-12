@@ -2,6 +2,12 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试）
 
+## v2.6.1（2026-08-12）— 跳转逻辑修复
+
+- fix: 动作详情页推荐动作跳转 navigateTo 改 redirectTo——详情页链式跳转（连续点推荐动作）会无限加深页面栈，超过微信 10 层上限后跳转静默失败；redirectTo 替换当前页，栈深度恒定
+- fix: 直达详情页（分享/小程序码入口，页面栈仅 1 层）遇到非法 id 时 navigateBack 无页面可退导致卡死——加 fail 兜底：navigateBack 失败自动 switchTab 回动作库/知识库 tab
+- test: 冒烟 mock 增强（redirectTo/switchTab/navigateBack 记录与 fail 触发）+ 异步兜底断言，共 242 项全绿
+
 ## v2.6.0（2026-08-12）— 热量板块 + 食物热量查询
 
 - feat: 统计页"每日热量"卡——基础代谢 BMR / 每日消耗 TDEE（Mifflin-St Jeor）/ 本周运动消耗（MET × 体重 × 时长估算，力量 5.0 / 有氧与游泳 7.0）/ 增肌减脂建议区间；未设置资料时显示引导卡，可跳营养计算器

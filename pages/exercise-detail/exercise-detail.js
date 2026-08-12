@@ -14,7 +14,12 @@ Page({
     var ex = exercisesData.getExercise(id);
     if (!ex) {
       wx.showToast({ title: '动作不存在', icon: 'none' });
-      setTimeout(function () { wx.navigateBack(); }, 800);
+      setTimeout(function () {
+        // 兜底：若为直达页（栈仅 1 层）navigateBack 失败 → 切回动作库 tab
+        wx.navigateBack({
+          fail: function () { wx.switchTab({ url: '/pages/exercises/exercises' }); }
+        });
+      }, 800);
       return;
     }
     var m = exercisesData.muscleInfo(ex.muscle);
@@ -62,10 +67,10 @@ Page({
     wx.switchTab({ url: '/pages/train/train' });
   },
 
-  // 跳转推荐动作详情
+  // 跳转推荐动作详情（redirectTo 替换当前页，防止详情页链式跳转堆栈溢出）
   onRelatedTap: function (e) {
     var rid = e.currentTarget.dataset.id;
-    wx.navigateTo({ url: '/pages/exercise-detail/exercise-detail?id=' + rid });
+    wx.redirectTo({ url: '/pages/exercise-detail/exercise-detail?id=' + rid });
   },
 
   // 跳转关联文章
