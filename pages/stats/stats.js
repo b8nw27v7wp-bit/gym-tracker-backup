@@ -28,7 +28,10 @@ Page({
     heatWeeks: [],
     heatDays: 0,
     muscleDist: [],
-    prs: []
+    prs: [],
+    chartVisible: false,
+    chartName: '',
+    chartEst: 0
   },
 
   onShow: function () {
@@ -44,6 +47,10 @@ Page({
       title: '铁馆日志 · 我的训练数据',
       path: '/pages/stats/stats'
     };
+  },
+
+  onUnload: function () {
+    this.setData({ chartVisible: false });
   },
 
   loadStats: function () {
@@ -209,7 +216,256 @@ Page({
       muscleDist: muscleDist,
       prs: prs
     });
+    // 等 canvas 挂载后绘制容量图
+    var self = this;
+    setTimeout(function () { self.drawVolumeChart(); }, 80);
   },
+
+  // ---------- 图表绘制（canvas 2d）----------
+  // 近 8 周容量柱状图：网格线 + 渐变柱（本周高亮）+ 数值/周标签
+  drawVolumeChart: function () {
+    var self = this;
+    wx.createSelectorQuery()
+      .select('#volCanvas')
+      .fields({ node: true, size: true })
+      .exec(function (res) {
+        if (!res || !res[0] || !res[0].node) return;
+        var canvas = res[0].node;
+        var width = res[0].width;
+        var height = res[0].height;
+        if (width <= 0 || height <= 0) return;
+        var dpr = wx.getSystemInfoSync().pixelRatio;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        var ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        self.paintVolume(ctx, width, height);
+      });
+  },
+
+  paintVolume: function (ctx, W, H) {
+    var weekly = this.data.weekly || [];
+    if (weekly.length === 0) return;
+    var n = weekly.length;
+    var topPad = 30, bottomPad = 26, leftPad = 34, rightPad = 10;
+    var chartW = W - leftPad - rightPad;
+    var innerH = H - topPad - bottomPad;
+    var base = H - bottomPad;
+    var max = 1;
+    weekly.forEach(function (w) { if (w.volume > max) max = w.volume; });
+    var slot = chartW / n;
+    var barW = Math.max(Math.min(slot * 0.5, 46), 8);
+
+    // 网格线 + y 轴刻度
+    ctx.lineWidth = 1;
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    for (var g = 0; g <= 3; g++) {
+      var gy = base - (innerH * g / 3);
+      ctx.strokeStyle = '#f1f2f4';
+      ctx.beginPath();
+      ctx.moveTo(leftPad, gy);
+      ctx.lineTo(W - rightPad, gy);
+      ctx.stroke();
+      ctx.fillStyle = '#c4c8cf';
+      ctx.fillText(util.fmtCompact(max * g / 3), leftPad - 6, gy + 3);
+    }
+
+    // 柱（本周 indigo 高亮，其余灰阶）
+    var self = this;
+    weekly.forEach(function (w, i) {
+      var isThisWeek = i === n - 1;
+      var h = w.volume > 0 ? Math.max(Math.round((w.volume / max) * innerH), 3) : 0;
+      var x = leftPad + slot * i + (slot - barW) / 2;
+      var y = base - h;
+      var grad = ctx.createLinearGradient(0, y, 0, base);
+      if (isThisWeek) {
+        grad.addColorStop(0, '#818cf8');
+        grad.addColorStop(1, '#4f46e5');
+      } else {
+        grad.addColorStop(0, '#eceef1');
+        grad.addColorStop(1, '#d8dbe0');
+      }
+      ctx.fillStyle = grad;
+      self.roundRectPath(ctx, x, y, barW, h, Math.min(barW / 2, 6));
+      ctx.fill();
+      // 数值标签：本周 + 隔一个显示
+      if (w.volume > 0 && (isThisWeek || i % 2 === 1)) {
+        ctx.fillStyle = isThisWeek ? '#4f46e5' : '#9ca3af';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(util.fmtCompact(w.volume), x + barW / 2, y - 5);
+      }
+      // 周标签
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(w.label, x + barW / 2, H - 8);
+    });
+    // "本周"标注
+    ctx.fillStyle = '#4f46e5';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('本周', leftPad + slot * (n - 1) + slot / 2, topPad - 12);
+  },
+
+  roundRectPath: function (ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  },
+
+  // 1RM 大图：点击 PR 行展开，canvas 绘制历史估算 1RM 曲线
+  onPrTrend: function (e) {
+    var id = e.currentTarget.dataset.id;
+    var workouts = store.getWorkouts();
+    var hist = util.est1RMHistory(id, workouts);
+    if (hist.length < 2) {
+      wx.showToast({ title: '至少 2 次记录才能看趋势', icon: 'none' });
+      return;
+    }
+    var ex = exercisesData.getExercise(id);
+    var chartHist = hist.map(function (p) {
+      var d = new Date(p.ts);
+      return { ts: p.ts, est: p.est, label: (d.getMonth() + 1) + '/' + d.getDate() };
+    });
+    var self = this;
+    this.setData({
+      chartVisible: true,
+      chartName: ex ? ex.name : id,
+      chartEst: chartHist[chartHist.length - 1].est
+    });
+    setTimeout(function () { self.drawRmChart(chartHist); }, 80);
+  },
+
+  drawRmChart: function (hist) {
+    var self = this;
+    wx.createSelectorQuery()
+      .select('#rmCanvas')
+      .fields({ node: true, size: true })
+      .exec(function (res) {
+        if (!res || !res[0] || !res[0].node) return;
+        var canvas = res[0].node;
+        var width = res[0].width;
+        var height = res[0].height;
+        if (width <= 0 || height <= 0) return;
+        var dpr = wx.getSystemInfoSync().pixelRatio;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        var ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        self.paintRm(ctx, width, height, hist);
+      });
+  },
+
+  paintRm: function (ctx, W, H, hist) {
+    if (!hist || hist.length < 2) return;
+    var topPad = 28, bottomPad = 28, leftPad = 44, rightPad = 16;
+    var chartW = W - leftPad - rightPad;
+    var innerH = H - topPad - bottomPad;
+    var base = H - bottomPad;
+    // y 轴范围：数据向上取整到 10，留 10 余量
+    var hi = 10, lo = 0;
+    hist.forEach(function (p) {
+      var h10 = Math.ceil((p.est + 10) / 10) * 10;
+      var l10 = Math.max(Math.floor((p.est - 10) / 10) * 10, 0);
+      if (h10 > hi) hi = h10;
+      if (l10 < lo || lo === 0) lo = l10;
+    });
+    var range = (hi - lo) || 1;
+    var xs = function (i) { return chartW * i / (hist.length - 1) + leftPad; };
+    var ys = function (v) { return base - ((v - lo) / range) * innerH; };
+    var pts = hist.map(function (p, i) { return { x: xs(i), y: ys(p.est), est: p.est, label: p.label }; });
+
+    // 网格 + y 轴刻度（5 条）
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    for (var g = 0; g <= 4; g++) {
+      var gy = base - innerH * g / 4;
+      ctx.strokeStyle = '#f1f2f4';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(leftPad, gy);
+      ctx.lineTo(W - rightPad, gy);
+      ctx.stroke();
+      ctx.fillStyle = '#c4c8cf';
+      ctx.fillText(String(Math.round(lo + range * g / 4)), leftPad - 6, gy + 3);
+    }
+
+    // 面积渐变
+    var grad = ctx.createLinearGradient(0, topPad, 0, base);
+    grad.addColorStop(0, 'rgba(79,70,229,0.16)');
+    grad.addColorStop(1, 'rgba(79,70,229,0)');
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, base);
+    pts.forEach(function (p) { ctx.lineTo(p.x, p.y); });
+    ctx.lineTo(pts[pts.length - 1].x, base);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // 折线
+    ctx.strokeStyle = '#4f46e5';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    pts.forEach(function (p, i) {
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.stroke();
+
+    // 数据点：末点放大高亮，其余白心描边
+    pts.forEach(function (p, i) {
+      var last = i === pts.length - 1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, last ? 4 : 3, 0, Math.PI * 2);
+      ctx.fillStyle = last ? '#4f46e5' : '#ffffff';
+      ctx.fill();
+      if (last) {
+        ctx.strokeStyle = '#4f46e5';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    });
+
+    // 数值标签：点数少全显示，多则首/峰/末
+    ctx.textAlign = 'center';
+    ctx.font = '10px sans-serif';
+    if (pts.length <= 8) {
+      pts.forEach(function (p) {
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText(String(p.est), p.x, p.y - 8);
+      });
+    } else {
+      var peak = 0;
+      pts.forEach(function (p, i) { if (p.est > pts[peak].est) peak = i; });
+      var idxs = [0, peak, pts.length - 1];
+      if (peak === 0 || peak === pts.length - 1) idxs = [0, pts.length - 1];
+      idxs.forEach(function (i) {
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText(String(pts[i].est), pts[i].x, pts[i].y - 8);
+      });
+    }
+
+    // x 轴首尾日期
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(pts[0].label, pts[0].x, H - 6);
+    ctx.fillText(pts[pts.length - 1].label, pts[pts.length - 1].x, H - 6);
+  },
+
+  onCloseChart: function () {
+    this.setData({ chartVisible: false });
+  },
+
+  noop: function () {},
 
   // 记录体重
   onAddBodyweight: function () {

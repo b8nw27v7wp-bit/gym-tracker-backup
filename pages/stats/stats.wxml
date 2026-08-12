@@ -59,17 +59,10 @@
     </view>
   </view>
 
-  <!-- 近 8 周容量 -->
+  <!-- 近 8 周容量（canvas 图） -->
   <view class="card" wx:if="{{hasData}}">
     <view class="card-title">近 8 周容量</view>
-    <view class="bars">
-      <view wx:for="{{weekly}}" wx:key="weekStart" class="bar-col">
-        <view class="bar-track">
-          <view class="bar-fill {{item.volume > 0 ? '' : 'bar-empty'}}" style="height: {{item.height}}%;"></view>
-        </view>
-        <text class="bar-label">{{item.label}}</text>
-      </view>
-    </view>
+    <canvas type="2d" id="volCanvas" class="chart-canvas"></canvas>
   </view>
 
   <!-- 训练热力图 -->
@@ -117,7 +110,8 @@
   <!-- 个人纪录 -->
   <view class="card" wx:if="{{prs.length > 0}}">
     <view class="card-title">个人纪录 PR</view>
-    <view wx:for="{{prs}}" wx:key="id" class="pr-row">
+    <view wx:for="{{prs}}" wx:key="id" class="pr-row" hover-class="pr-row-hover"
+          bindtap="onPrTrend" data-id="{{item.id}}">
       <view class="pr-left">
         <text class="pr-name">{{item.name}}</text>
         <text class="pr-date">{{item.dateText}}</text>
@@ -126,10 +120,27 @@
         <text class="pr-max">{{item.maxWeight}} <text class="pr-unit">kg</text></text>
         <text class="pr-best">最佳单组 {{item.bestSet}} kg<text wx:if="{{item.est1rm}}"> · 1RM≈{{item.est1rm}}</text></text>
       </view>
-      <!-- 1RM 迷你趋势 -->
-      <view class="pr-trend" wx:if="{{item.trend.length > 0}}">
-        <view class="pr-trend-bar" wx:for="{{item.trend}}" wx:for-item="t" wx:key="label" style="height: {{t.height}}%;" title="{{t.est}}kg"></view>
+      <!-- 1RM 迷你趋势 + 大图入口 -->
+      <view class="pr-trend-wrap" wx:if="{{item.trend.length > 0}}">
+        <view class="pr-trend">
+          <view class="pr-trend-bar" wx:for="{{item.trend}}" wx:for-item="t" wx:key="label" style="height: {{t.height}}%;" title="{{t.est}}kg"></view>
+        </view>
+        <view class="pr-chart-link" wx:if="{{item.trend.length > 1}}">趋势</view>
       </view>
+    </view>
+  </view>
+
+  <!-- 1RM 大图（modal） -->
+  <view class="chart-mask" wx:if="{{chartVisible}}" bindtap="onCloseChart">
+    <view class="chart-panel" catchtap="noop">
+      <view class="chart-panel-head">
+        <view>
+          <view class="chart-panel-title">{{chartName}}</view>
+          <view class="chart-panel-sub">估算 1RM 历史趋势 · 最新 {{chartEst}} kg</view>
+        </view>
+        <view class="chart-close" bindtap="onCloseChart">✕</view>
+      </view>
+      <canvas type="2d" id="rmCanvas" class="chart-canvas-lg"></canvas>
     </view>
   </view>
 

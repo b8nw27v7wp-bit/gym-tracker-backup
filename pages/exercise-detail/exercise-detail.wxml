@@ -43,7 +43,7 @@
   <view class="card">
     <view class="card-title">常见错误</view>
     <view wx:for="{{ex.errors}}" wx:key="*this" class="err-row">
-      <text class="err-icon">⚠️</text>
+      <view class="err-dot"></view>
       <text class="err-text">{{item}}</text>
     </view>
   </view>
@@ -51,7 +51,7 @@
   <!-- 小贴士 -->
   <view class="card tip-card">
     <view class="tip-head">
-      <text class="tip-icon">💡</text>
+      <view class="tip-dot"></view>
       <text class="tip-title">训练要点</text>
     </view>
     <text class="tip-text">{{ex.tip}}</text>

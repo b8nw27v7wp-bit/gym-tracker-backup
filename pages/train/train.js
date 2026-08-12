@@ -25,7 +25,8 @@ Page({
     sessionMinutes: 0,
     note: '',
     searchKeyword: '',
-    planInfo: null // 计划打卡标记 { planId, dayId }
+    planInfo: null, // 计划打卡标记 { planId, dayId }
+    planReminder: null // 本周计划今日提醒 { planId, planName, dayName, dayId }
   },
 
   onLoad: function () {
@@ -78,6 +79,38 @@ Page({
       wx.removeStorageSync('pending_plan_day');
       this.applyPlanDay(pendingDay);
     }
+    // 本周计划今日提醒
+    this.refreshPlanReminder();
+  },
+
+  // 本周计划今日提醒：有周计划且下一个训练日未完成时显示
+  refreshPlanReminder: function () {
+    var wp = store.getWeeklyPlan();
+    if (!wp) { this.setData({ planReminder: null }); return; }
+    var custom = store.getCustomPlans();
+    var plan = planUtil.getPlan(wp.planId, custom);
+    if (!plan) { this.setData({ planReminder: null }); return; }
+    var progress = util.weeklyPlanProgress(store.getWorkouts(), plan, wp.weekStart);
+    // 今日已完成或本周全部完成 → 不打扰
+    if (!progress.nextDay || progress.todayDone) {
+      this.setData({ planReminder: null });
+      return;
+    }
+    this.setData({
+      planReminder: {
+        planId: plan.id,
+        planName: plan.name,
+        dayName: progress.nextDay.name,
+        dayId: progress.nextDay.id
+      }
+    });
+  },
+
+  // 点击提醒条一键填充今日训练日
+  onFillReminder: function () {
+    var r = this.data.planReminder;
+    if (!r) return;
+    this.applyPlanDay({ planId: r.planId, dayId: r.dayId });
   },
 
   onGoPlans: function () {
@@ -86,7 +119,7 @@ Page({
 
   // 按计划日填充训练草稿
   applyPlanDay: function (pending) {
-    var draft = planUtil.buildDraftFromPlan(pending.planId, pending.dayId);
+    var draft = planUtil.buildDraftFromPlan(pending.planId, pending.dayId, store.getCustomPlans());
     if (draft.length === 0) {
       wx.showToast({ title: '计划数据异常', icon: 'none' });
       return;
@@ -225,26 +258,30 @@ Page({
       wx.showToast({ title: '至少保留一组', icon: 'none' });
       return;
     }
+    var idx = (e.detail && e.detail.idx !== undefined) ? e.detail.idx : e.currentTarget.dataset.idx;
     var next = sets.slice();
-    next.splice(e.currentTarget.dataset.idx, 1);
+    next.splice(idx, 1);
     this.setData({ 'editing.sets': next });
   },
 
   onWeightInput: function (e) {
     // 路径更新：只改单个字段，避免整对象替换导致输入光标跳动
-    this.setData({ ['editing.sets[' + e.currentTarget.dataset.idx + '].weight']: e.detail.value });
+    var idx = (e.detail && e.detail.idx !== undefined) ? e.detail.idx : e.currentTarget.dataset.idx;
+    this.setData({ ['editing.sets[' + idx + '].weight']: e.detail.value });
   },
 
   onRepsInput: function (e) {
-    this.setData({ ['editing.sets[' + e.currentTarget.dataset.idx + '].reps']: e.detail.value });
+    var idx = (e.detail && e.detail.idx !== undefined) ? e.detail.idx : e.currentTarget.dataset.idx;
+    this.setData({ ['editing.sets[' + idx + '].reps']: e.detail.value });
   },
 
   onRpeInput: function (e) {
-    this.setData({ ['editing.sets[' + e.currentTarget.dataset.idx + '].rpe']: e.detail.value });
+    var idx = (e.detail && e.detail.idx !== undefined) ? e.detail.idx : e.currentTarget.dataset.idx;
+    this.setData({ ['editing.sets[' + idx + '].rpe']: e.detail.value });
   },
 
   onToggleWarmup: function (e) {
-    var idx = e.currentTarget.dataset.idx;
+    var idx = (e.detail && e.detail.idx !== undefined) ? e.detail.idx : e.currentTarget.dataset.idx;
     this.setData({ ['editing.sets[' + idx + '].warmup']: !this.data.editing.sets[idx].warmup });
   },
 

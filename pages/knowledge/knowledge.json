@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "健身知识"
+  "navigationBarTitleText": "健身知识",
+  "usingComponents": {
+    "empty-state": "/components/empty-state/index"
+  }
 }

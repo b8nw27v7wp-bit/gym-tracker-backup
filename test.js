@@ -6,7 +6,8 @@ const path = require('path');
 global.wx = {
   _store: {},
   getStorageSync(key) { return this._store[key]; },
-  setStorageSync(key, val) { this._store[key] = val; }
+  setStorageSync(key, val) { this._store[key] = val; },
+  removeStorageSync(key) { delete this._store[key]; }
 };
 
 const store = require('./utils/store');
@@ -303,6 +304,54 @@ assert(planUtil.buildDraftFromPlan('cp_mine', 'd1', [customPlan])[0].sets.length
 assert(planUtil.planSummaries([customPlan]).length === 6, '计划汇总含自定义（5+1）');
 assert(planUtil.planSummaries([customPlan])[5].custom === true, '自定义计划标记 custom');
 
+// ---------- 本周计划打卡（v2.4 训练提醒） ----------
+console.log('7a. 本周计划打卡');
+// store 设置
+store.clearWeeklyPlan();
+assert(store.getWeeklyPlan() === null, '初始无本周计划');
+store.setWeeklyPlan('ppl');
+const wpSet = store.getWeeklyPlan();
+assert(wpSet && wpSet.planId === 'ppl' && wpSet.weekStart === util.weekStart(Date.now()), '设置本周计划并记录周起始');
+store.clearWeeklyPlan();
+assert(store.getWeeklyPlan() === null, '清除后无本周计划');
+// 跨周失效
+wx._store.gym_weekly_plan = { planId: 'ppl', weekStart: util.weekStart(Date.now()) - 7 * 86400000 };
+assert(store.getWeeklyPlan() === null, '上周设置自动失效');
+wx.removeStorageSync('gym_weekly_plan');
+
+// weeklyPlanProgress
+const pplPlan = planUtil.getPlan('ppl');
+const monTs = util.weekStart(Date.now());
+// 本周：完成 push 日；上周：完成 pull 日（不计入）
+const wpWorkouts = [
+  { id: 'wp1', ts: monTs + 1 * dayMs, date: util.dateStr(monTs + 1 * dayMs), plan: { planId: 'ppl', dayId: 'push' }, items: [{ exerciseId: 'bench', exerciseName: 'x', muscle: 'chest', sets: [{ weight: 60, reps: 8 }] }] },
+  { id: 'wp2', ts: monTs - 7 * dayMs, date: util.dateStr(monTs - 7 * dayMs), plan: { planId: 'ppl', dayId: 'pull' }, items: [{ exerciseId: 'bb-row', exerciseName: 'x', muscle: 'back', sets: [{ weight: 60, reps: 8 }] }] },
+  { id: 'wp3', ts: monTs + 2 * dayMs, date: util.dateStr(monTs + 2 * dayMs), plan: { planId: 'beginner-fullbody', dayId: 'a' }, items: [{ exerciseId: 'squat', exerciseName: 'x', muscle: 'legs', sets: [{ weight: 60, reps: 8 }] }] }
+];
+const wpp = util.weeklyPlanProgress(wpWorkouts, pplPlan, monTs);
+assert(wpp.totalDays === 3 && wpp.doneCount === 1 && wpp.pct === 33, '本周完成 1/3 天（实际 ' + wpp.doneCount + '/' + wpp.totalDays + '）');
+assert(wpp.doneIds[0] === 'push', '完成日按计划顺序');
+assert(wpp.nextDay && wpp.nextDay.id === 'pull' && wpp.nextDay.name === '拉日', '下一训练日为拉日');
+assert(wpp.todayDone === false, '今日（周一）未打卡');
+// 今天完成的训练（同计划）
+const wpToday = util.weeklyPlanProgress([{
+  id: 'wt', ts: Date.now(), date: util.todayStr(), plan: { planId: 'ppl', dayId: 'push' }, items: []
+}], pplPlan, monTs);
+assert(wpToday.todayDone === true && wpToday.doneIds[0] === 'push', '今日同计划打卡计入并标记 todayDone');
+// 其他计划的今日训练不影响本计划
+const wpOther = util.weeklyPlanProgress([wPlan], pplPlan, monTs);
+assert(wpOther.todayDone === false && wpOther.doneCount === 0, '其他计划今日训练不影响本计划');
+const wpAll = util.weeklyPlanProgress([
+  { id: 'wa', ts: monTs + dayMs, date: util.dateStr(monTs + dayMs), plan: { planId: 'ppl', dayId: 'push' }, items: [] },
+  { id: 'wb', ts: monTs + 2 * dayMs, date: util.dateStr(monTs + 2 * dayMs), plan: { planId: 'ppl', dayId: 'pull' }, items: [] },
+  { id: 'wc', ts: monTs + 3 * dayMs, date: util.dateStr(monTs + 3 * dayMs), plan: { planId: 'ppl', dayId: 'legs' }, items: [] }
+], pplPlan, monTs);
+assert(wpAll.doneCount === 3 && wpAll.pct === 100 && wpAll.nextDay === null, '全部完成无下一日');
+// 清空数据清理周计划
+store.setWeeklyPlan('ppl');
+store.clearAll();
+assert(store.getWeeklyPlan() === null, '清空数据同时清除本周计划');
+
 const bwList = [
   { ts: thisWeekMon - 10 * dayMs, weight: 70 },
   { ts: thisWeekMon - 5 * dayMs, weight: 71.5 },
@@ -312,6 +361,24 @@ const trend = util.bodyweightTrend(bwList);
 assert(trend.latest === 70.5 && trend.delta === 0.5, '体重 最新70.5 / 变化+0.5（实际 ' + trend.latest + '/' + trend.delta + '）');
 assert(trend.points.length === 3 && trend.min === 70 && trend.max === 71.5, '体重序列极值正确');
 assert(util.bodyweightTrend([]).latest === 0, '空体重列表安全');
+
+// ---------- 图表坐标（v2.4 图表增强） ----------
+console.log('7b. 图表坐标归一化');
+const ss = util.scaleSeries([0, 50, 100], 200, 20, 30);
+assert(ss.max === 100 && ss.baseline === 170, 'scaleSeries 最大值/基线正确');
+assert(ss.points[0].h === 0 && ss.points[0].y === 170, '0 值柱高 0、落在基线');
+assert(ss.points[2].h === 150 && ss.points[2].y === 20, '最大值柱高撑满内区、y=topPad');
+assert(ss.points[1].y > ss.points[2].y && ss.points[1].y < ss.points[0].y, '中间值 y 单调居中');
+assert(ss.points[0].i === 0 && ss.points[2].i === 2, '序号保留');
+const ssEmpty = util.scaleSeries([], 200, 20, 30);
+assert(ssEmpty.points.length === 0 && ssEmpty.max === 1, '空序列安全（max 兜底 1）');
+const ssZero = util.scaleSeries([0, 0], 100, 10, 10);
+assert(ssZero.points[0].h === 0 && ssZero.points[1].h === 0, '全 0 序列不除零');
+assert(util.fmtCompact(999) === '999', 'fmtCompact 千以下原样');
+assert(util.fmtCompact(1500) === '1.5k', 'fmtCompact 千缩写');
+assert(util.fmtCompact(123456) === '12.3万', 'fmtCompact 万缩写（实际 ' + util.fmtCompact(123456) + '）');
+assert(util.fmtCompact(100000) === '10万', 'fmtCompact 整十万');
+assert(util.fmtCompact(0) === '0', 'fmtCompact 零');
 
 // ---------- 营养计算 ----------
 console.log('8. 营养计算器');

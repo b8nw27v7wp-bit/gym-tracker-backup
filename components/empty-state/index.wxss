@@ -1,0 +1,19 @@
+/* 空态（app.wxss 全局样式副本，组件样式隔离需自带） */
+.empty {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 26rpx;
+  padding: 120rpx 40rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.empty-sub {
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-top: 12rpx;
+}

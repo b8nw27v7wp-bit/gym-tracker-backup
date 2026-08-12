@@ -374,14 +374,21 @@
 }
 
 /* PR 1RM 迷你趋势 */
-.pr-trend {
+.pr-trend-wrap {
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 4rpx;
+}
+
+.pr-trend {
+  flex: 1;
   height: 56rpx;
   display: flex;
   align-items: flex-end;
   gap: 6rpx;
   padding-top: 8rpx;
-  margin-top: 4rpx;
 }
 
 .pr-trend-bar {
@@ -389,4 +396,84 @@
   min-height: 4rpx;
   background: #e0e7ff;
   border-radius: 4rpx 4rpx 0 0;
+}
+
+.pr-chart-link {
+  font-size: 22rpx;
+  color: #4f46e5;
+  padding: 8rpx 20rpx;
+  background: #eef2ff;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
+.pr-row-hover {
+  background: #f7f7f8;
+  border-radius: 12rpx;
+}
+
+/* 图表 canvas */
+.chart-canvas {
+  width: 100%;
+  height: 340rpx;
+  display: block;
+  margin-top: 16rpx;
+}
+
+/* 1RM 大图 modal */
+.chart-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+}
+
+.chart-panel {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(17, 24, 39, 0.06), 0 16rpx 48rpx rgba(17, 24, 39, 0.12);
+}
+
+.chart-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.chart-panel-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.chart-panel-sub {
+  font-size: 22rpx;
+  color: #9ca3af;
+  margin-top: 6rpx;
+}
+
+.chart-close {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chart-canvas-lg {
+  width: 100%;
+  height: 440rpx;
+  display: block;
 }

@@ -1,0 +1,17 @@
+<view class="card ex-card" bindtap="onTap">
+  <view class="ex-head">
+    <text class="ex-name">{{name}}</text>
+    <text class="ex-tag ex-type">{{typeText}}</text>
+    <text class="ex-tag ex-diff">{{diffText}}</text>
+  </view>
+  <view class="ex-targets">
+    <text wx:for="{{target}}" wx:for-item="t" wx:key="*this" class="ex-target">{{t}}</text>
+  </view>
+  <view class="ex-meta">
+    <text>{{equipText}}</text>
+    <text class="meta-dot">·</text>
+    <text>{{rest}}</text>
+    <text class="meta-dot">·</text>
+    <text>{{muscleName}}</text>
+  </view>
+</view>

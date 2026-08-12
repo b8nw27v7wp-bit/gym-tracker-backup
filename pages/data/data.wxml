@@ -19,7 +19,7 @@
       <text class="info-value">v{{schemaVersion}}</text>
     </view>
     <view class="storage-tip" wx:if="{{sizeBytes > 3 * 1024 * 1024}}">
-      ⚠️ 数据量已超过 3MB，建议导出备份并清理
+      数据量已超过 3MB，建议导出备份并清理
     </view>
   </view>
 

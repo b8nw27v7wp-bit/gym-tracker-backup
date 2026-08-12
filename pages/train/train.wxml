@@ -20,9 +20,18 @@
     </view>
   </view>
 
+  <!-- 本周计划今日提醒 -->
+  <view class="plan-reminder" wx:if="{{planReminder}}" hover-class="plan-reminder-hover" bindtap="onFillReminder">
+    <view class="plan-reminder-left">
+      <text class="plan-reminder-title">{{planReminder.planName}} · 今日训练日 {{planReminder.dayName}}</text>
+      <text class="plan-reminder-sub">本周计划 · 点击一键填充</text>
+    </view>
+    <view class="plan-reminder-btn">开始</view>
+  </view>
+
   <!-- 训练计时 -->
   <view class="timer-bar" wx:if="{{sessionStarted}}">
-    <text class="timer-icon">⏱️</text>
+    <view class="timer-dot"></view>
     <text class="timer-text">本次训练已进行 {{sessionMinutes}} 分钟</text>
   </view>
 
@@ -33,7 +42,7 @@
         class="search-mini-input"
         value="{{searchKeyword}}"
         bindinput="onSearchInput"
-        placeholder="🔍 搜索动作快速添加"
+        placeholder="搜索动作快速添加"
         confirm-type="search"
       />
       <text wx:if="{{searchKeyword}}" class="search-clear" bindtap="onClearSearch">✕</text>
@@ -97,62 +106,21 @@
     </block>
   </view>
 
-  <!-- 组编辑卡片 -->
-  <view class="card" wx:if="{{step === 'edit'}}">
-    <view class="edit-head">
-      <text class="card-title">{{editing.exerciseName}}</text>
-      <view class="edit-head-right">
-        <text class="tag" style="margin:0;">{{editingMuscleName}}</text>
-        <text class="edit-close" bindtap="onBackToPick">✕</text>
-      </view>
-    </view>
-    <view class="set-head">
-      <text class="set-col set-c-no">组</text>
-      <text class="set-col set-c-warm">热</text>
-      <text class="set-col set-c-w">重量</text>
-      <text class="set-col set-c-x"></text>
-      <text class="set-col set-c-r">次数</text>
-      <text class="set-col set-c-rpe">RPE</text>
-      <text class="set-col set-c-del"></text>
-    </view>
-    <view wx:for="{{editing.sets}}" wx:key="uid" class="set-row">
-      <text class="set-col set-c-no set-no">{{index + 1}}</text>
-      <view
-        class="set-col set-c-warm warm-btn {{item.warmup ? 'warm-on' : ''}}"
-        data-idx="{{index}}"
-        bindtap="onToggleWarmup"
-      >{{item.warmup ? 'W' : '·'}}</view>
-      <input
-        class="set-col set-c-w set-input"
-        type="digit"
-        value="{{item.weight}}"
-        data-idx="{{index}}"
-        bindinput="onWeightInput"
-        placeholder="0"
-      />
-      <text class="set-col set-c-x set-x">×</text>
-      <input
-        class="set-col set-c-r set-input"
-        type="number"
-        value="{{item.reps}}"
-        data-idx="{{index}}"
-        bindinput="onRepsInput"
-        placeholder="0"
-      />
-      <input
-        class="set-col set-c-rpe set-input set-input-rpe"
-        type="number"
-        value="{{item.rpe}}"
-        data-idx="{{index}}"
-        bindinput="onRpeInput"
-        placeholder="—"
-      />
-      <text class="set-col set-c-del set-del" data-idx="{{index}}" bindtap="onRemoveSet">✕</text>
-    </view>
-    <view class="set-tip">热 = 热身组（不计入容量统计）· RPE 选填（1-10 自感强度）</view>
-    <view class="btn-ghost" bindtap="onAddSet">＋ 添加一组</view>
-    <view class="btn-primary" style="margin-top: 20rpx;" bindtap="onDoneEdit">完成该动作</view>
-  </view>
+  <!-- 组编辑卡片（set-editor 组件） -->
+  <set-editor
+    wx:if="{{step === 'edit'}}"
+    exercise-name="{{editing.exerciseName}}"
+    muscle-name="{{editingMuscleName}}"
+    sets="{{editing.sets}}"
+    bind:togglewarmup="onToggleWarmup"
+    bind:weightinput="onWeightInput"
+    bind:repsinput="onRepsInput"
+    bind:rpeinput="onRpeInput"
+    bind:removeset="onRemoveSet"
+    bind:addset="onAddSet"
+    bind:done="onDoneEdit"
+    bind:close="onBackToPick"
+  />
 
   <!-- 本次已添加动作 -->
   <view class="card" wx:if="{{draft.length > 0}}">

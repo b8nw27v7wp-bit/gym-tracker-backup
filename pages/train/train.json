@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "训练",
-  "enablePullDownRefresh": false
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "set-editor": "/components/set-editor/index"
+  }
 }

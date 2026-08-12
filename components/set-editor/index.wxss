@@ -1,0 +1,171 @@
+/* 组编辑器（从 train.wxss 提取，样式与页面级保持一致） */
+.edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.edit-head-right {
+  display: flex;
+  align-items: center;
+}
+
+.edit-close {
+  color: #d1d5db;
+  font-size: 34rpx;
+  padding: 8rpx 4rpx 8rpx 20rpx;
+}
+
+.edit-close:active {
+  color: #ef4444;
+}
+
+.set-head {
+  display: flex;
+  padding: 12rpx 0;
+  color: #9ca3af;
+  font-size: 21rpx;
+  letter-spacing: 1rpx;
+}
+
+.set-row {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid #f9fafb;
+}
+
+/* 组行列宽 */
+.set-c-no { width: 8%; }
+.set-c-warm { width: 9%; }
+.set-c-w { width: 19%; }
+.set-c-x { width: 6%; }
+.set-c-r { width: 19%; }
+.set-c-rpe { width: 19%; }
+.set-c-del { width: 9%; }
+
+.set-col {
+  text-align: center;
+}
+
+.set-no {
+  font-size: 26rpx;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.set-input {
+  background: #f9fafb;
+  border-radius: 14rpx;
+  padding: 14rpx 0;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #1d1d1f;
+  text-align: center;
+  height: auto;
+  min-height: 52rpx;
+}
+
+.set-input-rpe {
+  font-size: 26rpx;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.set-x {
+  color: #d1d5db;
+  font-size: 24rpx;
+}
+
+.set-del {
+  color: #d1d5db;
+  font-size: 30rpx;
+  padding: 12rpx;
+}
+
+.set-del:active {
+  color: #ef4444;
+}
+
+/* 热身开关 */
+.warm-btn {
+  font-size: 22rpx;
+  color: #c4c8cf;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 12rpx;
+  line-height: 42rpx;
+  height: 42rpx;
+  width: 46rpx;
+  margin: 0 auto;
+  transition: all 0.15s;
+}
+
+.warm-on {
+  background: #ffedd5;
+  border-color: #fdba74;
+  color: #ea580c;
+  font-weight: 700;
+}
+
+.set-tip {
+  font-size: 21rpx;
+  color: #9ca3af;
+  padding: 16rpx 0 20rpx;
+  line-height: 1.6;
+}
+
+/* 以下为 app.wxss 全局类的组件内副本（组件样式隔离，需自带） */
+.card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin: 24rpx 32rpx;
+  box-shadow: 0 1rpx 3rpx rgba(17, 24, 39, 0.04), 0 8rpx 24rpx rgba(17, 24, 39, 0.03);
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 16rpx;
+  letter-spacing: 0.5rpx;
+}
+
+.tag {
+  display: inline-block;
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  padding: 8rpx 20rpx;
+  margin-right: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.btn-primary {
+  background: #1d1d1f;
+  color: #ffffff;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  padding: 24rpx 0;
+  text-align: center;
+}
+
+.btn-primary:active {
+  opacity: 0.85;
+}
+
+.btn-ghost {
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  padding: 16rpx 0;
+  text-align: center;
+}
+
+.btn-ghost:active {
+  opacity: 0.85;
+}

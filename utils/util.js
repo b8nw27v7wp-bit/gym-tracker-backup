@@ -307,6 +307,67 @@ function planDayCompletion(workouts, planId, dayId, planDay) {
   return { total: total, done: done, pct: pct };
 }
 
+// ---------- 本周计划打卡进度 ----------
+// workouts 内本周（ts >= weekStartTs）带该计划标记的训练，按计划日顺序统计完成情况
+// 返回 { totalDays, doneCount, pct, doneIds, todayDone, nextDay|null }
+// nextDay = 按顺序第一个未完成的训练日（{ id, name }）；全部完成则 null
+function weeklyPlanProgress(workouts, plan, weekStartTs) {
+  var days = (plan && plan.days) || [];
+  var totalDays = days.length;
+  var doneSet = {};
+  var today = todayStr();
+  var todayDone = false;
+  (workouts || []).forEach(function (w) {
+    if (w.ts < weekStartTs) return;
+    if (!w.plan || w.plan.planId !== plan.id) return;
+    if (w.date === today) todayDone = true;
+    if (w.plan.dayId) doneSet[w.plan.dayId] = true;
+  });
+  var doneIds = [];
+  days.forEach(function (d) { if (doneSet[d.id]) doneIds.push(d.id); });
+  var nextDay = null;
+  if (doneIds.length < totalDays) nextDay = days[doneIds.length] || null;
+  return {
+    totalDays: totalDays,
+    doneCount: doneIds.length,
+    pct: totalDays > 0 ? Math.round((doneIds.length / totalDays) * 100) : 0,
+    doneIds: doneIds,
+    todayDone: todayDone,
+    nextDay: nextDay ? { id: nextDay.id, name: nextDay.name } : null
+  };
+}
+
+// ---------- 图表坐标 ----------
+// 将数值序列归一化为绘图坐标（canvas 用）
+// 返回 { points: [{i, value, y, h}], max, baseline, innerH }
+// y = 值对应纵坐标（画布内，越大越靠上），h = 柱高（0 值时 0），baseline = 底部基线 y
+function scaleSeries(values, H, topPad, bottomPad) {
+  var max = 1;
+  (values || []).forEach(function (v) { if (v > max) max = v; });
+  var innerH = H - topPad - bottomPad;
+  var base = H - bottomPad;
+  var points = (values || []).map(function (v, i) {
+    var ratio = v > 0 ? v / max : 0;
+    var h = Math.round(ratio * innerH);
+    return { i: i, value: v, y: Math.round(base - h), h: h };
+  });
+  return { points: points, max: max, baseline: base, innerH: innerH };
+}
+
+// 容量/数量数字缩写：≥1 万 → "1.2万"，≥1 千 → "1.5k"，否则原样
+function fmtCompact(n) {
+  n = Math.round(n);
+  if (n >= 10000) {
+    var wan = n / 10000;
+    return (wan >= 100 ? Math.round(wan) : Math.round(wan * 10) / 10) + '万';
+  }
+  if (n >= 1000) {
+    var k = n / 1000;
+    return (k >= 100 ? Math.round(k) : Math.round(k * 10) / 10) + 'k';
+  }
+  return String(n);
+}
+
 // ---------- 体重 ----------
 // 体重序列 [{ ts, weight }]，时间正序；返回变化量（最新-最早）与最新值
 function bodyweightTrend(list) {
@@ -353,5 +414,8 @@ module.exports = {
   est1RMTrend: est1RMTrend,
   planDayStatus: planDayStatus,
   planDayCompletion: planDayCompletion,
+  weeklyPlanProgress: weeklyPlanProgress,
+  scaleSeries: scaleSeries,
+  fmtCompact: fmtCompact,
   bodyweightTrend: bodyweightTrend
 };

@@ -2,6 +2,16 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试）
 
+## v2.4.0（2026-08-12）— 图表增强 + 训练提醒 + UI 打磨 + 组件化
+
+- feat: 图表增强——统计页"近 8 周容量"升级 canvas 2d 柱状图（网格线/渐变柱/本周 indigo 高亮/数值缩写标签）；PR 卡点击"趋势"展开 1RM 大图 modal（canvas 折线 + 面积渐变 + 数据点 + 首/峰/末数值标签）
+- feat: 训练提醒——本周计划打卡：计划库页可"设为本周计划"（周一起始、跨周自动失效），周计划卡显示进度条/今日训练日/取消；训练页顶部提醒条（今日训练日未完成时显示，点击一键填充）
+- feat: 组件化重构——抽出 set-editor（组编辑器）/ ex-card（动作卡片）/ empty-state（空态）三个自定义组件，train/exercises/history/knowledge 页接入；set-editor 只渲染+事件转发，数据与路径 setData 留在页面层，handler 兼容新旧事件形态（页面冒烟测试零改动）；组件样式隔离需自带 app.wxss 全局类副本
+- style(ui): 全局去 emoji 打磨——计时条换呼吸圆点、搜索 placeholder 去图标、错误/要点换灰阶圆点、空态换纯文字层级、工具入口/警告去图标、plans 页"今日已完成"去 ✅、知识文章结尾去 💪（共 8 处）
+- fix: 训练页按自定义计划一键填充失效——applyPlanDay 未传 custom plans 导致 buildDraftFromPlan 查不到（plans 页入口正常，train 页提醒条入口会失败）
+- test: 新增 24 项数据层断言（scaleSeries 坐标归一化 7 + fmtCompact 缩写 5 + 周计划 store CRUD/跨周失效/进度计算 12），共 181 项全绿
+- docs: README/roadmap/testing.md 同步 v2.4 状态
+
 ## v2.3.0（2026-08-12）— 数据分析 + 计划系统增强
 
 - fix(debug): 删除 store.js / plan-edit.js 未使用的 require（util）

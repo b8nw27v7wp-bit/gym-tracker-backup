@@ -108,9 +108,13 @@
   padding: 12rpx 0;
 }
 
-.err-icon {
-  margin-right: 14rpx;
-  font-size: 26rpx;
+.err-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #fca5a5;
+  margin: 14rpx 14rpx 0 0;
+  flex-shrink: 0;
 }
 
 .err-text {
@@ -133,8 +137,12 @@
   margin-bottom: 12rpx;
 }
 
-.tip-icon {
-  margin-right: 10rpx;
+.tip-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #a5b4fc;
+  margin-right: 12rpx;
 }
 
 .tip-title {

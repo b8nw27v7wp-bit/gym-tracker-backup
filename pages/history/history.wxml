@@ -3,11 +3,7 @@
     <view class="head-link" bindtap="onGoData">数据管理</view>
   </view>
 
-  <view wx:if="{{list.length === 0}}" class="empty">
-    <view class="empty-icon">🏋️</view>
-    <view>还没有训练记录</view>
-    <view style="font-size: 24rpx; margin-top: 12rpx;">去「训练」页记录第一练吧</view>
-  </view>
+  <empty-state wx:if="{{list.length === 0}}" text="还没有训练记录" sub="去「训练」页记录第一练吧" />
 
   <view wx:for="{{list}}" wx:key="id" class="card work-card">
     <view class="work-head" data-index="{{index}}" bindtap="onToggle">

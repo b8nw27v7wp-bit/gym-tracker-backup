@@ -1,4 +1,21 @@
 <view class="page">
+  <!-- 本周计划卡（打卡提醒） -->
+  <view class="card weekly-card" wx:if="{{weeklyPlan}}">
+    <view class="weekly-head">
+      <view>
+        <view class="weekly-title">本周计划</view>
+        <view class="weekly-sub">{{weeklyPlan.planName}} · 已完成 {{weeklyPlan.doneCount}}/{{weeklyPlan.totalDays}} 天</view>
+      </view>
+      <text class="weekly-clear" bindtap="onClearWeeklyPlan">取消</text>
+    </view>
+    <view class="weekly-progress">
+      <view class="weekly-progress-fill" style="width: {{weeklyPlan.pct}}%;"></view>
+    </view>
+    <view class="weekly-status" wx:if="{{weeklyPlan.allDone}}">本周计划已全部完成</view>
+    <view class="weekly-status" wx:elif="{{weeklyPlan.todayDone}}">今日已打卡 · 下一个训练日：{{weeklyPlan.nextDayName}}</view>
+    <view class="weekly-status" wx:else>今日训练日：{{weeklyPlan.nextDayName}}</view>
+  </view>
+
   <!-- 自建计划入口 -->
   <view class="new-plan-btn" bindtap="onNewPlan">＋ 自建计划</view>
 
@@ -17,15 +34,18 @@
     </view>
     <view class="plan-desc">{{item.desc}}</view>
     <view class="plan-meta">{{item.daysPerWeek}} 练/周 · {{item.dayCount}} 天 · {{item.exerciseCount}} 个动作位</view>
+    <view wx:if="{{weeklyPlan && weeklyPlan.planId === item.id}}" class="plan-weekly-tag">本周计划</view>
   </view>
 
   <!-- 选中计划的天列表 -->
   <view wx:if="{{currentPlan}}">
     <view class="section-title">
       {{currentPlan.name}} · 选择训练日
-      <view wx:if="{{currentPlan.custom}}" class="plan-ops">
-        <text class="plan-op" data-id="{{currentPlan.planId}}" catchtap="onEditPlan">编辑</text>
-        <text class="plan-op plan-op-del" data-id="{{currentPlan.planId}}" catchtap="onDeletePlan">删除</text>
+      <view class="plan-ops">
+        <text wx:if="{{!weeklyPlan || weeklyPlan.planId !== currentPlan.planId}}"
+              class="plan-op plan-op-set" data-id="{{currentPlan.planId}}" catchtap="onSetWeeklyPlan">设为本周计划</text>
+        <text wx:if="{{currentPlan.custom}}" class="plan-op" data-id="{{currentPlan.planId}}" catchtap="onEditPlan">编辑</text>
+        <text wx:if="{{currentPlan.custom}}" class="plan-op plan-op-del" data-id="{{currentPlan.planId}}" catchtap="onDeletePlan">删除</text>
       </view>
     </view>
     <view wx:for="{{currentPlan.days}}" wx:key="id" class="card day-card">
@@ -34,7 +54,7 @@
           <text class="day-name">{{item.name}}</text>
           <text wx:if="{{item.note}}" class="day-note">{{item.note}}</text>
         </view>
-        <view class="day-badge day-badge-done" wx:if="{{item.done}}">✅ 今日已完成</view>
+        <view class="day-badge day-badge-done" wx:if="{{item.done}}">今日已完成</view>
         <view class="day-badge" wx:elif="{{item.compDone > 0}}">今日完成 {{item.compDone}}/{{item.compTotal}}</view>
       </view>
       <!-- 今日进度条（部分完成时显示） -->

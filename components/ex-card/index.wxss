@@ -1,0 +1,70 @@
+/* 动作卡片（从 exercises.wxss 提取，组件样式隔离需自带） */
+.card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin: 24rpx 32rpx;
+  box-shadow: 0 1rpx 3rpx rgba(17, 24, 39, 0.04), 0 8rpx 24rpx rgba(17, 24, 39, 0.03);
+}
+
+.ex-card:active {
+  background: #f7f7f8;
+}
+
+.ex-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ex-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-right: 16rpx;
+}
+
+.ex-tag {
+  font-size: 20rpx;
+  border-radius: 8rpx;
+  padding: 4rpx 14rpx;
+  margin-left: 8rpx;
+}
+
+.ex-type {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.ex-diff {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.ex-targets {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 14rpx;
+  gap: 8rpx;
+}
+
+.ex-target {
+  font-size: 21rpx;
+  color: #374151;
+  background: #f9fafb;
+  border-radius: 8rpx;
+  padding: 4rpx 14rpx;
+}
+
+.ex-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 14rpx;
+  font-size: 21rpx;
+  color: #9ca3af;
+}
+
+.meta-dot {
+  margin: 0 10rpx;
+  color: #d1d5db;
+}

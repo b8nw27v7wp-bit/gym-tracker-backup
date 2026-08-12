@@ -1,7 +1,6 @@
 <view class="page">
   <!-- 工具入口 -->
   <view class="tool-card" bindtap="onOpenCalculator">
-    <view class="tool-icon">🧮</view>
     <view class="tool-info">
       <view class="tool-name">营养计算器</view>
       <view class="tool-desc">BMR / 每日消耗 / 蛋白质需求 / 增肌减脂热量</view>
@@ -25,10 +24,7 @@
   </view>
 
   <!-- 文章列表 -->
-  <view wx:if="{{list.length === 0}}" class="empty">
-    <view class="empty-icon">📚</view>
-    <view>该分类暂无文章</view>
-  </view>
+  <empty-state wx:if="{{list.length === 0}}" text="该分类暂无文章" />
 
   <view
     wx:for="{{list}}"

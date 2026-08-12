@@ -4,8 +4,18 @@ var KEY_INIT = 'gym_inited_v1';        // v1 遗留初始化标记
 var KEY_BODYWEIGHT = 'gym_bodyweight';
 var KEY_SCHEMA = 'gym_schema_version'; // 当前 schema 版本
 var KEY_CUSTOM_PLANS = 'gym_custom_plans'; // 用户自建计划
+var KEY_WEEKLY_PLAN = 'gym_weekly_plan';   // 本周计划打卡设置 { planId, weekStart }
 
 var SCHEMA_VERSION = 3;
+
+// 某 ts 所在周的周一 0 点（本地实现，避免依赖 util）
+function weekStartOf(ts) {
+  var d = new Date(ts);
+  var day = d.getDay() || 7; // 周日=7
+  d.setDate(d.getDate() - day + 1);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
 
 // ---------- 版本迁移 ----------
 // 原则：migrate 从旧版本逐步升级到当前版本；每个迁移幂等（可重复执行）；
@@ -132,6 +142,23 @@ function genPlanId() {
   return 'cp_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
 }
 
+// ---------- 本周计划（打卡提醒）----------
+// 返回 { planId, weekStart } 或 null（未设置 / 已跨周自动失效）
+function getWeeklyPlan() {
+  var wp = wx.getStorageSync(KEY_WEEKLY_PLAN);
+  if (!wp || !wp.planId) return null;
+  if (wp.weekStart !== weekStartOf(Date.now())) return null; // 跨周失效
+  return wp;
+}
+
+function setWeeklyPlan(planId) {
+  wx.setStorageSync(KEY_WEEKLY_PLAN, { planId: planId, weekStart: weekStartOf(Date.now()) });
+}
+
+function clearWeeklyPlan() {
+  wx.removeStorageSync(KEY_WEEKLY_PLAN);
+}
+
 // ---------- 备份导出 / 导入 ----------
 // 导出结构：{ app: 'gym-tracker', schemaVersion, exportedAt, workouts, bodyweight, customPlans }
 function exportData() {
@@ -174,6 +201,7 @@ function clearAll() {
   wx.setStorageSync(KEY_WORKOUTS, []);
   wx.setStorageSync(KEY_BODYWEIGHT, []);
   wx.setStorageSync(KEY_CUSTOM_PLANS, []);
+  clearWeeklyPlan();
 }
 
 // 当前数据量估算（字节）
@@ -207,6 +235,9 @@ module.exports = {
   saveCustomPlan: saveCustomPlan,
   removeCustomPlan: removeCustomPlan,
   genPlanId: genPlanId,
+  getWeeklyPlan: getWeeklyPlan,
+  setWeeklyPlan: setWeeklyPlan,
+  clearWeeklyPlan: clearWeeklyPlan,
   exportData: exportData,
   importData: importData,
   clearAll: clearAll,

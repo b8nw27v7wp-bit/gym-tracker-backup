@@ -13,11 +13,6 @@
   box-shadow: 0 2rpx 12rpx rgba(17, 24, 39, 0.04);
 }
 
-.tool-icon {
-  font-size: 44rpx;
-  margin-right: 20rpx;
-}
-
 .tool-info {
   flex: 1;
   display: flex;

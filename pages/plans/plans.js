@@ -8,7 +8,8 @@ Page({
   data: {
     summaries: [],
     currentPlanId: '',
-    currentPlan: null
+    currentPlan: null,
+    weeklyPlan: null // { planId, planName, totalDays, doneCount, pct, todayDone, nextDayName }
   },
 
   onLoad: function () {
@@ -37,6 +38,51 @@ Page({
     } else {
       this.setData({ currentPlan: null, currentPlanId: '' });
     }
+    this.refreshWeeklyPlan();
+  },
+
+  // 本周计划状态（打卡提醒）
+  refreshWeeklyPlan: function () {
+    var wp = store.getWeeklyPlan();
+    if (!wp) {
+      this.setData({ weeklyPlan: null });
+      return;
+    }
+    var custom = store.getCustomPlans();
+    var plan = planUtil.getPlan(wp.planId, custom);
+    if (!plan) {
+      this.setData({ weeklyPlan: null });
+      return;
+    }
+    var progress = util.weeklyPlanProgress(store.getWorkouts(), plan, wp.weekStart);
+    var nextName = progress.nextDay ? progress.nextDay.name : '';
+    this.setData({
+      weeklyPlan: {
+        planId: plan.id,
+        planName: plan.name,
+        totalDays: progress.totalDays,
+        doneCount: progress.doneCount,
+        pct: progress.pct,
+        todayDone: progress.todayDone,
+        nextDayName: nextName,
+        allDone: progress.doneCount >= progress.totalDays
+      }
+    });
+  },
+
+  // 设为本周计划（打卡提醒）
+  onSetWeeklyPlan: function (e) {
+    var id = e.currentTarget.dataset.id;
+    store.setWeeklyPlan(id);
+    this.refreshWeeklyPlan();
+    this.selectPlan(id);
+    wx.showToast({ title: '已设为本周计划', icon: 'success' });
+  },
+
+  onClearWeeklyPlan: function () {
+    store.clearWeeklyPlan();
+    this.refreshWeeklyPlan();
+    wx.showToast({ title: '已取消本周计划', icon: 'none' });
   },
 
   onPickPlan: function (e) {

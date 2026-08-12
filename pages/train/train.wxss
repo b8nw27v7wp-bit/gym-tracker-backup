@@ -70,6 +70,48 @@
   line-height: 1;
 }
 
+/* ========== 本周计划提醒条 ========== */
+.plan-reminder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16rpx 32rpx 0;
+  background: linear-gradient(90deg, #f5f6ff 0%, #ffffff 100%);
+  border: 1rpx solid #e0e7ff;
+  border-radius: 20rpx;
+  padding: 20rpx 28rpx;
+}
+
+.plan-reminder-hover {
+  background: #eef2ff;
+}
+
+.plan-reminder-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-reminder-title {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.plan-reminder-sub {
+  font-size: 21rpx;
+  color: #6b7280;
+  margin-top: 4rpx;
+}
+
+.plan-reminder-btn {
+  font-size: 24rpx;
+  color: #ffffff;
+  background: #4f46e5;
+  border-radius: 999rpx;
+  padding: 12rpx 32rpx;
+  flex-shrink: 0;
+}
+
 /* ========== 计时条 ========== */
 .timer-bar {
   display: flex;
@@ -81,9 +123,18 @@
   padding: 18rpx 28rpx;
 }
 
-.timer-icon {
+.timer-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #d97706;
   margin-right: 14rpx;
-  font-size: 30rpx;
+  animation: timer-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 }
 
 .timer-text {
@@ -233,123 +284,6 @@
 
 .dot-on {
   background: #1d1d1f;
-}
-
-/* ========== 组编辑 ========== */
-.edit-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20rpx;
-}
-
-.edit-head-right {
-  display: flex;
-  align-items: center;
-}
-
-.edit-close {
-  color: #d1d5db;
-  font-size: 34rpx;
-  padding: 8rpx 4rpx 8rpx 20rpx;
-}
-
-.edit-close:active {
-  color: #ef4444;
-}
-
-.set-head {
-  display: flex;
-  padding: 12rpx 0;
-  color: #9ca3af;
-  font-size: 21rpx;
-  letter-spacing: 1rpx;
-}
-
-.set-row {
-  display: flex;
-  align-items: center;
-  padding: 12rpx 0;
-  border-bottom: 1rpx solid #f9fafb;
-}
-
-/* 组行列宽 */
-.set-c-no { width: 8%; }
-.set-c-warm { width: 9%; }
-.set-c-w { width: 19%; }
-.set-c-x { width: 6%; }
-.set-c-r { width: 19%; }
-.set-c-rpe { width: 19%; }
-.set-c-del { width: 9%; }
-
-.set-col {
-  text-align: center;
-}
-
-.set-no {
-  font-size: 26rpx;
-  color: #9ca3af;
-  font-weight: 500;
-}
-
-.set-input {
-  background: #f9fafb;
-  border-radius: 14rpx;
-  padding: 14rpx 0;
-  font-size: 30rpx;
-  font-weight: 500;
-  color: #1d1d1f;
-  text-align: center;
-  height: auto;
-  min-height: 52rpx;
-}
-
-.set-input-rpe {
-  font-size: 26rpx;
-  color: #6b7280;
-  font-weight: 400;
-}
-
-.set-x {
-  color: #d1d5db;
-  font-size: 24rpx;
-}
-
-.set-del {
-  color: #d1d5db;
-  font-size: 30rpx;
-  padding: 12rpx;
-}
-
-.set-del:active {
-  color: #ef4444;
-}
-
-/* 热身开关 */
-.warm-btn {
-  font-size: 22rpx;
-  color: #c4c8cf;
-  border: 1rpx solid #e5e7eb;
-  border-radius: 12rpx;
-  line-height: 42rpx;
-  height: 42rpx;
-  width: 46rpx;
-  margin: 0 auto;
-  transition: all 0.15s;
-}
-
-.warm-on {
-  background: #ffedd5;
-  border-color: #fdba74;
-  color: #ea580c;
-  font-weight: 700;
-}
-
-.set-tip {
-  font-size: 21rpx;
-  color: #9ca3af;
-  padding: 16rpx 0 20rpx;
-  line-height: 1.6;
 }
 
 /* ========== 已添加动作 ========== */

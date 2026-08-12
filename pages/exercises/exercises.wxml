@@ -5,7 +5,7 @@
       class="search-input"
       value="{{keyword}}"
       bindinput="onSearchInput"
-      placeholder="🔍 搜索动作名称或肌群"
+      placeholder="搜索动作名称或肌群"
       confirm-type="search"
     />
   </view>
@@ -46,32 +46,19 @@
   </view>
 
   <!-- 动作列表 -->
-  <view wx:if="{{list.length === 0}}" class="empty">
-    <view class="empty-icon">🔍</view>
-    <view>没有找到匹配的动作</view>
-  </view>
+  <empty-state wx:if="{{list.length === 0}}" text="没有找到匹配的动作" />
 
-  <view
+  <ex-card
     wx:for="{{list}}"
     wx:key="id"
-    class="card ex-card"
+    name="{{item.name}}"
+    type-text="{{item.typeText}}"
+    diff-text="{{item.diffText}}"
+    target="{{item.target}}"
+    equip-text="{{item.equipText}}"
+    rest="{{item.rest}}"
+    muscle-name="{{item.muscleName}}"
     data-id="{{item.id}}"
-    bindtap="onOpenDetail"
-  >
-    <view class="ex-head">
-      <text class="ex-name">{{item.name}}</text>
-      <text class="ex-tag ex-type">{{item.typeText}}</text>
-      <text class="ex-tag ex-diff">{{item.diffText}}</text>
-    </view>
-    <view class="ex-targets">
-      <text wx:for="{{item.target}}" wx:for-item="t" wx:key="*this" class="ex-target">{{t}}</text>
-    </view>
-    <view class="ex-meta">
-      <text>{{item.equipText}}</text>
-      <text class="meta-dot">·</text>
-      <text>{{item.rest}}</text>
-      <text class="meta-dot">·</text>
-      <text>{{item.muscleName}}</text>
-    </view>
-  </view>
+    bind:tap="onOpenDetail"
+  />
 </view>

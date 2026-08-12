@@ -2,6 +2,75 @@
   padding-bottom: 60rpx;
 }
 
+/* 本周计划卡 */
+.weekly-card {
+  margin: 20rpx 32rpx 0;
+  background: linear-gradient(180deg, #f5f6ff 0%, #ffffff 70%);
+  border: 1rpx solid #eef2ff;
+  padding: 28rpx 32rpx;
+}
+
+.weekly-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.weekly-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.weekly-sub {
+  font-size: 22rpx;
+  color: #6b7280;
+  margin-top: 6rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.weekly-clear {
+  font-size: 22rpx;
+  color: #9ca3af;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  background: #f3f4f6;
+}
+
+.weekly-progress {
+  height: 10rpx;
+  background: #e8eaed;
+  border-radius: 999rpx;
+  margin: 20rpx 0 14rpx;
+  overflow: hidden;
+}
+
+.weekly-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #818cf8, #4f46e5);
+  border-radius: 999rpx;
+  transition: width 0.3s ease;
+}
+
+.weekly-status {
+  font-size: 24rpx;
+  color: #4f46e5;
+}
+
+.plan-weekly-tag {
+  display: inline-block;
+  margin-top: 12rpx;
+  font-size: 20rpx;
+  color: #4f46e5;
+  background: #eef2ff;
+  border-radius: 8rpx;
+  padding: 2rpx 12rpx;
+}
+
+.plan-op-set {
+  color: #4f46e5;
+}
+
 .new-plan-btn {
   margin: 20rpx 32rpx 0;
   background: #ffffff;

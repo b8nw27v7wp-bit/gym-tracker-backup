@@ -98,9 +98,16 @@ page {
   padding: 120rpx 40rpx;
 }
 
-.empty-icon {
-  font-size: 80rpx;
-  margin-bottom: 24rpx;
+.empty-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.empty-sub {
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-top: 12rpx;
 }
 
 /* 数字强调 */
