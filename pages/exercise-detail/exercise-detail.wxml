@@ -33,7 +33,7 @@
   <!-- 动作要领 -->
   <view class="card">
     <view class="card-title">动作要领</view>
-    <view wx:for="{{ex.steps}}" wx:key="index" class="step-row">
+    <view wx:for="{{ex.steps}}" wx:key="*this" class="step-row">
       <text class="step-no">{{index + 1}}</text>
       <text class="step-text">{{item}}</text>
     </view>
@@ -42,7 +42,7 @@
   <!-- 常见错误 -->
   <view class="card">
     <view class="card-title">常见错误</view>
-    <view wx:for="{{ex.errors}}" wx:key="index" class="err-row">
+    <view wx:for="{{ex.errors}}" wx:key="*this" class="err-row">
       <text class="err-icon">⚠️</text>
       <text class="err-text">{{item}}</text>
     </view>
@@ -61,7 +61,7 @@
   <view class="card" wx:if="{{muscle}}">
     <view class="card-title">{{muscle.name}}部训练知识</view>
     <view class="m-freq">{{muscle.freq}} · {{muscle.desc}}</view>
-    <view wx:for="{{muscle.tips}}" wx:key="index" class="m-tip-row">
+    <view wx:for="{{muscle.tips}}" wx:key="*this" class="m-tip-row">
       <text class="m-tip-dot">•</text>
       <text class="m-tip-text">{{item}}</text>
     </view>

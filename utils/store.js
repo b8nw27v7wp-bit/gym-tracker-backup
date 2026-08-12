@@ -1,6 +1,4 @@
 // 本地存储封装：训练记录/体重 CRUD + schema 版本迁移 + 备份导出
-var util = require('./util');
-
 var KEY_WORKOUTS = 'gym_workouts';
 var KEY_INIT = 'gym_inited_v1';        // v1 遗留初始化标记
 var KEY_BODYWEIGHT = 'gym_bodyweight';

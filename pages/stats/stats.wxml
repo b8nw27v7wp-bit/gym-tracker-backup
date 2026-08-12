@@ -143,7 +143,7 @@
       <view class="bw-add" bindtap="onAddBodyweight">＋ 记录</view>
     </view>
     <view class="bars">
-      <view wx:for="{{bwPoints}}" wx:key="index" class="bar-col">
+      <view wx:for="{{bwPoints}}" class="bar-col">
         <view class="bar-track">
           <view class="bar-fill bw-fill" style="height: {{item.height}}%;"></view>
         </view>

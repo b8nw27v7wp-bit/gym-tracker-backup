@@ -4,6 +4,8 @@
 
 ## v2.3.0（2026-08-12）— 数据分析 + 计划系统增强
 
+- fix(debug): 删除 store.js / plan-edit.js 未使用的 require（util）
+- fix(debug): wx:key="index" 全部修正——字符串列表改 *this、有唯一字段用字段名（h/label）、纯展示列表移除 wx:key、组编辑用临时 uid（enterEdit/onAddSet 生成，onDoneEdit 剥离，落库零泄漏）
 - feat: 1RM 迷你趋势——统计页 PR 卡内嵌最近 6 次估算 1RM 趋势柱（est1RMTrend 归一化高度）
 - feat: 计划完成度——计划库页显示当日各训练日动作完成率进度条 + "今日已完成"徽标（训练记录带 plan 标记，按日匹配动作）
 - feat: 自建计划——新页面 plan-edit（计划名/多训练日/按部位与搜索选动作/组数次数可调），store 支持自定义计划 CRUD（schema v3 迁移 + 备份导入导出/清空/容量统计同步适配），计划库统一展示内置+自建并支持编辑/删除，一键填充照常可用

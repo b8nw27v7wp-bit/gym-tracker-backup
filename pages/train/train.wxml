@@ -115,7 +115,7 @@
       <text class="set-col set-c-rpe">RPE</text>
       <text class="set-col set-c-del"></text>
     </view>
-    <view wx:for="{{editing.sets}}" wx:key="index" class="set-row">
+    <view wx:for="{{editing.sets}}" wx:key="uid" class="set-row">
       <text class="set-col set-c-no set-no">{{index + 1}}</text>
       <view
         class="set-col set-c-warm warm-btn {{item.warmup ? 'warm-on' : ''}}"

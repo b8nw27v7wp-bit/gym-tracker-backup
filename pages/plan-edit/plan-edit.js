@@ -1,7 +1,6 @@
 // 自建计划编辑器：新建/编辑计划（计划名 + 训练日 + 动作与组次）
 var store = require('../../utils/store');
 var exercisesData = require('../../data/exercises/index');
-var util = require('../../utils/util');
 
 Page({
   data: {

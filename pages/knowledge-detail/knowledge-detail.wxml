@@ -6,11 +6,11 @@
   </view>
 
   <view class="body">
-    <view wx:for="{{article.sections}}" wx:key="index" class="section">
+    <view wx:for="{{article.sections}}" wx:key="h" class="section">
       <view class="section-h">{{item.h}}</view>
       <view wx:if="{{item.type === 'para'}}" class="section-para">{{item.content}}</view>
       <view wx:if="{{item.type === 'list'}}" class="section-list">
-        <view wx:for="{{item.items}}" wx:for-item="li" wx:key="index" class="list-row">
+        <view wx:for="{{item.items}}" wx:for-item="li" wx:key="*this" class="list-row">
           <text class="list-dot">•</text>
           <text class="list-text">{{li}}</text>
         </view>

@@ -186,6 +186,11 @@ Page({
     var draft = this.data.draft;
     // 深拷贝编辑对象，与 draft 解耦：编辑期间只改副本，避免共享引用导致渲染层 diff 失效
     var editing = JSON.parse(JSON.stringify(draft[index]));
+    // 补组 uid（wx:key 稳定标识；初始组无 uid）
+    editing.sets = editing.sets.map(function (s) {
+      if (s.uid) return s;
+      return Object.assign({}, s, { uid: 's_' + Date.now() + '_' + Math.floor(Math.random() * 10000) });
+    });
     var m = exercisesData.muscleInfo(editing.muscle);
     this.setData({
       step: 'edit',
@@ -200,9 +205,14 @@ Page({
   },
 
   onAddSet: function () {
-    // concat 生成新数组引用，保证 setData diff 生效
-    var sets = this.data.editing.sets.concat([{ weight: '', reps: '', rpe: '', warmup: false }]);
+    // concat 生成新数组引用，保证 setData diff 生效；uid 供 wx:key 稳定标识
+    var sets = this.data.editing.sets.concat([{ uid: this.genSetUid(), weight: '', reps: '', rpe: '', warmup: false }]);
     this.setData({ 'editing.sets': sets });
+  },
+
+  // 生成组唯一 id（编辑态临时使用，保存时不落库）
+  genSetUid: function () {
+    return 's_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
   },
 
   onRemoveSet: function (e) {
@@ -240,7 +250,10 @@ Page({
     var cleaned = [];
     (editing.sets || []).forEach(function (s) {
       if ((s.weight === '' || s.weight === undefined) && (s.reps === '' || s.reps === undefined)) return;
-      cleaned.push(s);
+      // 剥离临时 uid（仅编辑态使用，不进 draft/存储）
+      var s2 = Object.assign({}, s);
+      delete s2.uid;
+      cleaned.push(s2);
     });
     if (cleaned.length === 0) cleaned = [{ weight: '', reps: '', rpe: '', warmup: false }];
     editing.sets = cleaned;
