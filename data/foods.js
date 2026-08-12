@@ -9,7 +9,8 @@ module.exports = {
     { key: 'fruit', name: '水果' },
     { key: 'dairy', name: '奶豆坚果' },
     { key: 'drink', name: '饮品' },
-    { key: 'snack', name: '快餐零食' }
+    { key: 'snack', name: '快餐零食' },
+    { key: 'sauce', name: '调味酱料' }
   ],
   ITEMS: [
     // 主食
@@ -88,6 +89,49 @@ module.exports = {
     { id: 'chocolate', name: '巧克力', cat: 'snack', kcal: 586, size: 25, sizeLabel: '1 块' },
     { id: 'cookie', name: '曲奇饼干', cat: 'snack', kcal: 546, size: 30, sizeLabel: '3 块' },
     { id: 'ice-cream', name: '冰淇淋', cat: 'snack', kcal: 127, size: 100, sizeLabel: '1 球' },
-    { id: 'biscuit', name: '苏打饼干', cat: 'snack', kcal: 408, size: 30, sizeLabel: '1 包' }
+    { id: 'biscuit', name: '苏打饼干', cat: 'snack', kcal: 408, size: 30, sizeLabel: '1 包' },
+    // 扩充（v2.7）：主食
+    { id: 'brown-rice', name: '糙米饭', cat: 'staple', kcal: 112, size: 150, sizeLabel: '1 碗' },
+    { id: 'pasta', name: '全麦意面', cat: 'staple', kcal: 124, size: 200, sizeLabel: '1 份' },
+    { id: 'millet-congee', name: '小米粥', cat: 'staple', kcal: 46, size: 250, sizeLabel: '1 碗' },
+    { id: 'youtiao', name: '油条', cat: 'staple', kcal: 388, size: 60, sizeLabel: '1 根' },
+    // 肉蛋海鲜
+    { id: 'chicken-thigh', name: '鸡腿肉', cat: 'meat', kcal: 181, size: 150, sizeLabel: '1 份' },
+    { id: 'pork-tenderloin', name: '猪里脊', cat: 'meat', kcal: 155, size: 150, sizeLabel: '1 份' },
+    { id: 'basa', name: '龙利鱼', cat: 'meat', kcal: 83, size: 150, sizeLabel: '1 条' },
+    { id: 'tuna-can', name: '金枪鱼罐头', cat: 'meat', kcal: 116, size: 100, sizeLabel: '1 罐' },
+    { id: 'duck-breast', name: '鸭胸肉', cat: 'meat', kcal: 90, size: 150, sizeLabel: '1 份' },
+    // 蔬菜
+    { id: 'lettuce', name: '生菜', cat: 'veg', kcal: 13, size: 100, sizeLabel: '1 份' },
+    { id: 'celery', name: '芹菜', cat: 'veg', kcal: 22, size: 150, sizeLabel: '1 份' },
+    { id: 'winter-melon', name: '冬瓜', cat: 'veg', kcal: 11, size: 200, sizeLabel: '1 份' },
+    { id: 'enoki', name: '金针菇', cat: 'veg', kcal: 32, size: 100, sizeLabel: '1 份' },
+    // 水果
+    { id: 'pear', name: '梨', cat: 'fruit', kcal: 51, size: 200, sizeLabel: '1 个' },
+    { id: 'pineapple', name: '菠萝', cat: 'fruit', kcal: 44, size: 200, sizeLabel: '1 份' },
+    { id: 'cherry', name: '樱桃', cat: 'fruit', kcal: 46, size: 100, sizeLabel: '1 份' },
+    { id: 'pomelo', name: '柚子', cat: 'fruit', kcal: 42, size: 300, sizeLabel: '1 份' },
+    // 奶豆坚果
+    { id: 'skim-milk', name: '脱脂牛奶', cat: 'dairy', kcal: 34, size: 250, sizeLabel: '1 盒' },
+    { id: 'dried-tofu', name: '豆腐干', cat: 'dairy', kcal: 142, size: 100, sizeLabel: '1 份' },
+    { id: 'chickpea', name: '鹰嘴豆', cat: 'dairy', kcal: 160, size: 100, sizeLabel: '1 份' },
+    { id: 'pistachio', name: '开心果', cat: 'dairy', kcal: 614, size: 30, sizeLabel: '1 把' },
+    // 饮品
+    { id: 'ice-tea', name: '冰红茶', cat: 'drink', kcal: 30, size: 500, sizeLabel: '1 瓶' },
+    { id: 'citrus-tea', name: '蜂蜜柚子茶', cat: 'drink', kcal: 58, size: 300, sizeLabel: '1 杯' },
+    // 快餐零食
+    { id: 'hotdog', name: '热狗', cat: 'snack', kcal: 247, size: 120, sizeLabel: '1 个' },
+    { id: 'egg-tart', name: '蛋挞', cat: 'snack', kcal: 375, size: 45, sizeLabel: '1 个' },
+    { id: 'latiao', name: '辣条', cat: 'snack', kcal: 395, size: 40, sizeLabel: '1 包' },
+    { id: 'mochi', name: '麻薯', cat: 'snack', kcal: 352, size: 50, sizeLabel: '1 个' },
+    // 调味酱料
+    { id: 'peanut-oil', name: '花生油', cat: 'sauce', kcal: 899, size: 10, sizeLabel: '1 勺' },
+    { id: 'olive-oil', name: '橄榄油', cat: 'sauce', kcal: 884, size: 10, sizeLabel: '1 勺' },
+    { id: 'lard', name: '猪油', cat: 'sauce', kcal: 897, size: 10, sizeLabel: '1 勺' },
+    { id: 'soy-sauce', name: '酱油', cat: 'sauce', kcal: 63, size: 10, sizeLabel: '1 勺' },
+    { id: 'oyster-sauce', name: '蚝油', cat: 'sauce', kcal: 114, size: 10, sizeLabel: '1 勺' },
+    { id: 'mayo', name: '沙拉酱', cat: 'sauce', kcal: 680, size: 15, sizeLabel: '1 勺' },
+    { id: 'ketchup', name: '番茄酱', cat: 'sauce', kcal: 112, size: 15, sizeLabel: '1 勺' },
+    { id: 'sugar', name: '白砂糖', cat: 'sauce', kcal: 400, size: 10, sizeLabel: '1 勺' }
   ]
 };

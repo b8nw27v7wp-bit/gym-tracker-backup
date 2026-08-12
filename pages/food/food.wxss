@@ -2,6 +2,78 @@
   padding-bottom: 80rpx;
 }
 
+/* 今日摄入卡 */
+.intake-card {
+  padding: 28rpx 32rpx;
+  margin: 20rpx 32rpx 0;
+}
+
+.intake-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.intake-total {
+  display: flex;
+  align-items: baseline;
+}
+
+.intake-total-num {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #4f46e5;
+  font-variant-numeric: tabular-nums;
+}
+
+.intake-total-unit {
+  font-size: 22rpx;
+  color: #9ca3af;
+  margin-left: 6rpx;
+}
+
+.intake-row {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f9fafb;
+}
+
+.intake-row:last-child {
+  border-bottom: none;
+}
+
+.intake-name {
+  flex: 1;
+  font-size: 26rpx;
+  color: #1d1d1f;
+}
+
+.intake-grams {
+  font-size: 22rpx;
+  color: #9ca3af;
+  margin-right: 16rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.intake-kcal {
+  font-size: 24rpx;
+  color: #6b7280;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.intake-del {
+  color: #d1d5db;
+  font-size: 26rpx;
+  padding: 8rpx 4rpx 8rpx 16rpx;
+}
+
+.intake-del:active {
+  color: #ef4444;
+}
+
 /* 搜索 */
 .search-wrap {
   display: flex;

@@ -482,6 +482,27 @@ const catKeys = foods.CATEGORIES.map(c => c.key);
 assert(foods.ITEMS.every(f => catKeys.indexOf(f.cat) >= 0), '食物分类均合法');
 const rice = foods.ITEMS.filter(f => f.id === 'rice')[0];
 assert(rice.kcal === 116 && Math.round(rice.kcal * rice.size / 100) === 174, '米饭 116 kcal/100g，1 碗约 174 kcal');
+assert(foods.ITEMS.length === 105, '食物库扩充至 105 项（实际 ' + foods.ITEMS.length + '）');
+assert(foods.CATEGORIES.length === 8 && foods.CATEGORIES[7].key === 'sauce', '8 分类含调味酱料');
+
+// ---------- 饮食摄入记录（v2.7） ----------
+console.log('7e. 饮食摄入记录');
+store.clearAll();
+store.ensureInit();
+store.addIntake({ id: 'i1', ts: Date.now(), date: util.todayStr(), name: '米饭', grams: 150, kcal: 174 });
+store.addIntake({ id: 'i2', ts: Date.now(), date: util.todayStr(), name: '鸡胸肉', grams: 150, kcal: 200 });
+store.addIntake({ id: 'i3', ts: Date.now() - 86400000, date: util.dateStr(Date.now() - 86400000), name: '苹果', grams: 200, kcal: 106 });
+assert(store.getIntake().length === 3, '摄入记录 3 条');
+store.removeIntake('i2');
+assert(store.getIntake().length === 2, '删除摄入记录');
+const sumToday = util.dailyIntakeSum(store.getIntake());
+assert(sumToday.total === 174 && sumToday.items.length === 1, '今日摄入 174（实际 ' + sumToday.total + '）');
+const sumYest = util.dailyIntakeSum(store.getIntake(), util.dateStr(Date.now() - 86400000));
+assert(sumYest.total === 106, '按指定日期汇总');
+assert(util.dailyIntakeSum([]).total === 0 && util.dailyIntakeSum(null).items.length === 0, '空记录安全');
+store.clearAll();
+store.ensureInit();
+assert(store.getIntake().length === 0, '清空数据清理摄入记录');
 
 // ---------- 营养计算 ----------
 console.log('8. 营养计算器');
@@ -701,6 +722,14 @@ assert(stPage.data.calHas === true && stPage.data.calBmr === 1674, '热量卡基
 assert(stPage.data.calTdee === 2595, '每日消耗 2595');
 assert(stPage.data.calWeekKcal === 368 + 257, '本周运动消耗 70kg 计 625（实际 ' + stPage.data.calWeekKcal + '）');
 assert(stPage.data.calBulk === 2855 && stPage.data.calCut === 2128, '增肌 2855 / 减脂 2128');
+// 今日摄入与热量缺口（无训练 → 今日可吃 = TDEE 2595）
+wx._store.gym_workouts = [];
+wx._store.gym_intake = [{ id: 'ti1', ts: Date.now(), date: util.todayStr(), name: '米饭', grams: 150, kcal: 174 }];
+const stPage3 = instantiate(pageCfg);
+stPage3.loadStats();
+assert(stPage3.data.calIntake === 174 && stPage3.data.calBudget === 2595, '今日摄入 174 / 今日可吃 2595（实际 ' + stPage3.data.calIntake + '/' + stPage3.data.calBudget + '）');
+assert(stPage3.data.calGap === 2421 && stPage3.data.calGapText === '2421', '热量缺口 2421');
+wx._store.gym_intake = [];
 wx.removeStorageSync('gym_user_profile');
 const stPage2 = instantiate(pageCfg);
 stPage2.loadStats();
@@ -731,6 +760,16 @@ fdPage.onQuickGrams({ currentTarget: { dataset: { d: -500 } } });
 assert(fdPage.data.calc.grams === 0 && fdPage.data.calc.total === 0, '克数不低于 0');
 fdPage.onResetGrams();
 assert(fdPage.data.calc.grams === 150, '恢复默认份量');
+// 记录到今日摄入
+fdPage.onRecordIntake();
+assert(fdPage.data.todayIntake && fdPage.data.todayIntake.total === 174, '记录米饭 174 kcal');
+assert(fdPage.data.calc === null, '记录后面板关闭');
+fdPage.onCalcFood({ currentTarget: { dataset: { id: 'chicken-breast' } } });
+fdPage.onGramsInput({ detail: { value: '150' } });
+fdPage.onRecordIntake();
+assert(fdPage.data.todayIntake.items.length === 2, '两条摄入记录');
+fdPage.onRemoveIntake({ currentTarget: { dataset: { id: fdPage.data.todayIntake.items[0].id } } });
+assert(fdPage.data.todayIntake.items.length === 1, '删除一条摄入');
 fdPage.onCloseCalc();
 assert(fdPage.data.calc === null, '关闭计算面板');
 

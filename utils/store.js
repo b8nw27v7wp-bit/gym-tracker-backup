@@ -6,6 +6,7 @@ var KEY_SCHEMA = 'gym_schema_version'; // 当前 schema 版本
 var KEY_CUSTOM_PLANS = 'gym_custom_plans'; // 用户自建计划
 var KEY_WEEKLY_PLAN = 'gym_weekly_plan';   // 本周计划打卡设置 { planId, weekStart }
 var KEY_PROFILE = 'gym_user_profile';      // 用户身体资料 { gender, age, heightCm, weightKg, activity }
+var KEY_INTAKE = 'gym_intake';             // 饮食记录 [{ id, ts, date, name, grams, kcal }]
 
 var SCHEMA_VERSION = 3;
 
@@ -170,6 +171,28 @@ function setProfile(profile) {
   wx.setStorageSync(KEY_PROFILE, profile);
 }
 
+// ---------- 饮食记录（食物热量摄入）----------
+// 记录结构 { id, ts, date: 'YYYY-MM-DD', name, grams, kcal }
+function getIntake() {
+  return wx.getStorageSync(KEY_INTAKE) || [];
+}
+
+function addIntake(record) {
+  var list = getIntake();
+  list.push(record);
+  wx.setStorageSync(KEY_INTAKE, list);
+  return list;
+}
+
+function removeIntake(id) {
+  var list = getIntake();
+  wx.setStorageSync(KEY_INTAKE, list.filter(function (r) { return r.id !== id; }));
+}
+
+function genIntakeId() {
+  return 'i_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+}
+
 // ---------- 备份导出 / 导入 ----------
 // 导出结构：{ app: 'gym-tracker', schemaVersion, exportedAt, workouts, bodyweight, customPlans }
 function exportData() {
@@ -212,6 +235,7 @@ function clearAll() {
   wx.setStorageSync(KEY_WORKOUTS, []);
   wx.setStorageSync(KEY_BODYWEIGHT, []);
   wx.setStorageSync(KEY_CUSTOM_PLANS, []);
+  wx.setStorageSync(KEY_INTAKE, []);
   clearWeeklyPlan();
   wx.removeStorageSync(KEY_PROFILE);
 }
@@ -252,6 +276,10 @@ module.exports = {
   clearWeeklyPlan: clearWeeklyPlan,
   getProfile: getProfile,
   setProfile: setProfile,
+  getIntake: getIntake,
+  addIntake: addIntake,
+  removeIntake: removeIntake,
+  genIntakeId: genIntakeId,
   exportData: exportData,
   importData: importData,
   clearAll: clearAll,

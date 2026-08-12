@@ -1,4 +1,21 @@
 <view class="page">
+  <!-- 今日摄入 -->
+  <view class="card intake-card" wx:if="{{todayIntake && todayIntake.items.length > 0}}">
+    <view class="intake-head">
+      <view class="card-title" style="margin:0;">今日摄入</view>
+      <view class="intake-total">
+        <text class="intake-total-num">{{todayIntake.total}}</text>
+        <text class="intake-total-unit">kcal</text>
+      </view>
+    </view>
+    <view class="intake-row" wx:for="{{todayIntake.items}}" wx:key="id">
+      <text class="intake-name">{{item.name}}</text>
+      <text class="intake-grams">{{item.grams}}g</text>
+      <text class="intake-kcal">{{item.kcal}} kcal</text>
+      <text class="intake-del" data-id="{{item.id}}" catchtap="onRemoveIntake">✕</text>
+    </view>
+  </view>
+
   <!-- 搜索 -->
   <view class="search-wrap">
     <input
@@ -69,7 +86,8 @@
       </view>
       <view class="calc-actions">
         <view class="btn-ghost" bindtap="onResetGrams">恢复默认</view>
-        <view class="btn-primary" bindtap="onCloseCalc">完成</view>
+        <view class="btn-primary" bindtap="onRecordIntake">记录到今日</view>
+        <view class="btn-ghost" bindtap="onCloseCalc">完成</view>
       </view>
     </view>
   </view>

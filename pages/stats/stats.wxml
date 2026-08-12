@@ -59,6 +59,22 @@
       </view>
     </view>
     <view class="cal-tip">Mifflin-St Jeor 估算 · 运动消耗按 MET × 体重 × 时长估算</view>
+    <!-- 摄入 vs 消耗 -->
+    <view class="cal-intake">
+      <view class="cal-intake-item">
+        <text class="cal-intake-label">今日摄入</text>
+        <text class="cal-intake-num">{{calIntake}}</text>
+      </view>
+      <view class="cal-intake-item">
+        <text class="cal-intake-label">今日可吃</text>
+        <text class="cal-intake-num">{{calBudget}}</text>
+      </view>
+      <view class="cal-intake-item">
+        <text class="cal-intake-label {{calGap >= 0 ? 'gap-ok' : 'gap-over'}}">{{calGap >= 0 ? '还可吃' : '已超支'}}</text>
+        <text class="cal-intake-num {{calGap >= 0 ? 'gap-ok' : 'gap-over'}}">{{calGapText}}</text>
+      </view>
+      <view class="cal-intake-btn" bindtap="onOpenFood">记饮食</view>
+    </view>
   </view>
 
   <!-- 热量未设置引导 -->

@@ -96,6 +96,54 @@
   text-align: center;
 }
 
+/* 摄入 vs 消耗 */
+.cal-intake {
+  display: flex;
+  align-items: center;
+  margin-top: 16rpx;
+  background: #f9fafb;
+  border-radius: 14rpx;
+  padding: 14rpx 8rpx;
+}
+
+.cal-intake-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cal-intake-label {
+  font-size: 19rpx;
+  color: #9ca3af;
+}
+
+.cal-intake-num {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-top: 4rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.gap-ok {
+  color: #10b981;
+}
+
+.gap-over {
+  color: #ef4444;
+}
+
+.cal-intake-btn {
+  flex-shrink: 0;
+  font-size: 21rpx;
+  color: #4f46e5;
+  background: #eef2ff;
+  border-radius: 999rpx;
+  padding: 10rpx 22rpx;
+  margin-right: 8rpx;
+}
+
 .cal-empty {
   display: flex;
   flex-direction: column;

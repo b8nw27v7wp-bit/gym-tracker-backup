@@ -366,6 +366,21 @@ function workoutCaloriesSum(workouts, weightKg, fromTs) {
   return { total: total, sessions: sessions };
 }
 
+// ---------- 饮食摄入汇总 ----------
+// 某日饮食记录汇总：{ total, items }；date 缺省为今天
+function dailyIntakeSum(records, date) {
+  var d = date || todayStr();
+  var items = [];
+  var total = 0;
+  (records || []).forEach(function (r) {
+    if (r.date !== d) return;
+    var kcal = Math.round(Number(r.kcal) || 0);
+    total += kcal;
+    items.push({ id: r.id, name: r.name, grams: r.grams, kcal: kcal });
+  });
+  return { total: total, items: items };
+}
+
 // ---------- 图表坐标 ----------
 // 将数值序列归一化为绘图坐标（canvas 用）
 // 返回 { points: [{i, value, y, h}], max, baseline, innerH }
@@ -446,6 +461,7 @@ module.exports = {
   weeklyPlanProgress: weeklyPlanProgress,
   workoutCalories: workoutCalories,
   workoutCaloriesSum: workoutCaloriesSum,
+  dailyIntakeSum: dailyIntakeSum,
   scaleSeries: scaleSeries,
   fmtCompact: fmtCompact,
   bodyweightTrend: bodyweightTrend

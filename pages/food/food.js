@@ -1,5 +1,7 @@
-// 食物热量查询页：搜索/分类浏览 + 按克数计算热量
+// 食物热量查询页：搜索/分类浏览 + 按克数计算热量 + 今日摄入记录
 var foods = require('../../data/foods');
+var store = require('../../utils/store');
+var util = require('../../utils/util');
 
 Page({
   data: {
@@ -7,11 +9,21 @@ Page({
     categories: foods.CATEGORIES,
     currentCat: 'all',
     list: [],
-    calc: null // { id, name, kcal, size, grams, total }
+    calc: null, // { id, name, kcal, size, grams, total }
+    todayIntake: null // { total, items }
   },
 
   onLoad: function () {
     this.refresh();
+  },
+
+  onShow: function () {
+    this.refreshIntake();
+  },
+
+  // 今日摄入记录
+  refreshIntake: function () {
+    this.setData({ todayIntake: util.dailyIntakeSum(store.getIntake()) });
   },
 
   onSearchInput: function (e) {
@@ -92,5 +104,38 @@ Page({
       'calc.grams': this.data.calc.size,
       'calc.total': Math.round(this.data.calc.kcal * this.data.calc.size / 100)
     });
+  },
+
+  // 记录到今日摄入
+  onRecordIntake: function () {
+    var c = this.data.calc;
+    if (!c) return;
+    var grams = parseFloat(c.grams) || 0;
+    if (grams <= 0) {
+      wx.showToast({ title: '请输入克数', icon: 'none' });
+      return;
+    }
+    var kcal = Math.round(c.kcal * grams / 100);
+    if (kcal <= 0) {
+      wx.showToast({ title: '热量为 0，无需记录', icon: 'none' });
+      return;
+    }
+    store.addIntake({
+      id: store.genIntakeId(),
+      ts: Date.now(),
+      date: util.todayStr(),
+      name: c.name,
+      grams: grams,
+      kcal: kcal
+    });
+    this.refreshIntake();
+    this.setData({ calc: null });
+    wx.showToast({ title: '已记录 ' + kcal + ' kcal', icon: 'none' });
+  },
+
+  // 删除今日某条摄入
+  onRemoveIntake: function (e) {
+    store.removeIntake(e.currentTarget.dataset.id);
+    this.refreshIntake();
   }
 });

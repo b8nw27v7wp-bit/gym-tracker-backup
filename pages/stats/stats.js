@@ -39,7 +39,11 @@ Page({
     calActivity: '',
     calWeekKcal: 0,
     calBulk: 0,
-    calCut: 0
+    calCut: 0,
+    calIntake: 0,
+    calBudget: 0,
+    calGap: 0,
+    calGapText: ''
   },
 
   onShow: function () {
@@ -254,6 +258,13 @@ Page({
     var bws = store.getBodyweights();
     if (bws.length > 0) weight = Number(bws[bws.length - 1].weight) || weight;
     var weekKcal = util.workoutCaloriesSum(workouts, weight, util.weekStart(Date.now())).total;
+    // 今日摄入与热量缺口（今日可吃 = TDEE + 今日运动消耗；缺口 = 可吃 - 摄入）
+    var d = new Date();
+    d.setHours(0, 0, 0, 0);
+    var todayKcal = util.workoutCaloriesSum(workouts, weight, d.getTime()).total;
+    var intake = util.dailyIntakeSum(store.getIntake());
+    var budget = res.tdee + todayKcal;
+    var gap = budget - intake.total;
     this.setData({
       calHas: true,
       calBmr: res.bmr,
@@ -261,12 +272,21 @@ Page({
       calActivity: res.activityLabel,
       calWeekKcal: weekKcal,
       calBulk: res.bulkCal,
-      calCut: res.cutCal
+      calCut: res.cutCal,
+      calIntake: intake.total,
+      calBudget: budget,
+      calGap: gap,
+      calGapText: gap >= 0 ? String(gap) : '超 ' + (-gap)
     });
   },
 
   onOpenCalculator: function () {
     wx.navigateTo({ url: '/pages/calculator/calculator' });
+  },
+
+  // 记饮食：跳食物热量页
+  onOpenFood: function () {
+    wx.navigateTo({ url: '/pages/food/food' });
   },
 
   // ---------- 图表绘制（canvas 2d）----------
