@@ -109,16 +109,13 @@ Page({
   },
 
   // ---------- 选动作 ----------
-  // 动作列表加部位图标，供大格展示
+  // 动作列表加难度评级（供难度点展示）
   decorateExerciseList: function (list) {
     return list.map(function (ex) {
-      var m = exercisesData.muscleInfo(ex.muscle);
       return {
         id: ex.id,
         name: ex.name,
-        muscle: ex.muscle,
-        icon: m.icon,
-        diffText: exercisesData.difficultyText(ex.difficulty)
+        difficulty: ex.difficulty || 1
       };
     });
   },
