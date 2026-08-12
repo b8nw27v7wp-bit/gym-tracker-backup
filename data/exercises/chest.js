@@ -152,4 +152,29 @@ module.exports = [
     errors: ['哑铃轨迹偏离', '下放过深'],
     rest: '60-90 秒', tip: '下胸专项，肩部不适者改用双杠'
   }
+,
+  {
+    id: 'landmine-press', name: '地雷管推举', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'other', difficulty: 2,
+    target: ["胸大肌上部", "三角肌前束"], secondary: ["肱三头肌"],
+    steps: ["杠铃一端抵地，另一端握于胸前，身体侧对杠铃", "下放时杠铃贴胸口，手肘自然下沉", "胸部发力沿斜上方推起至手臂伸直"],
+    errors: ["站姿过直变成推肩", "杠铃远离身体", "腰部过度反弓借力"],
+    rest: '60-90 秒', tip: '单侧推举角度对肩友好，上胸刺激明显'
+  },
+  {
+    id: 'band-pushup', name: '弹力带俯卧撑', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'band', difficulty: 1,
+    target: ["胸大肌"], secondary: ["肱三头肌", "三角肌前束"],
+    steps: ["弹力带绕过背部，两端压于掌下", "标准俯卧撑姿势下放至胸部贴近地面", "撑起时对抗弹力带阻力完成全程"],
+    errors: ["弹力带松脱", "臀部过高", "幅度不足半程"],
+    rest: '45-60 秒', tip: '弹力带让顶端受力最大，弥补自重俯卧撑顶端无阻力的短板'
+  },
+  {
+    id: 'incline-cable-fly', name: '上斜绳索飞鸟', muscle: 'chest', type: 'isolate', mechanic: 'push',
+    equipment: 'cable', difficulty: 2,
+    target: ["胸大肌上部"], secondary: ["三角肌前束"],
+    steps: ["上斜凳置于龙门架中间，双手握低位滑轮把手", "手肘微屈，沿弧线向胸前合拢", "顶端挤压胸肌停顿 1 秒，缓慢还原"],
+    errors: ["手肘角度全程变化", "耸肩代偿", "还原过快失去张力"],
+    rest: '45-60 秒', tip: '上斜角度+低位滑轮=全程张力，上胸孤立首选'
+  }
 ];

@@ -149,6 +149,72 @@
   line-height: 1.7;
 }
 
+/* 部位训练知识 */
+.m-freq {
+  font-size: 24rpx;
+  color: #6b7280;
+  margin-bottom: 14rpx;
+  line-height: 1.6;
+}
+
+.m-tip-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 10rpx 0;
+}
+
+.m-tip-dot {
+  color: #111827;
+  font-size: 28rpx;
+  margin-right: 14rpx;
+  line-height: 1.6;
+}
+
+.m-tip-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #374151;
+  line-height: 1.6;
+}
+
+/* 相关动作 / 关联阅读 */
+.rel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid #f9fafb;
+}
+
+.rel-row:last-child {
+  border-bottom: none;
+}
+
+.rel-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-right: 20rpx;
+}
+
+.rel-name {
+  font-size: 27rpx;
+  color: #111827;
+  font-weight: 500;
+}
+
+.rel-summary {
+  font-size: 22rpx;
+  color: #9ca3af;
+  margin-top: 6rpx;
+  line-height: 1.5;
+}
+
+.rel-arrow {
+  color: #d1d5db;
+  font-size: 34rpx;
+}
+
 /* 底部按钮 */
 .footer {
   position: fixed;

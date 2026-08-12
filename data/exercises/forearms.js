@@ -80,4 +80,29 @@ module.exports = [
     errors: ['借助手臂抬举', '速度过快'],
     rest: '45-60 秒', tip: '动态握力训练，卷起放下都保持控制'
   }
+,
+  {
+    id: 'finger-curl', name: '手指卷曲', muscle: 'forearms', type: 'isolate', mechanic: 'other',
+    equipment: 'plate', difficulty: 2,
+    target: ["前臂屈肌"], secondary: ["指屈肌"],
+    steps: ["前臂置于大腿或平凳，掌心向上握杠铃片", "手指依次卷曲将杠铃片握向掌心", "顶端挤压后缓慢伸指还原"],
+    errors: ["用腕关节代偿", "速度过快", "大重量塌腕"],
+    rest: '45-60 秒', tip: '手指屈肌的专项强化，攀岩/格斗人群必练'
+  },
+  {
+    id: 'reverse-grip-hang', name: '反握悬垂', muscle: 'forearms', type: 'isolate', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["前臂屈肌"], secondary: ["肱二头肌", "背阔肌"],
+    steps: ["双手反握单杠，身体自然悬垂", "保持肩膀放松下沉", "持续悬挂至力竭，重复 3-4 组"],
+    errors: ["耸肩缩脖", "身体前后晃动", "握力不足时硬撑"],
+    rest: '60-90 秒', tip: '最简单的握力基础训练，也是肩关节牵引放松动作'
+  },
+  {
+    id: 'wrist-curl-machine', name: '器械腕弯举', muscle: 'forearms', type: 'isolate', mechanic: 'other',
+    equipment: 'machine', difficulty: 1,
+    target: ["前臂屈肌"], secondary: [],
+    steps: ["坐于器械腕弯举机，前臂垫于托板", "手腕向上卷起至最大收缩", "顶端停顿后缓慢下放"],
+    errors: ["前臂离开托板", "借助身体晃动", "幅度过小"],
+    rest: '45-60 秒', tip: '固定轨迹避免手腕乱晃，安全上重量的首选'
+  }
 ];

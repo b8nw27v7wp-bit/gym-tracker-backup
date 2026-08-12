@@ -152,4 +152,29 @@ module.exports = [
     errors: ['膝盖内扣', '重心前移'],
     rest: '60-90 秒', tip: '宽站距更多臀部参与，兼练大腿内侧'
   }
+,
+  {
+    id: 'adductor-machine', name: '大腿内收机', muscle: 'legs', type: 'isolate', mechanic: 'other',
+    equipment: 'machine', difficulty: 1,
+    target: ["大腿内收肌群"], secondary: ["髂腰肌"],
+    steps: ["坐于内收机，双腿置于挡板上", "双腿发力向中间夹拢", "顶端停顿 1 秒，缓慢还原"],
+    errors: ["借助惯性快速夹拢", "还原过快", "腰部离开靠背"],
+    rest: '45-60 秒', tip: '内收肌常被忽视，与侧向行走搭配平衡大腿内侧外侧'
+  },
+  {
+    id: 'reverse-lunge', name: '反向箭步蹲', muscle: 'legs', type: 'compound', mechanic: 'other',
+    equipment: 'dumbbell', difficulty: 1,
+    target: ["股四头肌", "臀大肌"], secondary: ["腘绳肌", "大腿内收肌"],
+    steps: ["双手持哑铃自然下垂，双脚并拢站立", "单腿向后迈一步，前腿下蹲至大腿平行地面", "前腿发力蹬起回到起始位，交替进行"],
+    errors: ["后腿膝盖直接触地", "身体前倾过度", "重心压在前脚掌"],
+    rest: '60-90 秒', tip: '向后迈步对膝盖更友好，新手箭步蹲首选'
+  },
+  {
+    id: 'nordic-curl', name: '北欧腿弯举', muscle: 'legs', type: 'isolate', mechanic: 'pull',
+    equipment: 'bodyweight', difficulty: 3,
+    target: ["腘绳肌"], secondary: ["臀大肌"],
+    steps: ["跪姿，脚踝由伙伴或器械固定，躯干直立", "保持髋部伸直，身体缓慢前倾下放", "腘绳肌控制全程，接近地面时用手撑地缓冲", "用手推地回到起始位"],
+    errors: ["髋部屈曲提前卸力", "下放速度失控", "把动作做成俯身"],
+    rest: '90-120 秒', tip: '腘绳肌离心之王，预防拉伤效果极佳，从离心次数开始练'
+  }
 ];

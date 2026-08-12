@@ -64,4 +64,37 @@ module.exports = [
     errors: ['幅度过小', '借助身体晃动'],
     rest: '45-60 秒', tip: '单腿坐姿行程更深，比目鱼肌针对性更强'
   }
+,
+  {
+    id: 'tibialis-raise', name: '胫骨前肌提踵', muscle: 'calves', type: 'isolate', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ["胫骨前肌"], secondary: [],
+    steps: ["脚跟踩于台阶边缘，脚尖悬空", "脚尖向上勾起至最大幅度", "顶端停顿 1 秒，缓慢下放"],
+    errors: ["速度过快", "幅度不足", "用手扶墙借力过多"],
+    rest: '45-60 秒', tip: '胫骨前肌常被忽视，强化后小腿围度和膝盖稳定性双赢'
+  },
+  {
+    id: 'smith-calf', name: '史密斯机提踵', muscle: 'calves', type: 'isolate', mechanic: 'other',
+    equipment: 'machine', difficulty: 1,
+    target: ["腓肠肌"], secondary: ["比目鱼肌"],
+    steps: ["肩扛史密斯杠铃，前脚掌踩踏板", "脚跟下放至最大拉伸", "小腿发力踮起至最高点停顿 2 秒"],
+    errors: ["借助膝部弹动", "幅度过小", "顶端不停顿"],
+    rest: '45-60 秒', tip: '史密斯轨迹垂直稳定，比自由杠铃更容易上大重量'
+  },
+  {
+    id: 'weighted-step-calf', name: '负重台阶提踵', muscle: 'calves', type: 'isolate', mechanic: 'other',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ["腓肠肌"], secondary: ["比目鱼肌"],
+    steps: ["手持哑铃，前脚掌踩台阶边缘", "脚跟下放至最大拉伸", "单侧或双侧踮起至最高点停顿 2 秒"],
+    errors: ["幅度过小", "借助弹跳", "身体前倾"],
+    rest: '45-60 秒', tip: '居家负重方案，行程与器械版一致'
+  },
+  {
+    id: 'calf-press-single', name: '单腿腿举机提踵', muscle: 'calves', type: 'isolate', mechanic: 'other',
+    equipment: 'machine', difficulty: 2,
+    target: ["腓肠肌"], secondary: ["比目鱼肌"],
+    steps: ["坐于腿举机，单脚前掌踩踏板下缘", "脚跟下放至拉伸位", "单脚发力推起至最高点停顿"],
+    errors: ["膝盖完全锁死", "幅度过小", "左右失衡"],
+    rest: '45-60 秒', tip: '单腿版纠正两侧小腿围度差异，行程拉满'
+  }
 ];

@@ -23,7 +23,7 @@ function assert(cond, name) {
 
 // ---------- 动作库 v2 ----------
 console.log('1. 动作库（v2 专业版）');
-assert(exercisesData.ALL.length === 150, '共 ' + exercisesData.ALL.length + ' 个动作');
+assert(exercisesData.ALL.length === 180, '共 ' + exercisesData.ALL.length + ' 个动作');
 assert(exercisesData.MUSCLES.length === 10, '10 个部位');
 // id 唯一
 const ids = new Set();
@@ -48,6 +48,20 @@ assert(emptyMuscle === 0, '每个部位都有动作');
 // 部位知识
 const chest = exercisesData.muscleInfo('chest');
 assert(chest.freq.length > 0 && chest.tips.length >= 3 && chest.recommended.length >= 3, '部位知识（频率/要点/推荐动作）完整');
+// 动作关联知识：每个部位都有关联文章
+let noArticle = 0;
+exercisesData.MUSCLES.forEach(m => {
+  if (!exercisesData.muscleInfo(m.key).articleIds || exercisesData.muscleInfo(m.key).articleIds.length === 0) noArticle++;
+});
+assert(noArticle === 0, '10 个部位都有关联知识文章');
+const chestArts = chest.articleIds;
+assert(chestArts.indexOf('volume-intensity') >= 0, '胸部关联训练原理文章');
+assert(knowledge.getArticle(chestArts[0]) !== null, '关联文章 id 在知识库中真实存在');
+// 新扩充动作抽查
+assert(exercisesData.getExercise('landmine-press') && exercisesData.getExercise('nordic-curl') &&
+       exercisesData.getExercise('swimming') && exercisesData.getExercise('handstand-pushup'), 'v2.2 新动作已入库');
+assert(exercisesData.getExercise('calf-press-single').target.length >= 1, '新动作字段完整');
+assert(exercisesData.muscleName('legs').name === '腿', 'muscleName 兼容别名（stats 页）');
 assert(exercisesData.getExercise('squat').name === '杠铃深蹲', 'getExercise 查询');
 assert(exercisesData.difficultyText(2) === '进阶', '难度文案');
 assert(exercisesData.typeText('compound') === '复合', '类型文案');
@@ -196,6 +210,21 @@ const weekly = util.weeklyVolume(all, 8);
 assert(weekly.length === 8 && weekly[7].volume === 2600, '近 8 周 / 本周柱 2600');
 assert(weekly[6].volume === 500, '上周柱 500');
 
+// 训练热力图
+const hm = util.heatmap(all, 4);
+assert(hm.weeks.length === 4 && hm.weeks[3].days.length === 7, '热力图 4 周 × 7 天');
+// w1 在本周一（ts = thisWeekMon + 1h），容量 2560；w3 在 thisWeekMon - 3 天（上周五）容量 500
+const w3Day = hm.weeks[2].days.filter(d => d.ts === w3.ts)[0];
+assert(w3Day && w3Day.volume === 500, '热力图 w3 当日容量 500（实际 ' + (w3Day && w3Day.volume) + '）');
+assert(hm.weeks[3].days[0].volume === 2560, '热力图本周一容量 2560');
+assert(hm.maxVol >= 2560, '热力图最大日容量 ≥ 2560');
+// level 分档：最大日 → 4 档，0 容量 → 0 档
+assert(hm.weeks[3].days[0].level === 4, '最大容量日 level 4');
+assert(hm.weeks[3].days[3].level === 0 && hm.weeks[0].days[0].level === 0, '无训练日 level 0');
+const hm12 = util.heatmap(all, 12);
+assert(hm12.weeks.length === 12, '默认 12 周热力图');
+assert(util.heatmap([], 4).maxVol === 1, '空数据热力图安全');
+
 const pr = util.exercisePR('bench', all);
 assert(pr.maxWeight === 80 && pr.bestSetVol === 600, '卧推 PR 80kg / 最佳单组 600');
 
@@ -309,6 +338,70 @@ store.clearAll();
 assert(store.getWorkouts().length === 0 && store.getBodyweights().length === 0, '清空全部数据');
 assert(store.formatSize(2048) === '2.0 KB', '容量格式化（实际 ' + store.formatSize(2048) + '）');
 assert(store.dataSizeBytes() >= 0, '容量估算可用');
+
+// ---------- 动作详情页冒烟（v2.2 关联知识） ----------
+console.log('10. 动作详情页冒烟（关联知识）');
+let pageCfg = null;
+const navLog = [];
+global.Page = cfg => { pageCfg = cfg; };
+const wxNav = wx.navigateTo;
+wx.navigateTo = o => navLog.push(o.url);
+const wxToast = wx.showToast;
+wx.showToast = () => {};
+wx.setNavigationBarTitle = () => {};
+
+// 实例化页面对象
+function instantiate(cfg) {
+  const p = Object.create(cfg);
+  p.data = JSON.parse(JSON.stringify(cfg.data));
+  p.setData = function (obj) {
+    Object.keys(obj).forEach(k => {
+      const parts = k.split('.');
+      let cur = this.data;
+      for (let i = 0; i < parts.length - 1; i++) {
+        const m = parts[i].match(/^(\w+)\[(\d+)\]$/);
+        cur = m ? cur[m[1]][+m[2]] : cur[parts[i]];
+      }
+      const last = parts[parts.length - 1];
+      const lm = last.match(/^(\w+)\[(\d+)\]$/);
+      if (lm) cur[lm[1]][+lm[2]] = obj[k];
+      else cur[last] = obj[k];
+    });
+  };
+  return p;
+}
+
+// 加载动作详情页（require 会执行 Page() 捕获配置）
+require('./pages/exercise-detail/exercise-detail.js');
+const exPage = instantiate(pageCfg);
+exPage.onLoad({ id: 'bench' });
+assert(exPage.data.ex && exPage.data.ex.name === '杠铃卧推', '动作详情加载（bench → 杠铃卧推）');
+assert(exPage.data.muscle && exPage.data.muscle.name === '胸', '部位知识加载（胸部训练知识）');
+assert(exPage.data.muscle.tips.length >= 3, '部位要点 ≥3 条');
+assert(exPage.data.muscle.recommended.length >= 3, '同部位推荐动作 ≥3 个');
+assert(exPage.data.articles.length === 2 && exPage.data.articles[0].id === 'volume-intensity', '关联阅读 2 篇（训练原理）');
+assert(exPage.data.articles.every(a => a.title && a.summary && a.catName), '关联文章标题/摘要/分类完整');
+
+// 推荐动作跳转
+exPage.onRelatedTap({ currentTarget: { dataset: { id: 'db-bench' } } });
+assert(navLog[navLog.length - 1] === '/pages/exercise-detail/exercise-detail?id=db-bench', '推荐动作跳转');
+// 关联文章跳转
+exPage.onArticleTap({ currentTarget: { dataset: { id: 'progressive-overload' } } });
+assert(navLog[navLog.length - 1] === '/pages/knowledge-detail/knowledge-detail?id=progressive-overload', '关联文章跳转');
+
+// 其他部位动作的关联知识（抽查腿部）
+const legsPage = instantiate(pageCfg);
+legsPage.onLoad({ id: 'squat' });
+assert(legsPage.data.muscle.name === '腿' && legsPage.data.articles.length === 2, '深蹲关联腿部知识');
+
+// 不存在的动作 → toast + 返回
+const badPage = instantiate(pageCfg);
+badPage.onLoad({ id: 'nope' });
+assert(badPage.data.ex === null, '不存在动作显示空态');
+
+// 恢复 wx 原始函数
+wx.navigateTo = wxNav;
+wx.showToast = wxToast;
 
 console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
 process.exit(failed > 0 ? 1 : 0);

@@ -92,10 +92,31 @@ function getExercise(id) {
 
 function muscleInfo(key) {
   for (var i = 0; i < MUSCLES.length; i++) {
-    if (MUSCLES[i].key === key) return MUSCLES[i];
+    if (MUSCLES[i].key === key) {
+      var m = MUSCLES[i];
+      return {
+        key: m.key, name: m.name, icon: m.icon, freq: m.freq, desc: m.desc,
+        tips: m.tips, recommended: m.recommended,
+        articleIds: MUSCLE_ARTICLES[m.key] || []
+      };
+    }
   }
-  return { key: key, name: key, icon: '', freq: '', desc: '', tips: [], recommended: [] };
+  return { key: key, name: key, icon: '', freq: '', desc: '', tips: [], recommended: [], articleIds: [] };
 }
+
+// 部位 → 关联知识文章（动作详情页"关联阅读"）
+var MUSCLE_ARTICLES = {
+  chest: ['volume-intensity', 'progressive-overload'],
+  back: ['volume-intensity', 'rest-interval'],
+  legs: ['progressive-overload', 'tracking-guide'],
+  glutes: ['frequency-guide', 'progressive-overload'],
+  shoulder: ['rm-rir-rpe', 'rest-interval'],
+  arms: ['rm-rir-rpe', 'volume-intensity'],
+  forearms: ['tracking-guide', 'frequency-guide'],
+  core: ['frequency-guide', 'rm-rir-rpe'],
+  calves: ['tracking-guide', 'rest-interval'],
+  cardio: ['fat-loss', 'tracking-guide']
+};
 
 // 按关键字搜索动作名
 function searchExercises(keyword) {
@@ -132,6 +153,7 @@ module.exports = {
   exercisesByMuscle: exercisesByMuscle,
   getExercise: getExercise,
   muscleInfo: muscleInfo,
+  muscleName: muscleInfo, // 兼容别名（stats 页使用）
   searchExercises: searchExercises,
   difficultyText: difficultyText,
   typeText: typeText,

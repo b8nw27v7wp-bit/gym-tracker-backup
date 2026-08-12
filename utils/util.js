@@ -149,6 +149,48 @@ function weeklyVolume(workouts, n) {
   return result;
 }
 
+// 训练热力图（日历视图）：近 weeks 周，每天一格，颜色深浅 = 当日容量
+// 返回 { weeks: [{ weekStart, label, days: [{ ts, volume, level }] }], maxVol, totalDays }
+// level: 0=无训练；1-4=按当日容量相对最大日的四档
+function heatmap(workouts, weeks) {
+  var n = weeks || 12;
+  var now = Date.now();
+  var start = weekStart(now);
+  var dayMs = 86400000;
+  var result = [];
+
+  // 按天聚合容量（从最早一周的周一起）
+  var firstWeekStart = start - (n - 1) * 7 * dayMs;
+  var dayVol = {};
+  (workouts || []).forEach(function (w) {
+    if (w.ts < firstWeekStart) return;
+    var d = dateStr(w.ts);
+    var v = calcWorkout(w).volume;
+    dayVol[d] = (dayVol[d] || 0) + v;
+  });
+
+  var maxVol = 1;
+  Object.keys(dayVol).forEach(function (k) { if (dayVol[k] > maxVol) maxVol = dayVol[k]; });
+
+  for (var i = 0; i < n; i++) {
+    var ws = firstWeekStart + i * 7 * dayMs;
+    var days = [];
+    for (var d = 0; d < 7; d++) {
+      var ts = ws + d * dayMs;
+      var ds = dateStr(ts);
+      var v = dayVol[ds] || 0;
+      var level = 0;
+      if (v > 0) {
+        var ratio = v / maxVol;
+        level = ratio >= 0.75 ? 4 : ratio >= 0.5 ? 3 : ratio >= 0.25 ? 2 : 1;
+      }
+      days.push({ ts: ts, volume: v, level: level });
+    }
+    result.push({ weekStart: ws, label: weekLabel(ws), days: days });
+  }
+  return { weeks: result, maxVol: maxVol };
+}
+
 // 本周 vs 上周容量对比
 function weekCompare(workouts) {
   var now = Date.now();
@@ -252,6 +294,7 @@ module.exports = {
   fmtDuration: fmtDuration,
   volumeByMuscle: volumeByMuscle,
   weeklyVolume: weeklyVolume,
+  heatmap: heatmap,
   weekCompare: weekCompare,
   exercisePR: exercisePR,
   epley1RM: epley1RM,

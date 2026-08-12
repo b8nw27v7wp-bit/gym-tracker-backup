@@ -199,6 +199,91 @@
   margin-top: 10rpx;
 }
 
+/* 训练热力图 */
+.heat-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.heat-days {
+  font-size: 22rpx;
+  color: #9ca3af;
+}
+
+.heat-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.heat-grid {
+  display: flex;
+  padding: 4rpx 0 8rpx;
+}
+
+.heat-week {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 8rpx;
+}
+
+.heat-week-label {
+  font-size: 18rpx;
+  color: #9ca3af;
+  height: 28rpx;
+  line-height: 28rpx;
+  margin-bottom: 6rpx;
+}
+
+.heat-label-spacer {
+  visibility: hidden;
+}
+
+.heat-days-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.heat-cell {
+  width: 26rpx;
+  height: 26rpx;
+  border-radius: 6rpx;
+  margin-bottom: 6rpx;
+  background: #f3f4f6;
+}
+
+.heat-l0 { background: #f3f4f6; }
+.heat-l1 { background: #dbeafe; }
+.heat-l2 { background: #93c5fd; }
+.heat-l3 { background: #3b82f6; }
+.heat-l4 { background: #1d4ed8; }
+
+.heat-cell-hover {
+  opacity: 0.7;
+}
+
+.heat-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 12rpx;
+}
+
+.heat-legend-text {
+  font-size: 20rpx;
+  color: #9ca3af;
+  margin: 0 8rpx;
+}
+
+.legend-cell {
+  width: 20rpx;
+  height: 20rpx;
+  margin-bottom: 0;
+  margin-right: 6rpx;
+}
+
 /* 部位分布 */
 .dist-row {
   display: flex;

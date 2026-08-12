@@ -57,6 +57,37 @@
     <text class="tip-text">{{ex.tip}}</text>
   </view>
 
+  <!-- 部位训练知识 -->
+  <view class="card" wx:if="{{muscle}}">
+    <view class="card-title">{{muscle.name}}部训练知识</view>
+    <view class="m-freq">{{muscle.freq}} · {{muscle.desc}}</view>
+    <view wx:for="{{muscle.tips}}" wx:key="index" class="m-tip-row">
+      <text class="m-tip-dot">•</text>
+      <text class="m-tip-text">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 相关动作 -->
+  <view class="card" wx:if="{{muscle.recommended.length > 0}}">
+    <view class="card-title">同部位推荐</view>
+    <view class="rel-row" wx:for="{{muscle.recommended}}" wx:key="id" data-id="{{item.id}}" bindtap="onRelatedTap">
+      <text class="rel-name">{{item.name}}</text>
+      <text class="rel-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 关联阅读 -->
+  <view class="card" wx:if="{{articles.length > 0}}">
+    <view class="card-title">关联阅读</view>
+    <view class="rel-row" wx:for="{{articles}}" wx:key="id" data-id="{{item.id}}" bindtap="onArticleTap">
+      <view class="rel-left">
+        <text class="rel-name">{{item.title}}</text>
+        <text class="rel-summary">{{item.catName}} · {{item.summary}}</text>
+      </view>
+      <text class="rel-arrow">›</text>
+    </view>
+  </view>
+
   <!-- 底部操作 -->
   <view class="footer">
     <view class="save-btn" bindtap="onRecord">去记录这个动作</view>

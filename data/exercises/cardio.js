@@ -88,4 +88,29 @@ module.exports = [
     errors: ['弯腰弓背', '步幅过大'],
     rest: '60-90 秒', tip: '全身发力模式训练，膝盖压力小'
   }
+,
+  {
+    id: 'swimming', name: '游泳', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'other', difficulty: 1,
+    target: ["心肺", "背阔肌"], secondary: ["三角肌", "核心"],
+    steps: ["热身 5 分钟后开始持续游", "自由泳或蛙泳保持匀速呼吸", "间歇休息后重复 4-6 个段落"],
+    errors: ["憋气游导致心率过高", "姿势变形仍硬撑", "不热身直接下水"],
+    rest: '60-90 秒', tip: '全身性低冲击有氧，关节压力最小的燃脂选项'
+  },
+  {
+    id: 'shadow-boxing', name: '空击', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'other', difficulty: 1,
+    target: ["心肺", "三角肌"], secondary: ["核心", "小腿"],
+    steps: ["摆出拳击站架，双脚前后分立", "连续打出直拳组合，配合脚下移动", "每回合 2-3 分钟，间歇 30 秒"],
+    errors: ["手臂完全伸直锁死", "重心不动只出拳", "节奏忽快忽慢"],
+    rest: '45-60 秒', tip: '居家零器械高强度有氧，对肩部耐力与协调性极佳'
+  },
+  {
+    id: 'stair-run', name: '爬楼梯', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["心肺", "股四头肌"], secondary: ["臀大肌", "小腿"],
+    steps: ["快步爬楼，每次跨 1-2 级", "保持核心收紧，前脚掌发力", "到达楼层后乘电梯下楼休息，循环 10-15 分钟"],
+    errors: ["扶着扶手借力", "一步跨太多级", "下楼跑动伤膝"],
+    rest: '45-60 秒', tip: '电梯下楼只做上楼段，保护膝盖同时保证强度'
+  }
 ];

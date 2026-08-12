@@ -160,4 +160,29 @@ module.exports = [
     errors: ['含胸', '用手臂代偿'],
     rest: '60-90 秒', tip: '宽握更侧重中背厚度，与窄握划船互补'
   }
+,
+  {
+    id: 'lat-prayer', name: '跪姿高位下拉', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'cable', difficulty: 2,
+    target: ["背阔肌"], secondary: ["大圆肌", "肱二头肌"],
+    steps: ["跪于高位下拉器前，双手宽握横杆", "身体略后仰，将横杆拉向锁骨方向", "顶端夹紧肩胛骨，缓慢还原至手臂伸直"],
+    errors: ["身体大幅摆动借力", "拉到胸口后肘部过度后移", "还原时耸肩"],
+    rest: '60-90 秒', tip: '跪姿固定骨盆，比坐姿更能孤立背阔肌'
+  },
+  {
+    id: 'back-extension', name: '背屈伸', muscle: 'back', type: 'isolate', mechanic: 'pull',
+    equipment: 'machine', difficulty: 1,
+    target: ["竖脊肌"], secondary: ["臀大肌", "腘绳肌"],
+    steps: ["俯卧于罗马椅，髋部贴垫，脚踝固定", "身体下放至与地面约 45 度", "臀部发力将躯干抬起至中立位，避免过伸"],
+    errors: ["起身过高反弓腰部", "用腰部猛甩借力", "脖子过度后仰"],
+    rest: '45-60 秒', tip: '竖脊肌恢复快，可放训练末尾做 3 组高次数'
+  },
+  {
+    id: 'meadow-row', name: '梅多斯划船', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'barbell', difficulty: 3,
+    target: ["背阔肌", "大圆肌"], secondary: ["菱形肌", "肱二头肌"],
+    steps: ["杠铃一端固定于地雷架，侧身单臂握杠", "躯干接近平行地面，握杠手自然下垂", "单臂将杠铃拉向髋部，肘部贴身", "顶端挤压背阔肌后缓慢下放"],
+    errors: ["身体旋转借力", "拉向胸口而非髋部", "下放不完全"],
+    rest: '90-120 秒', tip: '单臂杠铃轨迹比哑铃更稳定，适合上大重量练背阔'
+  }
 ];

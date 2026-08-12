@@ -33,7 +33,7 @@ gym-tracker/
 │   ├── history  exercise-detail  knowledge-detail  # v2.0 子页
 │   └── plans  calculator  data  privacy            # v2.1 子页
 ├── doc/                            项目文档
-└── test.js                         数据层单测（85 项断言）
+└── test.js                         数据层单测（109 项断言）
 ```
 
 ## 3. 开发规范

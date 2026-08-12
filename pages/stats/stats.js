@@ -25,6 +25,8 @@ Page({
     bwDeltaText: '',
     bwPoints: [],
     weekly: [],
+    heatWeeks: [],
+    heatDays: 0,
     muscleDist: [],
     prs: []
   },
@@ -87,6 +89,27 @@ Page({
     weekly.forEach(function (w) { if (w.volume > maxVol) maxVol = w.volume; });
     weekly.forEach(function (w) {
       w.height = w.volume > 0 ? Math.max(Math.round((w.volume / maxVol) * 100), 12) : 0;
+    });
+
+    // 训练热力图（近 12 周日历）
+    var hm = util.heatmap(workouts, 12);
+    var heatWeeks = hm.weeks.map(function (w) {
+      return {
+        label: w.label,
+        days: w.days.map(function (d) {
+          return {
+            ts: d.ts,
+            vol: d.volume,
+            level: d.level,
+            has: d.volume > 0
+          };
+        })
+      };
+    });
+    // 本月训练天数（热力图覆盖区间内）
+    var heatDays = 0;
+    heatWeeks.forEach(function (w) {
+      w.days.forEach(function (d) { if (d.has) heatDays += 1; });
     });
 
     // 部位分布
@@ -171,6 +194,8 @@ Page({
       bwDeltaText: bodyDeltaText ? '变化 ' + bodyDeltaText + ' kg' : '',
       bwPoints: bwPoints,
       weekly: weekly,
+      heatWeeks: heatWeeks,
+      heatDays: heatDays,
       muscleDist: muscleDist,
       prs: prs
     });

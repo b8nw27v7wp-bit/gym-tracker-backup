@@ -72,6 +72,36 @@
     </view>
   </view>
 
+  <!-- 训练热力图 -->
+  <view class="card" wx:if="{{hasData}}">
+    <view class="heat-head">
+      <view class="card-title">训练热力图</view>
+      <text class="heat-days">近 12 周训练 {{heatDays}} 天</text>
+    </view>
+    <scroll-view scroll-x class="heat-scroll" enable-flex>
+      <view class="heat-grid">
+        <view class="heat-week" wx:for="{{heatWeeks}}" wx:key="weekStart" wx:for-item="wk">
+          <text class="heat-week-label" wx:if="{{index % 4 === 0}}">{{wk.label}}</text>
+          <text class="heat-week-label heat-label-spacer" wx:else> </text>
+          <view class="heat-days-col">
+            <view wx:for="{{wk.days}}" wx:key="ts" wx:for-item="d"
+                  class="heat-cell heat-l{{d.level}}"
+                  hover-class="heat-cell-hover"></view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="heat-legend">
+      <text class="heat-legend-text">少</text>
+      <view class="heat-cell heat-l0 legend-cell"></view>
+      <view class="heat-cell heat-l1 legend-cell"></view>
+      <view class="heat-cell heat-l2 legend-cell"></view>
+      <view class="heat-cell heat-l3 legend-cell"></view>
+      <view class="heat-cell heat-l4 legend-cell"></view>
+      <text class="heat-legend-text">多</text>
+    </view>
+  </view>
+
   <!-- 部位分布 -->
   <view class="card" wx:if="{{hasData}}">
     <view class="card-title">部位训练分布</view>

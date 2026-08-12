@@ -128,4 +128,29 @@ module.exports = [
     errors: ['下放过深', '耸肩'],
     rest: '60-90 秒', tip: '固定轨迹安全，新手学推肩模式首选'
   }
+,
+  {
+    id: 'machine-rear-delt', name: '器械反向飞鸟', muscle: 'shoulder', type: 'isolate', mechanic: 'pull',
+    equipment: 'machine', difficulty: 1,
+    target: ["三角肌后束"], secondary: ["菱形肌", "斜方肌中束"],
+    steps: ["坐于反向飞鸟机，胸口贴垫，双手握把", "双臂向两侧展开至与肩平齐", "顶端停顿 1 秒，缓慢还原"],
+    errors: ["耸肩代偿", "借助惯性甩臂", "幅度过大后拉"],
+    rest: '45-60 秒', tip: '固定轨迹安全稳定，后束薄弱者用小重量高频打磨'
+  },
+  {
+    id: 'cable-front-raise', name: '绳索前平举', muscle: 'shoulder', type: 'isolate', mechanic: 'push',
+    equipment: 'cable', difficulty: 1,
+    target: ["三角肌前束"], secondary: [],
+    steps: ["背对低位滑轮，单手握把", "手臂伸直向前抬起至与肩平", "顶端停顿后缓慢下放"],
+    errors: ["身体后仰借力", "耸肩", "摆动甩起"],
+    rest: '45-60 秒', tip: '绳索全程张力，前束孤立效果优于哑铃'
+  },
+  {
+    id: 'handstand-pushup', name: '倒立撑', muscle: 'shoulder', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 3,
+    target: ["三角肌", "肱三头肌"], secondary: ["斜方肌"],
+    steps: ["靠墙倒立，双手撑地与墙保持距离", "屈肘将头顶缓慢接近地面", "肩部发力推起至手臂伸直"],
+    errors: ["腰部过度反弓", "头顶直接砸地", "肘部外展过大"],
+    rest: '90-120 秒', tip: '肩部王牌自重动作，进阶可做半程或加负重背心'
+  }
 ];
