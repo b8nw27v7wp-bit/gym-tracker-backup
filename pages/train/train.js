@@ -109,20 +109,34 @@ Page({
   },
 
   // ---------- 选动作 ----------
+  // 动作列表加部位图标，供大格展示
+  decorateExerciseList: function (list) {
+    return list.map(function (ex) {
+      var m = exercisesData.muscleInfo(ex.muscle);
+      return {
+        id: ex.id,
+        name: ex.name,
+        muscle: ex.muscle,
+        icon: m.icon,
+        diffText: exercisesData.difficultyText(ex.difficulty)
+      };
+    });
+  },
+
   onPickMuscle: function (e) {
     var key = e.currentTarget.dataset.key;
     this.setData({
       currentMuscle: key,
-      exerciseList: util.sortByFrequency(exercisesData.exercisesByMuscle(key), this.freqMap || {})
+      exerciseList: this.decorateExerciseList(util.sortByFrequency(exercisesData.exercisesByMuscle(key), this.freqMap || {}))
     });
   },
 
   refreshExerciseList: function () {
     this.setData({
-      exerciseList: util.sortByFrequency(
+      exerciseList: this.decorateExerciseList(util.sortByFrequency(
         exercisesData.exercisesByMuscle(this.data.currentMuscle),
         this.freqMap || {}
-      )
+      ))
     });
   },
 
@@ -132,7 +146,7 @@ Page({
     this.setData({ searchKeyword: kw });
     if (kw) {
       this.setData({
-        exerciseList: exercisesData.searchExercises(kw)
+        exerciseList: this.decorateExerciseList(exercisesData.searchExercises(kw))
       });
     } else {
       this.refreshExerciseList();

@@ -61,7 +61,11 @@
           class="exercise-item"
           data-id="{{item.id}}"
           bindtap="onAddExercise"
-        >{{item.name}}</view>
+        >
+          <text class="exercise-icon">{{item.icon}}</text>
+          <text class="exercise-name">{{item.name}}</text>
+          <text class="exercise-diff">{{item.diffText}}</text>
+        </view>
       </view>
     </block>
 
@@ -74,7 +78,11 @@
           class="exercise-item"
           data-id="{{item.id}}"
           bindtap="onAddExercise"
-        >{{item.name}}</view>
+        >
+          <text class="exercise-icon">{{item.icon}}</text>
+          <text class="exercise-name">{{item.name}}</text>
+          <text class="exercise-diff">{{item.diffText}}</text>
+        </view>
       </view>
       <view class="btn-ghost" bindtap="onClearSearch">清除搜索，返回部位选择</view>
     </block>

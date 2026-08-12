@@ -132,13 +132,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 150rpx;
-  height: 126rpx;
-  border-radius: 22rpx;
+  width: 168rpx;
+  height: 140rpx;
+  border-radius: 24rpx;
   background: #ffffff;
   border: 1rpx solid #f3f4f6;
   margin: 0 8rpx 16rpx;
-  font-size: 25rpx;
+  font-size: 26rpx;
   color: #374151;
   box-shadow: 0 2rpx 10rpx rgba(17, 24, 39, 0.04);
   transition: all 0.15s;
@@ -157,12 +157,12 @@
 }
 
 .muscle-icon {
-  font-size: 42rpx;
-  margin-bottom: 8rpx;
+  font-size: 46rpx;
+  margin-bottom: 10rpx;
   line-height: 1;
 }
 
-/* ========== 动作网格 ========== */
+/* ========== 动作网格（两列大格） ========== */
 .exercise-grid {
   display: flex;
   flex-wrap: wrap;
@@ -170,15 +170,16 @@
 }
 
 .exercise-item {
-  width: 31.3%;
+  width: 48.4%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   margin: 0 8rpx 16rpx;
   background: #ffffff;
   border: 1rpx solid #f3f4f6;
-  border-radius: 18rpx;
-  padding: 22rpx 0;
-  text-align: center;
-  font-size: 25rpx;
-  color: #111827;
+  border-radius: 22rpx;
+  padding: 28rpx 12rpx;
   box-sizing: border-box;
   box-shadow: 0 2rpx 10rpx rgba(17, 24, 39, 0.03);
   transition: all 0.15s;
@@ -186,8 +187,36 @@
 
 .exercise-item:active {
   background: #111827;
-  color: #ffffff;
+  border-color: #111827;
   transform: scale(0.97);
+}
+
+.exercise-item:active .exercise-name {
+  color: #ffffff;
+}
+
+.exercise-item:active .exercise-diff {
+  color: #d1d5db;
+}
+
+.exercise-icon {
+  font-size: 48rpx;
+  line-height: 1;
+  margin-bottom: 12rpx;
+}
+
+.exercise-name {
+  font-size: 27rpx;
+  font-weight: 500;
+  color: #111827;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.exercise-diff {
+  font-size: 21rpx;
+  color: #9ca3af;
+  margin-top: 8rpx;
 }
 
 /* ========== 组编辑 ========== */
