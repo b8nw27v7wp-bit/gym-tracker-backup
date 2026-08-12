@@ -1,7 +1,7 @@
 {
   "desc": "铁馆日志 - 健身训练记录小程序",
   "projectname": "gym-tracker",
-  "appid": "touristappid",
+  "appid": "wx83a08a69cc9d9fd5",
   "compileType": "miniprogram",
   "libVersion": "3.4.0",
   "setting": {
@@ -9,7 +9,31 @@
     "enhance": true,
     "postcss": true,
     "minified": true,
-    "urlCheck": false
+    "urlCheck": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
-  "condition": {}
+  "condition": {},
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {}
 }

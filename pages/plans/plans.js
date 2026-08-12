@@ -2,7 +2,7 @@
 var planUtil = require('../../utils/plan');
 var store = require('../../utils/store');
 var util = require('../../utils/util');
-var exercisesData = require('../../data/exercises');
+var exercisesData = require('../../data/exercises/index');
 
 Page({
   data: {

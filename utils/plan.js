@@ -2,7 +2,7 @@
 // 自定义计划（用户自建）通过参数传入，与内置计划统一处理；结构一致：
 // { id, name, level, desc, daysPerWeek, days: [{ id, name, items: [{ exerciseId, sets, reps }] }] }
 var plans = require('../data/plans');
-var exercisesData = require('../data/exercises');
+var exercisesData = require('../data/exercises/index');
 
 // 合并全部计划：内置在前，自定义在后（自定义 id 以 cp_ 开头，天然不冲突）
 function allPlans(customPlans) {

@@ -1,5 +1,5 @@
 // 知识库页：分类浏览健身知识文章
-var knowledge = require('../../data/knowledge');
+var knowledge = require('../../data/knowledge/index');
 
 Page({
   data: {

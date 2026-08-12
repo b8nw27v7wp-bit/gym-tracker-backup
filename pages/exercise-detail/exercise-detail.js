@@ -1,6 +1,6 @@
 // 动作详情页
-var exercisesData = require('../../data/exercises');
-var knowledge = require('../../data/knowledge');
+var exercisesData = require('../../data/exercises/index');
+var knowledge = require('../../data/knowledge/index');
 
 Page({
   data: {

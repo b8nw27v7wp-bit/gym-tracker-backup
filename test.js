@@ -11,8 +11,8 @@ global.wx = {
 
 const store = require('./utils/store');
 const util = require('./utils/util');
-const exercisesData = require('./data/exercises');
-const knowledge = require('./data/knowledge');
+const exercisesData = require('./data/exercises/index');
+const knowledge = require('./data/knowledge/index');
 const planUtil = require('./utils/plan');
 
 let passed = 0, failed = 0;

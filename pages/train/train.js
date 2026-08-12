@@ -1,5 +1,5 @@
 // 训练记录页：选部位 → 选动作 → 记组 → 保存
-var exercisesData = require('../../data/exercises');
+var exercisesData = require('../../data/exercises/index');
 var store = require('../../utils/store');
 var util = require('../../utils/util');
 var planUtil = require('../../utils/plan');

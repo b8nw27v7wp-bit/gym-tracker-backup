@@ -1,7 +1,7 @@
 // 统计页：周容量趋势 / 部位分布 / 个人纪录
 var store = require('../../utils/store');
 var util = require('../../utils/util');
-var exercisesData = require('../../data/exercises');
+var exercisesData = require('../../data/exercises/index');
 
 // 展示 PR 的招牌动作
 var PR_EXERCISES = ['bench', 'squat', 'deadlift', 'ohp', 'pullup', 'db-bench', 'leg-press', 'bb-row'];

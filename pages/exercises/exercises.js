@@ -1,5 +1,5 @@
 // 动作库页：浏览 / 筛选 / 搜索动作
-var exercisesData = require('../../data/exercises');
+var exercisesData = require('../../data/exercises/index');
 
 Page({
   data: {

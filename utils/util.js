@@ -1,5 +1,5 @@
 // 训练数据计算：容量 / 强度 / 统计
-var exercises = require('../data/exercises');
+var exercises = require('../data/exercises/index');
 
 // ---------- 训练容量 ----------
 // 单组容量 = 重量 × 次数；训练容量 = Σ(组容量)；自重动作 weight 记 0，容量按附加重量算

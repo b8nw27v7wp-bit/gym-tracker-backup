@@ -47,7 +47,15 @@
 - 复现步骤：训练页保存任意记录 → 切到统计页（有数据）→ 崩
 - 根因：index.js 导出了 muscleInfo 但无 muscleName；stats.js 按旧接口名调用，重构动作库时接口未同步
 - 修复：index.js 导出 `muscleName: muscleInfo` 兼容别名
-- 验证：`node test.js` 新增 muscleName 别名断言 + 统计页冒烟（109 项全绿）
+- 验证：`node test.js` 新增 muscleName 别名断言 + 统计页冒烟（157 项全绿）
+
+### BUG-006 | 2026-08-12 | S1 | 已关闭
+- 模块：全局（首次微信开发者工具运行发现）
+- 描述：模拟器编译后所有页面整页白屏（tabBar 正常），Console 报 `module 'data/exercises.js' is not defined, require args is '../data/exercises'`
+- 复现步骤：微信开发者工具导入项目 → 编译 → 所有 tab 页白屏
+- 根因：微信小程序 require 不解析目录 index.js（与 Node 不同）——项目 11 个文件 12 处 `require('.../data/exercises')` / `require('.../data/knowledge')` 目录引用在微信环境全部失效；此前仅 node 测试通过（Node 支持目录解析），从未在微信环境运行过
+- 修复：全部目录引用改为显式 `require('.../data/exercises/index')` / `require('.../data/knowledge/index')`
+- 验证：`node test.js` 157 项全绿 + 模拟器编译通过 + 12 页面加载正常
 
 ---
 

@@ -1,5 +1,5 @@
 // 知识文章详情页
-var knowledge = require('../../data/knowledge');
+var knowledge = require('../../data/knowledge/index');
 
 Page({
   data: {
