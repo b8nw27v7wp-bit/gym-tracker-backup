@@ -61,6 +61,11 @@ Page({
     this.setData({ chartVisible: false });
   },
 
+  // 切走 tab 时关闭图表弹层，避免回来时残留
+  onHide: function () {
+    this.setData({ chartVisible: false });
+  },
+
   loadStats: function () {
     var workouts = store.getWorkouts();
     // 热量板块（不依赖训练记录，无训练也显示）

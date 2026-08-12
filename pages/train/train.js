@@ -81,6 +81,9 @@ Page({
     }
     // 本周计划今日提醒
     this.refreshPlanReminder();
+    // 重新统计动作使用频率（保存训练后切回时常用动作排序更新）
+    this.freqMap = util.frequencyByExercise(store.getWorkouts());
+    if (this.data.step === 'pick') this.refreshExerciseList();
   },
 
   // 本周计划今日提醒：有周计划且下一个训练日未完成时显示
@@ -117,13 +120,29 @@ Page({
     wx.navigateTo({ url: '/pages/plans/plans' });
   },
 
-  // 按计划日填充训练草稿
+  // 按计划日填充训练草稿（已有未保存动作时先确认，防止覆盖丢失）
   applyPlanDay: function (pending) {
     var draft = planUtil.buildDraftFromPlan(pending.planId, pending.dayId, store.getCustomPlans());
     if (draft.length === 0) {
       wx.showToast({ title: '计划数据异常', icon: 'none' });
       return;
     }
+    if (this.data.draft.length > 0) {
+      var self = this;
+      wx.showModal({
+        title: '替换当前训练？',
+        content: '已添加 ' + this.data.draft.length + ' 个动作，按计划填充将替换它们',
+        confirmText: '替换',
+        success: function (res) {
+          if (res.confirm) self.fillDraftFromPlan(draft, pending);
+        }
+      });
+      return;
+    }
+    this.fillDraftFromPlan(draft, pending);
+  },
+
+  fillDraftFromPlan: function (draft, pending) {
     this.setData({ draft: draft, step: 'pick', planInfo: { planId: pending.planId, dayId: pending.dayId } });
     this.refreshDraftMeta();
     wx.showToast({ title: '已按计划填充 ' + draft.length + ' 个动作', icon: 'none' });

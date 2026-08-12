@@ -734,6 +734,25 @@ assert(fdPage.data.calc.grams === 150, '恢复默认份量');
 fdPage.onCloseCalc();
 assert(fdPage.data.calc === null, '关闭计算面板');
 
+// ---------- 训练页计划填充覆盖保护冒烟（v2.6.2） ----------
+console.log('10f. 训练页计划填充保护');
+require('./pages/train/train.js');
+const trPage = instantiate(pageCfg);
+trPage.data.draft = [{ exerciseId: 'bench', exerciseName: 'x', muscle: 'chest', sets: [{ weight: '60', reps: '8' }] }];
+const wxModal2 = wx.showModal;
+let modalCalled = null;
+wx.showModal = o => { modalCalled = o; };
+trPage.applyPlanDay({ planId: 'beginner-fullbody', dayId: 'a' });
+assert(modalCalled && modalCalled.title === '替换当前训练？', '已有草稿时弹覆盖确认');
+assert(trPage.data.draft.length === 1, '未确认前不覆盖草稿');
+wx.showModal = o => o.success && o.success({ confirm: true });
+trPage.applyPlanDay({ planId: 'beginner-fullbody', dayId: 'a' });
+assert(trPage.data.draft.length === 5 && trPage.data.planInfo.dayId === 'a', '确认后按计划填充 5 个动作');
+trPage.data.draft = [];
+trPage.applyPlanDay({ planId: 'beginner-fullbody', dayId: 'a' });
+assert(trPage.data.draft.length === 5, '空草稿直接填充不弹窗');
+wx.showModal = wxModal2;
+
 // ---------- 自建计划页冒烟（v2.3） ----------
 console.log('11. 自建计划页冒烟');
 // 重置存储，清空自定义计划
