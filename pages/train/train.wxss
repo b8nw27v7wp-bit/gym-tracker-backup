@@ -1,5 +1,5 @@
 .page {
-  padding-bottom: 200rpx;
+  padding-bottom: 240rpx;
 }
 
 /* ========== 页头 ========== */
@@ -387,17 +387,19 @@
 }
 
 /* ========== 底部保存栏 ========== */
+/* bottom 让出自定义 tabBar 高度（tabBar 内容约 100rpx + 安全区），避免被遮挡 */
 .footer {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: calc(100rpx + env(safe-area-inset-bottom));
   background: #ffffff;
-  padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
+  padding: 20rpx 32rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 -4rpx 20rpx rgba(17, 24, 39, 0.06);
+  z-index: 100; /* 低于 tabBar(999)，高于页面内容 */
 }
 
 .footer-summary {

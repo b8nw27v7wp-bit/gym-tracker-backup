@@ -1,5 +1,5 @@
 .page {
-  padding-bottom: 140rpx;
+  padding-bottom: 180rpx;
 }
 
 .search-wrap {
