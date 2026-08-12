@@ -514,6 +514,12 @@ assert(n1.valid && n1.bmr === 1674, 'BMR 1674（实际 ' + n1.bmr + '）');
 // TDEE = 1674 * 1.55 = 2594.7 → 2595
 assert(n1.tdee === 2595, 'TDEE 2595（实际 ' + n1.tdee + '）');
 assert(n1.proteinMin === 112 && n1.proteinMax === 154, '蛋白质 112-154g（实际 ' + n1.proteinMin + '-' + n1.proteinMax + '）');
+// 输入校验边界
+assert(nutrition.calcNutrition({ gender: 'x', age: 25, heightCm: 175, weightKg: 70, activity: 3 }).valid === false, '非法性别拦截');
+assert(nutrition.calcNutrition({ gender: 'male', age: 5, heightCm: 175, weightKg: 70, activity: 3 }).valid === false, '年龄过小拦截');
+assert(nutrition.calcNutrition({ gender: 'male', age: 25, heightCm: 80, weightKg: 70, activity: 3 }).valid === false, '身高过矮拦截');
+assert(nutrition.calcNutrition({ gender: 'male', age: 25, heightCm: 175, weightKg: 20, activity: 3 }).valid === false, '体重过轻拦截');
+assert(nutrition.calcNutrition({ gender: 'male', age: 25, heightCm: 175, weightKg: 70, activity: 9 }).valid === false, '活动水平非法拦截');
 assert(n1.bulkCal === 2855 && n1.cutCal === 2128, '增肌 2855 / 减脂 2128（实际 ' + n1.bulkCal + '/' + n1.cutCal + '）');
 // 女 30 岁 160cm 55kg 轻度（2）
 const n2 = nutrition.calcNutrition({ gender: 'female', age: 30, heightCm: 160, weightKg: 55, activity: 2 });
@@ -877,6 +883,115 @@ assert(store.getCustomPlans().length === 0, '删除计划生效');
 // 清空恢复
 store.clearAll();
 store.ensureInit();
+
+// ---------- 端到端联动验证（v2.7 页面链接 + 计算全链路） ----------
+console.log('12. 端到端联动（页面链接 + 计算链路）');
+// 页面可能已 require 过（Node 缓存导致 Page() 不重新执行、pageCfg 指向旧页），强制重新加载
+function freshRequire(rel) {
+  delete require.cache[require.resolve(rel)];
+  require(rel);
+}
+store.clearAll();
+store.ensureInit();
+
+// ① 训练页保存训练（60×10 + 70×8 卧推，100×5 深蹲，1 小时）
+freshRequire('./pages/train/train.js');
+const e2eTrain = instantiate(pageCfg);
+e2eTrain.data.draft = [
+  { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: '60', reps: '10' }, { weight: '70', reps: '8' }] },
+  { exerciseId: 'squat', exerciseName: '杠铃深蹲', muscle: 'legs', sets: [{ weight: '100', reps: '5' }] }
+];
+e2eTrain.data.note = '状态不错';
+e2eTrain.sessionStartTs = Date.now() - 3600000;
+e2eTrain.onSave();
+let saved = store.getWorkouts();
+assert(saved.length === 1 && saved[0].items.length === 2, '训练保存：2 个动作');
+assert(saved[0].duration === 60 && saved[0].note === '状态不错', '时长/备注保存');
+assert(store.getWorkouts()[0].items[0].sets[0].weight === 60, '组数据落库为数字');
+
+// ② 历史页展示与展开
+freshRequire('./pages/history/history.js');
+const e2eHist = instantiate(pageCfg);
+e2eHist.onShow();
+assert(e2eHist.data.list.length === 1 && e2eHist.data.list[0].volume === 1660, '历史列表容量 1660（实际 ' + e2eHist.data.list[0].volume + '）');
+e2eHist.onToggle({ currentTarget: { dataset: { index: 0 } } });
+assert(e2eHist.data.list[0].expanded === true, '历史展开明细');
+// 分享训练总结面板
+e2eHist.onShareWorkout({ currentTarget: { dataset: { id: saved[0].id } } });
+assert(e2eHist.data.showShare === true, '分享面板打开');
+e2eHist.onCloseShare();
+assert(e2eHist.data.showShare === false, '分享面板关闭');
+
+// ③ 计划填充保存带 plan 标记（30 分钟）
+e2eTrain.data.draft = [];
+e2eTrain.applyPlanDay({ planId: 'beginner-fullbody', dayId: 'a' });
+assert(e2eTrain.data.draft.length === 5 && e2eTrain.data.planInfo.dayId === 'a', '计划填充 5 动作');
+e2eTrain.data.draft = e2eTrain.data.draft.map(it => Object.assign({}, it, { sets: it.sets.map(s => ({ weight: '50', reps: s.reps })) }));
+e2eTrain.sessionStartTs = Date.now() - 1800000;
+e2eTrain.onSave();
+const planWorkout = store.getWorkouts()[0];
+assert(planWorkout.plan && planWorkout.plan.planId === 'beginner-fullbody' && planWorkout.plan.dayId === 'a', '计划标记写入');
+// 计划完成度联动
+const pStat = util.planDayStatus(store.getWorkouts(), 'beginner-fullbody', 'a');
+assert(pStat.done === true, '计划库完成度联动（今日已打卡）');
+
+// ④ 营养计算器 → 保存资料
+freshRequire('./pages/calculator/calculator.js');
+const e2eCal = instantiate(pageCfg);
+e2eCal.onLoad({});
+e2eCal.onAgeInput({ detail: { value: '25' } });
+e2eCal.onHeightInput({ detail: { value: '175' } });
+e2eCal.onWeightInput({ detail: { value: '70' } });
+e2eCal.onCalc();
+assert(store.getProfile() && store.getProfile().weightKg === 70 && e2eCal.data.result.tdee === 2595, '资料保存 + TDEE 计算');
+
+// ⑤ 食物记录（米饭 174 + 鸡胸 200）
+freshRequire('./pages/food/food.js');
+const e2eFood = instantiate(pageCfg);
+e2eFood.onLoad({});
+e2eFood.onCalcFood({ currentTarget: { dataset: { id: 'rice' } } });
+e2eFood.onRecordIntake();
+e2eFood.onCalcFood({ currentTarget: { dataset: { id: 'chicken-breast' } } });
+e2eFood.onGramsInput({ detail: { value: '150' } });
+e2eFood.onRecordIntake();
+assert(e2eFood.data.todayIntake.total === 374, '今日摄入 374（实际 ' + e2eFood.data.todayIntake.total + '）');
+
+// ⑥ 统计页全链路联动
+wx.createSelectorQuery = () => ({ select: () => ({ fields: () => ({ exec: cb => cb([]) }) }) });
+wx.getSystemInfoSync = () => ({ pixelRatio: 2 });
+freshRequire('./pages/stats/stats.js');
+const e2eStats = instantiate(pageCfg);
+e2eStats.loadStats();
+assert(e2eStats.data.calHas === true && e2eStats.data.calTdee === 2595, '热量卡 TDEE 联动');
+assert(e2eStats.data.calIntake === 374, '今日摄入联动 374（实际 ' + e2eStats.data.calIntake + '）');
+assert(e2eStats.data.calWeekKcal === 368 + 184, '本周运动消耗联动 552（实际 ' + e2eStats.data.calWeekKcal + '）');
+assert(e2eStats.data.totalCount === 2 && e2eStats.data.weekVolume > 1660, '训练 2 次 / 容量含两练（实际 ' + e2eStats.data.weekVolume + '）');
+const squatPr = e2eStats.data.prs.find(p => p.id === 'squat');
+assert(squatPr && squatPr.maxWeight === 100, 'PR 卡联动（深蹲 100kg）');
+assert(e2eStats.data.hasBodyData === false, '无体重记录时趋势空态');
+
+// ⑦ 体重记录 → 统计页体重联动
+const wxm3 = wx.showModal;
+wx.showModal = o => o.success && o.success({ confirm: true, content: '70.5' });
+e2eStats.onAddBodyweight();
+assert(store.getBodyweights().length === 1, '体重记录入库');
+e2eStats.loadStats();
+assert(e2eStats.data.hasBodyData === true && e2eStats.data.bwLatest === 70.5, '统计页体重联动');
+
+// ⑧ 数据管理：导出 → 导入 → 清空
+freshRequire('./pages/data/data.js');
+const e2eData = instantiate(pageCfg);
+let clipText = '';
+wx.setClipboardData = o => { clipText = o.data; o.success && o.success(); };
+e2eData.onExport();
+assert(clipText.indexOf('gym-tracker') >= 0 && clipText.indexOf('"workouts"') >= 0, '导出 JSON 到剪贴板');
+wx.getClipboardData = o => o.success && o.success({ data: clipText });
+e2eData.onImport();
+assert(store.getWorkouts().length === 2, '导入恢复 2 条训练');
+wx.showModal = o => o.success && o.success({ confirm: true });
+e2eData.onClear();
+assert(store.getWorkouts().length === 0 && store.getIntake().length === 0 && store.getBodyweights().length === 0, '清空全部数据（训练/摄入/体重）');
+wx.showModal = wxm3;
 
 // 恢复 wx 原始函数（navigateBack/switchTab 保持 fallback mock，badPage 的 800ms 定时器在异步阶段触发）
 wx.navigateTo = wxNav;
