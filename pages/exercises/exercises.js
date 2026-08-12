@@ -108,5 +108,11 @@ Page({
     wx.navigateTo({
       url: '/pages/exercise-detail/exercise-detail?id=' + e.currentTarget.dataset.id
     });
+  },
+
+  // 部位训练指南：进入当前筛选部位的训练页
+  onOpenMuscleGuide: function () {
+    var key = this.data.currentMuscle || 'chest';
+    wx.navigateTo({ url: '/pages/muscle-detail/muscle-detail?key=' + key });
   }
 });

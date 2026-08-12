@@ -1,0 +1,52 @@
+<view class="page">
+  <!-- 部位切换 -->
+  <scroll-view scroll-x class="muscle-tabs" enhanced show-scrollbar="{{false}}">
+    <view
+      wx:for="{{muscles}}"
+      wx:key="key"
+      class="tab {{currentKey === item.key ? 'tab-active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onPickMuscle"
+    >{{item.icon}} {{item.name}}</view>
+  </scroll-view>
+
+  <!-- 部位头部 -->
+  <view class="m-head" wx:if="{{current}}">
+    <view class="m-title">{{current.icon}} {{current.name}}部训练</view>
+    <view class="m-freq">{{current.freq}} · {{current.desc}}</view>
+    <view class="m-tips">
+      <view wx:for="{{current.tips}}" wx:key="*this" class="m-tip-row">
+        <view class="m-tip-dot"></view>
+        <text class="m-tip-text">{{item}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 肌肉发力分区 -->
+  <view class="card group-card" wx:for="{{groups}}" wx:key="name">
+    <view class="group-head">
+      <view class="group-name">{{item.name}}</view>
+      <view class="group-count">{{item.exercises.length}} 个动作</view>
+    </view>
+    <view class="group-tip">{{item.tips}}</view>
+    <view
+      class="group-ex"
+      wx:for="{{item.exercises}}"
+      wx:for-item="e"
+      wx:key="id"
+      data-id="{{e.id}}"
+      bindtap="onOpenExercise"
+      hover-class="group-ex-hover"
+    >
+      <text class="group-ex-name">{{e.name}}</text>
+      <view class="dots">
+        <view class="dot {{e.difficulty >= 1 ? 'dot-on' : ''}}"></view>
+        <view class="dot {{e.difficulty >= 2 ? 'dot-on' : ''}}"></view>
+        <view class="dot {{e.difficulty >= 3 ? 'dot-on' : ''}}"></view>
+      </view>
+      <text class="group-ex-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="empty-tip" wx:if="{{groups.length === 0}}">该部位暂无分区数据</view>
+</view>

@@ -28,7 +28,7 @@ data/exercises/
 |-----|-----|------|---------|
 | id | ✅ | 小写连字符 | 全局唯一，语义化（如 lat-pulldown），一旦发布不轻易改名 |
 | name | ✅ | 中文名 | 使用健身圈通用叫法，同名动作加修饰词（上斜/窄距/坐姿） |
-| muscle | ✅ | 9 个部位 key | 见 1.3 |
+| muscle | ✅ | 10 个部位 key | 见 1.3 |
 | type | ✅ | compound / isolate | 复合=多关节，孤立=单关节 |
 | mechanic | ✅ | push/pull/squat/hinge/lunge/carry/core/other | 力学模式，未来可用于计划编排 |
 | equipment | ✅ | barbell/dumbbell/machine/cable/bodyweight/kettlebell/band/plate/other | 器材枚举 |
@@ -108,7 +108,7 @@ data/knowledge/
 
 | 指标 | 当前 | 容量规划 |
 |-----|-----|---------|
-| 动作数 | 167 | ≤ 500（单动作 ~700B，500 动作 < 400KB） |
+| 动作数 | 173 | ≤ 500（单动作 ~700B，500 动作 < 400KB） |
 | 计划数 | 5 套（17 训练日） | ≤ 20 套 |
 | 文章数 | 14 | ≤ 50 |
 | 包体积 | < 120KB | 主包 2MB 上限内无压力 |

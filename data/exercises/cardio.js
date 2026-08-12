@@ -90,14 +90,6 @@ module.exports = [
   }
 ,
   {
-    id: 'swimming', name: '游泳', muscle: 'cardio', type: 'compound', mechanic: 'other',
-    equipment: 'other', difficulty: 1,
-    target: ["心肺", "背阔肌"], secondary: ["三角肌", "核心"],
-    steps: ["热身 5 分钟后开始持续游", "自由泳或蛙泳保持匀速呼吸", "间歇休息后重复 4-6 个段落"],
-    errors: ["憋气游导致心率过高", "姿势变形仍硬撑", "不热身直接下水"],
-    rest: '60-90 秒', tip: '全身性低冲击有氧，关节压力最小的燃脂选项'
-  },
-  {
     id: 'shadow-boxing', name: '空击', muscle: 'cardio', type: 'compound', mechanic: 'other',
     equipment: 'other', difficulty: 1,
     target: ["心肺", "三角肌"], secondary: ["核心", "小腿"],

@@ -24,8 +24,8 @@ function assert(cond, name) {
 
 // ---------- 动作库 v2 ----------
 console.log('1. 动作库（v2 专业版）');
-assert(exercisesData.ALL.length === 167, '共 ' + exercisesData.ALL.length + ' 个动作');
-assert(exercisesData.MUSCLES.length === 9, '9 个部位');
+assert(exercisesData.ALL.length === 173, '共 ' + exercisesData.ALL.length + ' 个动作');
+assert(exercisesData.MUSCLES.length === 10, '10 个部位');
 // id 唯一
 const ids = new Set();
 let dup = 0;
@@ -54,7 +54,7 @@ let noArticle = 0;
 exercisesData.MUSCLES.forEach(m => {
   if (!exercisesData.muscleInfo(m.key).articleIds || exercisesData.muscleInfo(m.key).articleIds.length === 0) noArticle++;
 });
-assert(noArticle === 0, '9 个部位都有关联知识文章');
+assert(noArticle === 0, '10 个部位都有关联知识文章');
 const chestArts = chest.articleIds;
 assert(chestArts.indexOf('volume-intensity') >= 0, '胸部关联训练原理文章');
 assert(knowledge.getArticle(chestArts[0]) !== null, '关联文章 id 在知识库中真实存在');
@@ -73,9 +73,50 @@ assert(exercisesData.MUSCLES.every(function (m) { return m.key !== 'forearms'; }
 assert(exercisesData.getExercise('dead-hang') === null && exercisesData.getExercise('wrist-curl') === null, '前臂动作已移出动作库');
 assert(exercisesData.muscleInfo('forearms').name === '前臂', '历史记录前臂兜底名（统计显示）');
 assert(exercisesData.muscleInfo('nonexistent-muscle').name === 'nonexistent-muscle', '未知部位兜底为 key');
-// 划船机 / 游泳（有氧部位）仍可用
+// 划船机 / 游泳（游泳板块）仍可用
 assert(exercisesData.getExercise('rowing') && exercisesData.getExercise('rowing').name === '划船机', '划船机动作存在');
 assert(exercisesData.getExercise('swimming') && exercisesData.getExercise('swimming').steps.length >= 2, '游泳动作存在且字段完整');
+
+// 游泳板块（v2.4 新增独立部位）
+const swims = exercisesData.exercisesByMuscle('swimming');
+assert(swims.length === 7, '游泳板块 7 个动作（实际 ' + swims.length + '）');
+assert(exercisesData.getExercise('freestyle') && exercisesData.getExercise('butterfly') &&
+       exercisesData.getExercise('kick-drill') && exercisesData.getExercise('water-jogging'), '游泳细分动作已入库');
+let swimIncomplete = 0;
+swims.forEach(e => {
+  if (!e.name || !e.steps || e.steps.length < 2 || !e.errors || e.errors.length < 2 ||
+      !e.target || e.target.length < 1 || !e.rest || !e.tip || e.difficulty < 1 || e.difficulty > 3) swimIncomplete++;
+});
+assert(swimIncomplete === 0, '游泳动作字段完整');
+assert(exercisesData.exercisesByMuscle('cardio').every(e => e.id !== 'swimming'), '游泳已从有氧迁出');
+const swimInfo = exercisesData.muscleInfo('swimming');
+assert(swimInfo.name === '游泳' && swimInfo.tips.length >= 2, '游泳部位知识与要点完整');
+
+// 肌肉发力分区（muscle-detail 页数据源）
+console.log('1b. 肌肉发力分区');
+let groupBad = 0, groupCount = 0, groupExTotal = 0;
+exercisesData.MUSCLES.forEach(m => {
+  const gs = exercisesData.muscleGroups(m.key);
+  if (gs.length < 2) { groupBad++; console.log('  分区不足:', m.key, gs.length); }
+  groupCount += gs.length;
+  gs.forEach(g => {
+    if (!g.name || !g.tips) groupBad++;
+    if (!g.exercises || g.exercises.length < 1) { groupBad++; console.log('  空分区:', m.key, g.name); }
+    g.exercises.forEach(e => {
+      groupExTotal++;
+      if (!exercisesData.getExercise(e.id)) { groupBad++; console.log('  坏引用:', m.key, g.name, e.id); }
+      if (!e.name || e.difficulty < 1 || e.difficulty > 3) groupBad++;
+    });
+  });
+});
+assert(groupCount === 31, '全部部位共 31 个肌肉分区（实际 ' + groupCount + '）');
+assert(groupBad === 0, '分区名称/要点/动作引用全部有效');
+// 全部动作都被分区覆盖
+const coveredIds = {};
+exercisesData.MUSCLES.forEach(m => exercisesData.muscleGroups(m.key).forEach(g => g.exercises.forEach(e => { coveredIds[e.id] = true; })));
+const uncovered = exercisesData.ALL.filter(e => !coveredIds[e.id]);
+assert(uncovered.length === 0, '173 个动作全部归入肌肉分区');
+assert(exercisesData.muscleGroups('nonexistent').length === 0, '未知部位分区为空');
 
 // 搜索
 const search = exercisesData.searchExercises('卧推');
