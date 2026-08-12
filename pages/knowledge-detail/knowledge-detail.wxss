@@ -18,7 +18,7 @@
 .hero-title {
   font-size: 44rpx;
   font-weight: 700;
-  color: #111827;
+  color: #1d1d1f;
   line-height: 1.4;
   margin-top: 20rpx;
 }
@@ -41,7 +41,7 @@
 .section-h {
   font-size: 32rpx;
   font-weight: 600;
-  color: #111827;
+  color: #1d1d1f;
   margin-bottom: 16rpx;
 }
 
@@ -61,7 +61,7 @@
 }
 
 .list-dot {
-  color: #111827;
+  color: #1d1d1f;
   font-weight: 700;
   margin-right: 16rpx;
   flex-shrink: 0;

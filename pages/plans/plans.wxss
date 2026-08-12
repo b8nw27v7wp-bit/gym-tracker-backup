@@ -24,7 +24,7 @@
 }
 
 .plan-active {
-  border: 2rpx solid #111827;
+  border: 2rpx solid #1d1d1f;
 }
 
 .plan-head {
@@ -35,7 +35,7 @@
 .plan-name {
   font-size: 32rpx;
   font-weight: 700;
-  color: #111827;
+  color: #1d1d1f;
 }
 
 .plan-level {
@@ -107,7 +107,7 @@
 .day-name {
   font-size: 30rpx;
   font-weight: 600;
-  color: #111827;
+  color: #1d1d1f;
 }
 
 .day-note {
@@ -170,7 +170,7 @@
 
 .day-start {
   margin-top: 16rpx;
-  background: #111827;
+  background: #1d1d1f;
   color: #ffffff;
   font-size: 27rpx;
   font-weight: 500;

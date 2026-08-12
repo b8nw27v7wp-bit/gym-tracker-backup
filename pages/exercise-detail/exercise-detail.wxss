@@ -9,7 +9,7 @@
 .hero-name {
   font-size: 52rpx;
   font-weight: 700;
-  color: #111827;
+  color: #1d1d1f;
 }
 
 .hero-tags {
@@ -84,7 +84,7 @@
 .step-no {
   width: 48rpx;
   height: 48rpx;
-  background: #111827;
+  background: #1d1d1f;
   color: #ffffff;
   border-radius: 50%;
   font-size: 24rpx;
@@ -164,7 +164,7 @@
 }
 
 .m-tip-dot {
-  color: #111827;
+  color: #1d1d1f;
   font-size: 28rpx;
   margin-right: 14rpx;
   line-height: 1.6;
@@ -199,7 +199,7 @@
 
 .rel-name {
   font-size: 27rpx;
-  color: #111827;
+  color: #1d1d1f;
   font-weight: 500;
 }
 
@@ -227,7 +227,7 @@
 }
 
 .save-btn {
-  background: #111827;
+  background: #1d1d1f;
   color: #ffffff;
   font-size: 30rpx;
   font-weight: 600;

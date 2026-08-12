@@ -31,7 +31,7 @@
 }
 
 .day-tab-active {
-  background: #111827;
+  background: #1d1d1f;
   color: #ffffff;
 }
 
@@ -81,7 +81,7 @@
 .edit-item-name {
   flex: 1;
   font-size: 27rpx;
-  color: #111827;
+  color: #1d1d1f;
   padding-right: 16rpx;
 }
 
@@ -138,7 +138,7 @@
 }
 
 .muscle-chip-active {
-  background: #111827;
+  background: #1d1d1f;
   color: #ffffff;
 }
 
@@ -197,7 +197,7 @@
 }
 
 .save-btn {
-  background: #111827;
+  background: #1d1d1f;
   color: #ffffff;
   font-size: 30rpx;
   font-weight: 600;

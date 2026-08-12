@@ -110,7 +110,7 @@ Page({
     ctx.fillRect(0, 0, W, H);
 
     // 顶部品牌条
-    ctx.fillStyle = '#111827';
+    ctx.fillStyle = '#1d1d1f';
     ctx.fillRect(0, 0, W, 72);
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 26px sans-serif';
@@ -125,7 +125,7 @@ Page({
     ctx.fillText(dateText, 24, 108);
 
     // 大数字：总容量
-    ctx.fillStyle = '#111827';
+    ctx.fillStyle = '#1d1d1f';
     ctx.font = 'bold 64px sans-serif';
     ctx.fillText(String(Math.round(calc.volume)), 24, 186);
     ctx.font = '26px sans-serif';
@@ -142,7 +142,7 @@ Page({
     ctx.fillRect(24, 252, W - 48, 2);
 
     // 动作列表（最多 8 个）
-    ctx.fillStyle = '#111827';
+    ctx.fillStyle = '#1d1d1f';
     ctx.font = '22px sans-serif';
     var y = 292;
     var shown = workout.items.slice(0, 8);
@@ -154,7 +154,7 @@ Page({
       ctx.fillStyle = '#9ca3af';
       ctx.fillText(item.sets.length + ' 组 · ' + Math.round(itemVol) + ' kg', W - 24, y);
       ctx.textAlign = 'left';
-      ctx.fillStyle = '#111827';
+      ctx.fillStyle = '#1d1d1f';
       y += 40;
     });
     if (workout.items.length > 8) {

@@ -35,7 +35,7 @@
 .work-date {
   font-size: 30rpx;
   font-weight: 600;
-  color: #111827;
+  color: #1d1d1f;
 }
 
 .work-sub {
@@ -73,7 +73,7 @@
 .detail-ex-name {
   font-size: 27rpx;
   font-weight: 500;
-  color: #111827;
+  color: #1d1d1f;
   margin-bottom: 10rpx;
 }
 
@@ -157,7 +157,7 @@
 }
 
 .share-save {
-  background: #111827;
+  background: #1d1d1f;
   color: #ffffff;
   border-radius: 14rpx;
   font-size: 28rpx;

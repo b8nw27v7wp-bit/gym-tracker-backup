@@ -1,10 +1,20 @@
 /* 浅色极简主题：白底、无边框卡片、大留白 */
+/* 全局 Apple 系统字体栈：iOS=SF Pro+苹方，Android=Roboto，去 AI 感 */
 page {
   background: #f7f7f8;
-  color: #111827;
+  color: #1d1d1f;
   font-size: 28rpx;
   line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0.2rpx;
+}
+
+/* 数字统一等宽数字特性（金额/容量/计数对齐） */
+.num, .num-accent, .big-num {
+  font-variant-numeric: tabular-nums;
 }
 
 /* 卡片：白底 + 大圆角 + 轻投影，无边框 */
@@ -13,14 +23,15 @@ page {
   border-radius: 24rpx;
   padding: 32rpx;
   margin: 24rpx 32rpx;
-  box-shadow: 0 2rpx 12rpx rgba(17, 24, 39, 0.04);
+  box-shadow: 0 1rpx 3rpx rgba(17, 24, 39, 0.04), 0 8rpx 24rpx rgba(17, 24, 39, 0.03);
 }
 
 .card-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #111827;
+  color: #1d1d1f;
   margin-bottom: 16rpx;
+  letter-spacing: 0.5rpx;
 }
 
 .card-sub {
@@ -30,7 +41,7 @@ page {
 
 /* 主按钮：黑底白字 */
 .btn-primary {
-  background: #111827;
+  background: #1d1d1f;
   color: #ffffff;
   border-radius: 16rpx;
   font-size: 30rpx;
@@ -75,7 +86,7 @@ page {
 }
 
 .tag-active {
-  background: #111827;
+  background: #1d1d1f;
   color: #ffffff;
 }
 
@@ -95,12 +106,12 @@ page {
 /* 数字强调 */
 .num {
   font-weight: 600;
-  color: #111827;
+  color: #1d1d1f;
 }
 
 .num-accent {
   font-weight: 700;
-  color: #111827;
+  color: #1d1d1f;
 }
 
 /* 删除按钮文字 */

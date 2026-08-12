@@ -20,7 +20,7 @@
   flex: 1;
   font-size: 28rpx;
   text-align: right;
-  color: #111827;
+  color: #1d1d1f;
 }
 
 .sex-row {
@@ -39,13 +39,13 @@
 }
 
 .sex-active {
-  background: #111827;
+  background: #1d1d1f;
   color: #ffffff;
 }
 
 .picker-value {
   font-size: 28rpx;
-  color: #111827;
+  color: #1d1d1f;
   text-align: right;
 }
 
@@ -69,7 +69,7 @@
 
 .res-value {
   font-size: 28rpx;
-  color: #111827;
+  color: #1d1d1f;
   font-weight: 500;
 }
 
