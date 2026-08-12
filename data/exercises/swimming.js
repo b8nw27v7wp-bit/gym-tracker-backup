@@ -45,7 +45,7 @@ module.exports = [
   {
     id: 'kick-drill', name: '浮板打腿', muscle: 'swimming', type: 'isolate', mechanic: 'other',
     equipment: 'other', difficulty: 1,
-    target: ['股四头肌', '髋屈肌'], secondary: ['核心', '小腿'],
+    target: ['股四头肌', '髋屈肌'], secondary: ['核心', '腓肠肌'],
     steps: ['双手扶浮板，身体水平', '髋部发力带动双腿交替打水', '保持核心收紧，幅度小而快'],
     errors: ['膝盖过度弯曲', '从膝盖发力打水', '腰部塌陷'],
     rest: '30 秒', tip: '打腿是游泳基本功，练好打腿能明显提升整体配速'

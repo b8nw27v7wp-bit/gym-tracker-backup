@@ -3,7 +3,7 @@ module.exports = [
   {
     id: 'plank', name: '平板支撑', muscle: 'core', type: 'isolate', mechanic: 'core',
     equipment: 'bodyweight', difficulty: 1,
-    target: ['腹横肌', '腹直肌'], secondary: ['竖脊肌', '臀部'],
+    target: ['腹横肌', '腹直肌'], secondary: ['竖脊肌', '臀大肌'],
     steps: ['俯卧撑姿势，前臂撑地，身体呈一条直线', '收紧腹部和臀部', '保持 30-60 秒'],
     errors: ['塌腰', '撅臀', '憋气'],
     rest: '30-60 秒', tip: '重点是保持骨盆中立，不是坚持时间越长越好'
@@ -35,7 +35,7 @@ module.exports = [
   {
     id: 'ab-wheel', name: '健腹轮', muscle: 'core', type: 'compound', mechanic: 'core',
     equipment: 'other', difficulty: 3,
-    target: ['腹直肌', '腹横肌'], secondary: ['背阔肌', '肩部'],
+    target: ['腹直肌', '腹横肌'], secondary: ['背阔肌', '三角肌'],
     steps: ['跪姿双手握健腹轮', '腹部收紧，向前滚动至身体接近伸直', '腹部发力拉回'],
     errors: ['塌腰', '手臂代偿', '滚动距离超出控制'],
     rest: '60-90 秒', tip: '全程收紧核心，宁可少滚一点也不要塌腰'
@@ -59,7 +59,7 @@ module.exports = [
   {
     id: 'mountain-climber', name: '登山跑', muscle: 'core', type: 'compound', mechanic: 'core',
     equipment: 'bodyweight', difficulty: 1,
-    target: ['腹直肌', '髋屈肌'], secondary: ['肩部', '心肺'],
+    target: ['腹直肌', '髋屈肌'], secondary: ['三角肌', '心肺'],
     steps: ['俯卧撑姿势撑地', '交替将膝盖快速拉向胸口', '保持髋部稳定不晃动'],
     errors: ['臀部抬高', '腰部塌陷'],
     rest: '45-60 秒', tip: '核心+心肺结合，可作为高强度收尾'

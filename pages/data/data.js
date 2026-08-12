@@ -45,7 +45,7 @@ Page({
     });
   },
 
-  // 导入：从剪贴板读取 JSON
+  // 导入：从剪贴板读取 JSON（先解析校验 → 弹确认 → 确认后才覆盖写入）
   onImport: function () {
     var self = this;
     wx.getClipboardData({
@@ -55,6 +55,11 @@ Page({
           wx.showToast({ title: '剪贴板为空', icon: 'none' });
           return;
         }
+        // 大小上限：避免超大 JSON 解析卡顿 / 超出单 key 1MB 存储上限静默失败
+        if (text.length > 1048576) {
+          wx.showToast({ title: '备份文件过大（超过 1MB）', icon: 'none' });
+          return;
+        }
         var obj = null;
         try {
           obj = JSON.parse(text);
@@ -62,17 +67,34 @@ Page({
           wx.showToast({ title: '剪贴板内容不是有效 JSON', icon: 'none' });
           return;
         }
-        var result = store.importData(obj);
-        if (!result.ok) {
-          wx.showToast({ title: result.error, icon: 'none' });
+        // 先预览校验（不写入），确认无误后用户点"恢复"才覆盖
+        var preview = store.previewImport(obj);
+        if (!preview.ok) {
+          wx.showToast({ title: preview.error, icon: 'none' });
           return;
         }
         wx.showModal({
-          title: '导入成功',
-          content: '已恢复 ' + result.workouts + ' 条训练、' + result.bodyweight + ' 条体重记录' +
-            (result.customPlans > 0 ? '、' + result.customPlans + ' 个自建计划' : '') + '。（将覆盖当前数据）',
-          showCancel: false,
-          success: function () { self.refresh(); }
+          title: '确认恢复备份？',
+          content: '将恢复 ' + preview.workouts + ' 条训练、' + preview.bodyweight + ' 条体重记录' +
+            (preview.customPlans > 0 ? '、' + preview.customPlans + ' 个自建计划' : '') +
+            '。当前数据会被覆盖，建议先导出当前备份。',
+          confirmText: '恢复',
+          cancelText: '取消',
+          success: function (res) {
+            if (!res.confirm) return;
+            var result = store.importData(obj);
+            if (!result.ok) {
+              wx.showToast({ title: result.error, icon: 'none' });
+              return;
+            }
+            wx.showModal({
+              title: '恢复成功',
+              content: '已恢复 ' + result.workouts + ' 条训练、' + result.bodyweight + ' 条体重记录' +
+                (result.customPlans > 0 ? '、' + result.customPlans + ' 个自建计划' : '') + '。',
+              showCancel: false,
+              success: function () { self.refresh(); }
+            });
+          }
         });
       },
       fail: function () {

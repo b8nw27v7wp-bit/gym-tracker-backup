@@ -13,6 +13,7 @@ Page({
     todayWeek: '',
     muscles: exercisesData.MUSCLES,
     currentMuscle: 'chest',
+    currentMuscleName: '胸',
     exerciseList: [],
     step: 'pick', // pick 选动作 / edit 编辑组
     editing: null, // 当前编辑的 item
@@ -23,6 +24,14 @@ Page({
     totalSets: 0,
     sessionStarted: false,
     sessionMinutes: 0,
+    sessionPaused: false, // 训练计时暂停
+    pauseAccumMs: 0, // 已累计的暂停时长
+    pauseStartTs: 0, // 当前暂停开始时刻
+    pausedMinutes: 0, // 已暂停累计分钟数（暂停中实时更新）
+    restRemaining: 0, // 组间休息倒计时（秒），0 = 未计时
+    restRunning: false, // 休息倒计时进行中
+    restCustomSecs: '', // 自定义休息秒数输入
+    restAlmostDone: false, // 最后 3 秒高亮
     note: '',
     searchKeyword: '',
     planInfo: null, // 计划打卡标记 { planId, dayId }
@@ -32,6 +41,8 @@ Page({
   onLoad: function () {
     // 动作使用频率（常用动作置顶）
     this.freqMap = util.frequencyByExercise(store.getWorkouts());
+    // 历史记录索引（动作卡"上次重量"标签 + 添加时预填）
+    this.lastRecords = util.lastRecordsMap(store.getWorkouts());
     this.refreshDraftMeta();
     this.refreshExerciseList();
   },
@@ -63,8 +74,7 @@ Page({
     var self = this;
     if (!timer) {
       timer = setInterval(function () {
-        var mins = Math.floor((Date.now() - self.sessionStartTs) / 60000);
-        self.setData({ sessionMinutes: mins });
+        self.setData({ sessionMinutes: self.sessionElapsedMinutes() });
       }, 30000);
     }
     // 从动作详情页跳转来的预选动作
@@ -83,7 +93,103 @@ Page({
     this.refreshPlanReminder();
     // 重新统计动作使用频率（保存训练后切回时常用动作排序更新）
     this.freqMap = util.frequencyByExercise(store.getWorkouts());
+    this.lastRecords = util.lastRecordsMap(store.getWorkouts());
     if (this.data.step === 'pick') this.refreshExerciseList();
+  },
+
+  // 本次训练已进行分钟数（扣除暂停时长）
+  sessionElapsedMinutes: function () {
+    var paused = this.data.sessionPaused ? (Date.now() - this.data.pauseStartTs) : 0;
+    var elapsed = Date.now() - this.sessionStartTs - this.data.pauseAccumMs - paused;
+    return Math.max(Math.floor(elapsed / 60000), 0);
+  },
+
+  // 已暂停累计分钟数（暂停中实时增长）
+  sessionPausedMinutes: function () {
+    var total = this.data.pauseAccumMs;
+    if (this.data.sessionPaused) total += (Date.now() - this.data.pauseStartTs);
+    return Math.floor(total / 60000);
+  },
+
+  // 暂停 / 继续训练计时
+  onTogglePause: function () {
+    var paused = !this.data.sessionPaused;
+    var set = { sessionPaused: paused };
+    if (paused) {
+      set.pauseStartTs = Date.now();
+    } else {
+      set.pauseAccumMs = this.data.pauseAccumMs + (Date.now() - this.data.pauseStartTs);
+      set.pausedMinutes = this.sessionPausedMinutes();
+    }
+    // 用户手动结束了休息自动暂停 → 解除 rest 的自动恢复义务（防重复累计暂停时长）
+    if (!paused && this.restAutoPaused) this.restAutoPaused = false;
+    this.setData(set);
+    wx.showToast({ title: paused ? '计时已暂停' : '计时继续', icon: 'none' });
+  },
+
+  // ---------- 组间休息计时 ----------
+  // 快捷倒计时：30/60/90/120 秒 + 自定义秒数，到点震动提醒；进行中再点可停止
+  // 联动：休息期间自动暂停训练计时（休息不算训练时长），休息结束/停止自动恢复
+  onRestStart: function (e) {
+    var secs = Number(e.currentTarget.dataset.secs);
+    this.startRest(secs);
+  },
+
+  // 自定义秒数开始
+  onRestCustomStart: function () {
+    var secs = Number(this.data.restCustomSecs);
+    if (!secs || secs <= 0 || secs > 600) {
+      wx.showToast({ title: '请输入 1-600 秒', icon: 'none' });
+      return;
+    }
+    this.setData({ restCustomSecs: '' });
+    this.startRest(secs);
+  },
+
+  onRestCustomInput: function (e) {
+    this.setData({ restCustomSecs: e.detail.value });
+  },
+
+  startRest: function (secs) {
+    if (this.data.restRunning) {
+      this.stopRestTimer();
+      wx.showToast({ title: '休息已停止', icon: 'none' });
+      return;
+    }
+    this.restEndTs = Date.now() + secs * 1000;
+    var set = { restRemaining: secs, restRunning: true, restAlmostDone: false };
+    // 休息期间自动暂停训练计时（若正在计时且未手动暂停），休息结束自动恢复
+    if (this.data.sessionStarted && !this.data.sessionPaused) {
+      set.sessionPaused = true;
+      set.pauseStartTs = Date.now();
+      this.restAutoPaused = true;
+    } else {
+      this.restAutoPaused = false;
+    }
+    this.setData(set);
+    var self = this;
+    this.restTimer = setInterval(function () {
+      var left = Math.max(Math.ceil((self.restEndTs - Date.now()) / 1000), 0);
+      self.setData({ restRemaining: left, restAlmostDone: left <= 3 });
+      if (left <= 0) {
+        self.stopRestTimer();
+        if (wx.vibrateShort) wx.vibrateShort({ type: 'medium' });
+        wx.showToast({ title: '休息结束，开始下一组', icon: 'none' });
+      }
+    }, 1000);
+  },
+
+  stopRestTimer: function () {
+    if (this.restTimer) { clearInterval(this.restTimer); this.restTimer = null; }
+    var set = { restRunning: false, restRemaining: 0, restAlmostDone: false };
+    // 若休息期间自动暂停了训练计时，恢复计时
+    if (this.restAutoPaused) {
+      this.restAutoPaused = false;
+      set.sessionPaused = false;
+      set.pauseAccumMs = this.data.pauseAccumMs + (Date.now() - this.data.pauseStartTs);
+      set.pausedMinutes = this.sessionPausedMinutes();
+    }
+    this.setData(set);
   },
 
   // 本周计划今日提醒：有周计划且下一个训练日未完成时显示
@@ -154,6 +260,7 @@ Page({
 
   onUnload: function () {
     if (timer) { clearInterval(timer); timer = null; }
+    this.stopRestTimer();
   },
 
   onGoHistory: function () {
@@ -165,23 +272,39 @@ Page({
   },
 
   // ---------- 选动作 ----------
-  // 动作列表加难度评级（供难度点展示）
+  // 动作列表加难度评级（供难度点展示）+ 上次记录标签（含日期，供预填提示）
   decorateExerciseList: function (list) {
+    var self = this;
     return list.map(function (ex) {
+      var rec = self.lastRecords && self.lastRecords[ex.id];
+      var lastText = '';
+      if (rec) {
+        var date = rec.ts ? util.fmtDate(rec.ts) : '';
+        lastText = '上次 ' + date + ' · ' + rec.weight + 'kg × ' + rec.reps;
+      }
       return {
         id: ex.id,
         name: ex.name,
-        difficulty: ex.difficulty || 1
+        difficulty: ex.difficulty || 1,
+        lastText: lastText
       };
     });
   },
 
   onPickMuscle: function (e) {
     var key = e.currentTarget.dataset.key;
+    var m = exercisesData.muscleInfo(key);
     this.setData({
       currentMuscle: key,
+      currentMuscleName: m ? m.name : key,
       exerciseList: this.decorateExerciseList(util.sortByFrequency(exercisesData.exercisesByMuscle(key), this.freqMap || {}))
     });
+  },
+
+  // 跳转动作库（携带当前部位，动作库页读取后自动筛选）
+  onGoLibrary: function () {
+    wx.setStorageSync('pending_muscle_key', this.data.currentMuscle);
+    wx.switchTab({ url: '/pages/exercises/exercises' });
   },
 
   refreshExerciseList: function () {
@@ -225,16 +348,33 @@ Page({
     }
     var ex = exercisesData.getExercise(id);
     if (!ex) return;
+    // 上次记录预填：有历史则第一组带入上次重量/次数（prefilled 标记供"已带入"提示，保存时剥离）
+    var rec = this.lastRecords && this.lastRecords[id];
     var item = {
       exerciseId: ex.id,
       exerciseName: ex.name,
       muscle: ex.muscle,
-      sets: [{ weight: '', reps: '', rpe: '', warmup: false }]
+      sets: [{ weight: rec ? String(rec.weight) : '', reps: rec ? String(rec.reps) : '', rpe: '', warmup: false }]
     };
+    if (rec) item.prefilled = true;
     // 不可变更新：concat 生成新数组，setData 才能 diff 到变化并刷新视图
     var next = draft.concat([item]);
     this.setData({ draft: next });
     this.enterEdit(next.length - 1);
+  },
+
+  // 调整已添加动作顺序（上移/下移）
+  onMoveItem: function (e) {
+    var idx = Number(e.currentTarget.dataset.index);
+    var dir = Number(e.currentTarget.dataset.dir); // -1 上移 / 1 下移
+    var next = this.data.draft.slice();
+    var target = idx + dir;
+    if (target < 0 || target >= next.length) return;
+    var tmp = next[idx];
+    next[idx] = next[target];
+    next[target] = tmp;
+    this.setData({ draft: next });
+    this.refreshDraftMeta();
   },
 
   // ---------- 组编辑 ----------
@@ -247,6 +387,14 @@ Page({
       if (s.uid) return s;
       return Object.assign({}, s, { uid: 's_' + Date.now() + '_' + Math.floor(Math.random() * 10000) });
     });
+    // 预填提示文案（组编辑器内"已带入上次记录"条 + 清空按钮）
+    // 仅本次新添加且自动预填过的动作显示；用户手动填写的动作不提示
+    var rec = this.lastRecords && this.lastRecords[editing.exerciseId];
+    if (rec && editing.prefilled && editing.sets.length > 0 && editing.sets[0].weight !== '' && editing.sets[0].weight !== undefined) {
+      editing.lastPrefillText = '已带入上次记录 ' + rec.weight + 'kg × ' + rec.reps;
+    } else {
+      editing.lastPrefillText = '';
+    }
     var m = exercisesData.muscleInfo(editing.muscle);
     this.setData({
       step: 'edit',
@@ -254,6 +402,20 @@ Page({
       editing: editing,
       editingMuscleName: m.name
     });
+  },
+
+  // 清空预填（把带入的重量/次数还原为空，恢复手动填写）
+  onClearPrefill: function () {
+    var sets = this.data.editing.sets;
+    var next = sets.map(function (s) {
+      return Object.assign({}, s, { weight: '', reps: '' });
+    });
+    this.setData({
+      'editing.sets': next,
+      'editing.lastPrefillText': '',
+      'editing.prefilled': false
+    });
+    wx.showToast({ title: '已清空，请手动填写', icon: 'none' });
   },
 
   onEditItem: function (e) {
@@ -317,6 +479,9 @@ Page({
     });
     if (cleaned.length === 0) cleaned = [{ weight: '', reps: '', rpe: '', warmup: false }];
     editing.sets = cleaned;
+    // 剥离显示字段（lastPrefillText / prefilled 仅编辑态提示用，不进 draft/存储）
+    delete editing.lastPrefillText;
+    delete editing.prefilled;
     // 深拷贝 draft 后写回编辑结果：draft 是新数组引用，渲染层 diff 才能生效
     var draft = JSON.parse(JSON.stringify(this.data.draft));
     draft[this.data.editingIndex] = editing;
@@ -384,7 +549,7 @@ Page({
     });
     var self = this;
     var doSave = function () {
-      var mins = Math.max(Math.floor((Date.now() - self.sessionStartTs) / 60000), 1);
+      var mins = Math.max(self.sessionElapsedMinutes(), 1);
       var workout = {
         id: store.genId(),
         ts: Date.now(),
@@ -428,10 +593,11 @@ Page({
         return;
       }
       store.saveWorkout(workout);
-      self.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '', planInfo: null });
+      self.stopRestTimer(); // 训练结束，停止休息倒计时（内部处理自动恢复/清除）
+      self.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '', planInfo: null, restCustomSecs: '' });
       self.refreshDraftMeta();
       self.sessionStartTs = Date.now();
-      self.setData({ sessionMinutes: 0 });
+      self.setData({ sessionMinutes: 0, sessionPaused: false, pauseAccumMs: 0, pauseStartTs: 0, pausedMinutes: 0 });
       wx.showToast({ title: '已保存 ✅', icon: 'none' });
     };
     if (emptyCount > 0) {

@@ -61,6 +61,44 @@ function sortByFrequency(exercises, freqMap) {
   return list;
 }
 
+// 某动作最近一次有效记录：从最新训练往回找该动作，取第一个正式组（跳过热身组/全空组）
+// 返回 { weight, reps, ts } 或 null（无历史 / 历史组全空）；ts 为该组所属训练的日期戳
+function lastRecordFor(workouts, exerciseId) {
+  var list = (workouts || []).slice();
+  list.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+  for (var i = 0; i < list.length; i++) {
+    var items = list[i].items || [];
+    for (var j = 0; j < items.length; j++) {
+      if (items[j].exerciseId !== exerciseId) continue;
+      var sets = items[j].sets || [];
+      for (var k = 0; k < sets.length; k++) {
+        var s = sets[k];
+        if (s.warmup) continue;
+        var w = Number(s.weight), r = Number(s.reps);
+        if (w > 0 && r > 0) return { weight: w, reps: r, ts: list[i].ts || 0 };
+      }
+    }
+  }
+  return null;
+}
+
+// 全量历史记录索引：{ exerciseId: {weight, reps} }（供列表批量装饰"上次重量"标签）
+// 对每个出现过的动作单独查 lastRecordFor（内部按 ts 排序），不依赖传入顺序
+function lastRecordsMap(workouts) {
+  var ids = [];
+  (workouts || []).forEach(function (w) {
+    (w.items || []).forEach(function (item) {
+      if (ids.indexOf(item.exerciseId) === -1) ids.push(item.exerciseId);
+    });
+  });
+  var map = {};
+  ids.forEach(function (id) {
+    var rec = lastRecordFor(workouts, id);
+    if (rec) map[id] = rec;
+  });
+  return map;
+}
+
 // ---------- 日期工具 ----------
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
@@ -440,6 +478,8 @@ module.exports = {
   calcWorkout: calcWorkout,
   frequencyByExercise: frequencyByExercise,
   sortByFrequency: sortByFrequency,
+  lastRecordFor: lastRecordFor,
+  lastRecordsMap: lastRecordsMap,
   dateStr: dateStr,
   todayStr: todayStr,
   weekStart: weekStart,

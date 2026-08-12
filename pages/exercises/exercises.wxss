@@ -2,6 +2,42 @@
   padding-bottom: 180rpx;
 }
 
+/* 从训练页跳来时的返回条 */
+.back-bar {
+  display: flex;
+  align-items: center;
+  margin: 16rpx 32rpx 0;
+  background: #ffffff;
+  border: 1rpx solid #f1f2f4;
+  border-radius: 20rpx;
+  padding: 20rpx 28rpx;
+  font-size: 27rpx;
+  font-weight: 500;
+  color: #1d1d1f;
+  box-shadow: 0 1rpx 6rpx rgba(17, 24, 39, 0.03);
+}
+
+.back-bar-hover {
+  background: #f7f7f8;
+}
+
+.back-bar-arrow {
+  width: 13rpx;
+  height: 13rpx;
+  border-left: 2.5rpx solid #1d1d1f;
+  border-bottom: 2.5rpx solid #1d1d1f;
+  transform: rotate(45deg);
+  margin-right: 16rpx;
+  border-radius: 1rpx;
+}
+
+.back-bar-sub {
+  margin-left: auto;
+  font-size: 21rpx;
+  font-weight: 400;
+  color: #9ca3af;
+}
+
 .search-wrap {
   padding: 24rpx 32rpx 8rpx;
 }

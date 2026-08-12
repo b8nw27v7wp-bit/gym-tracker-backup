@@ -64,10 +64,17 @@
 }
 
 .history-arrow {
-  margin-left: 10rpx;
-  color: #9ca3af;
-  font-size: 28rpx;
-  line-height: 1;
+  width: 13rpx;
+  height: 13rpx;
+  border-top: 2.5rpx solid #9ca3af;
+  border-right: 2.5rpx solid #9ca3af;
+  transform: rotate(45deg);
+  margin-left: 12rpx;
+  border-radius: 1rpx;
+}
+
+.history-entry:active .history-arrow {
+  border-color: #4b5563;
 }
 
 /* ========== 本周计划提醒条 ========== */
@@ -137,10 +144,189 @@
   50% { opacity: 0.35; }
 }
 
+.timer-dot-paused {
+  background: #9ca3af;
+  animation: none;
+}
+
 .timer-text {
   font-size: 25rpx;
   color: #92400e;
   font-weight: 500;
+  flex: 1;
+}
+
+.timer-pause {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d97706;
+  margin-left: 16rpx;
+  border: 1rpx solid #fde68a;
+}
+
+.timer-pause:active {
+  background: #fef3c7;
+}
+
+/* 播放/暂停图标 */
+.icon-pause::before,
+.icon-pause::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 5rpx;
+  height: 18rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  transform: translateY(-50%);
+}
+
+.icon-pause::before {
+  left: 30%;
+}
+
+.icon-pause::after {
+  right: 30%;
+}
+
+.icon-play::before {
+  content: '';
+  position: absolute;
+  left: 36%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-left: 16rpx solid currentColor;
+  border-top: 9rpx solid transparent;
+  border-bottom: 9rpx solid transparent;
+  transform: translateY(-50%);
+}
+
+/* ========== 组间休息倒计时 ========== */
+.rest-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16rpx 32rpx 0;
+  background: #1d1d1f;
+  border-radius: 20rpx;
+  padding: 22rpx 28rpx;
+}
+
+.rest-left {
+  display: flex;
+  align-items: baseline;
+}
+
+.rest-num {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  min-width: 100rpx;
+  transition: color 0.3s;
+}
+
+.rest-num-almost {
+  color: #fca5a5;
+}
+
+.rest-unit {
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-left: 8rpx;
+}
+
+.rest-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.rest-chip {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 24rpx;
+  border-radius: 999rpx;
+  padding: 12rpx 24rpx;
+}
+
+.rest-chip:active {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.rest-stop {
+  color: #9ca3af;
+  font-size: 24rpx;
+  padding: 12rpx 16rpx;
+}
+
+/* 休息快捷入口（常驻，未计时时显示） */
+.rest-quick {
+  display: flex;
+  align-items: center;
+  margin: 16rpx 32rpx 0;
+  background: #ffffff;
+  border: 1rpx solid #f1f2f4;
+  border-radius: 20rpx;
+  padding: 18rpx 24rpx;
+  box-shadow: 0 1rpx 6rpx rgba(17, 24, 39, 0.03);
+}
+
+.rest-quick-label {
+  font-size: 24rpx;
+  color: #6b7280;
+  font-weight: 500;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+
+.rest-chip-dark {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 10rpx 22rpx;
+}
+
+.rest-chip-dark:active {
+  background: #e5e7eb;
+}
+
+.rest-custom-input {
+  width: 90rpx;
+  background: #f9fafb;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  padding: 10rpx 14rpx;
+  height: auto;
+  min-height: 40rpx;
+  text-align: center;
+  margin-left: 4rpx;
+  color: #1d1d1f;
+}
+
+.rest-custom-go {
+  background: #1d1d1f;
+  color: #ffffff;
+  font-size: 24rpx;
+  border-radius: 999rpx;
+  padding: 10rpx 26rpx;
+  margin-left: 10rpx;
+  flex-shrink: 0;
+}
+
+.rest-custom-go:active {
+  opacity: 0.85;
+}
+
+/* 暂停中的子文案 */
+.timer-paused-sub {
+  color: #9ca3af;
+  font-weight: 400;
 }
 
 /* ========== 搜索 ========== */
@@ -167,8 +353,51 @@
 
 .search-clear {
   color: #9ca3af;
-  font-size: 28rpx;
   padding: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8rpx;
+}
+
+/* ========== CSS 线性图标（纯样式，无图片依赖） ========== */
+.icon {
+  position: relative;
+  display: inline-block;
+  width: 28rpx;
+  height: 28rpx;
+  flex-shrink: 0;
+}
+
+.icon::before,
+.icon::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 66%;
+  height: 2.5rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  transform: translate(-50%, -50%);
+}
+
+/* ×（关闭/删除） */
+.icon-x::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.icon-x::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* ＋（添加） */
+.icon-plus::before {
+  transform: translate(-50%, -50%);
+}
+
+.icon-plus::after {
+  transform: translate(-50%, -50%) rotate(90deg);
 }
 
 /* ========== 部位选择 ========== */
@@ -266,6 +495,14 @@
   white-space: nowrap;
 }
 
+/* 上次记录提示（添加时预填） */
+.exercise-last {
+  font-size: 20rpx;
+  color: #4f46e5;
+  margin-top: 6rpx;
+  font-variant-numeric: tabular-nums;
+}
+
 /* 难度评级点（1-3 个点亮） */
 .exercise-dots {
   display: flex;
@@ -350,6 +587,50 @@
   align-items: center;
 }
 
+/* 排序按钮（上移/下移） */
+.added-move {
+  display: flex;
+  flex-direction: column;
+  margin-right: 14rpx;
+}
+
+.move-btn {
+  width: 40rpx;
+  height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c4c8cf;
+}
+
+.move-btn:active {
+  color: #6b7280;
+}
+
+.move-btn-disabled {
+  opacity: 0.25;
+}
+
+.icon-arrow-up::before,
+.icon-arrow-down::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12rpx;
+  height: 12rpx;
+  border-top: 2.5rpx solid currentColor;
+  border-left: 2.5rpx solid currentColor;
+}
+
+.icon-arrow-up::before {
+  transform: translate(-50%, -40%) rotate(45deg);
+}
+
+.icon-arrow-down::before {
+  transform: translate(-50%, -60%) rotate(225deg);
+}
+
 .added-tag {
   background: #eef2ff;
   color: #4f46e5;
@@ -361,12 +642,31 @@
 
 .added-del {
   color: #d1d5db;
-  font-size: 32rpx;
   padding: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.added-del .icon {
+  width: 30rpx;
+  height: 30rpx;
 }
 
 .added-del:active {
   color: #ef4444;
+}
+
+.btn-ghost-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-ghost-add .icon {
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 10rpx;
 }
 
 /* ========== 备注输入 ========== */

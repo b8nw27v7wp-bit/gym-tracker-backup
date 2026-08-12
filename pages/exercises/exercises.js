@@ -5,6 +5,8 @@ Page({
   data: {
     keyword: '',
     currentMuscle: 'all',
+    currentMuscleName: '全部',
+    showBack: false, // 从训练页跳来时的返回条
     allCount: 0,
     muscles: [],
     typeFilter: 'all',
@@ -28,6 +30,21 @@ Page({
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 1 });
     }
+    // 从训练页"在动作库查看"跳来：读取部位并自动筛选，显示返回条
+    var pendingKey = wx.getStorageSync('pending_muscle_key');
+    if (pendingKey) {
+      wx.removeStorageSync('pending_muscle_key');
+      var m = exercisesData.muscleInfo(pendingKey);
+      this.setData({ currentMuscle: pendingKey, currentMuscleName: m ? m.name : pendingKey, showBack: true });
+      this.refresh();
+    } else {
+      this.setData({ showBack: false });
+    }
+  },
+
+  // 返回训练页（训练页跳来时的返回入口）
+  onBackToTrain: function () {
+    wx.switchTab({ url: '/pages/train/train' });
   },
 
   onLoad: function () {
@@ -59,7 +76,9 @@ Page({
   },
 
   onPickMuscle: function (e) {
-    this.setData({ currentMuscle: e.currentTarget.dataset.key });
+    var key = e.currentTarget.dataset.key;
+    var m = exercisesData.muscleInfo(key);
+    this.setData({ currentMuscle: key, currentMuscleName: m ? m.name : key });
     this.refresh();
   },
 

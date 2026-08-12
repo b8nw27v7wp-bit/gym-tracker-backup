@@ -3,7 +3,9 @@
     <text class="card-title">{{exerciseName}}</text>
     <view class="edit-head-right">
       <text class="tag" style="margin:0;">{{muscleName}}</text>
-      <text class="edit-close" bindtap="onClose">✕</text>
+      <view class="edit-close" bindtap="onClose">
+        <view class="icon icon-x"></view>
+      </view>
     </view>
   </view>
   <view class="set-head">
@@ -47,9 +49,18 @@
       bindinput="onRpeInput"
       placeholder="—"
     />
-    <text class="set-col set-c-del set-del" data-idx="{{index}}" bindtap="onRemoveSet">✕</text>
+    <view class="set-col set-c-del set-del" data-idx="{{index}}" bindtap="onRemoveSet">
+      <view class="icon icon-x"></view>
+    </view>
   </view>
-  <view class="set-tip">热 = 热身组（不计入容量统计）· RPE 选填（1-10 自感强度）</view>
-  <view class="btn-ghost" bindtap="onAddSet">＋ 添加一组</view>
+  <view class="set-tip" wx:if="{{lastPrefill}}">
+    <text class="prefill-text">{{lastPrefill}}</text>
+    <text class="prefill-clear" catchtap="onClearPrefill">清空预填</text>
+  </view>
+  <view class="set-tip" wx:else>热 = 热身组（不计入容量统计）· RPE 选填（1-10 自感强度）</view>
+  <view class="btn-ghost btn-ghost-add" bindtap="onAddSet">
+    <view class="icon icon-plus"></view>
+    <text>添加一组</text>
+  </view>
   <view class="btn-primary" style="margin-top: 20rpx;" bindtap="onDone">完成该动作</view>
 </view>

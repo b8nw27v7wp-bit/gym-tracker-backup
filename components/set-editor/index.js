@@ -1,11 +1,12 @@
 // 组编辑器组件：训练页编辑某动作的组列表
 // 数据在页面层维护（editing.sets），组件只渲染 + 转发事件
-// 事件约定：togglewarmup/removeset {idx}；weightinput/repsinput/rpeinput {idx, value}；addset/done/close 无参
+// 事件约定：togglewarmup/removeset {idx}；weightinput/repsinput/rpeinput {idx, value}；addset/done/close 无参；clearprefill 无参
 Component({
   properties: {
     exerciseName: { type: String, value: '' },
     muscleName: { type: String, value: '' },
-    sets: { type: Array, value: [] }
+    sets: { type: Array, value: [] },
+    lastPrefill: { type: String, value: '' } // "已带入上次记录 60kg×8"提示文案，空 = 不显示
   },
   methods: {
     onToggleWarmup: function (e) {
@@ -31,6 +32,9 @@ Component({
     },
     onClose: function () {
       this.triggerEvent('close');
+    },
+    onClearPrefill: function () {
+      this.triggerEvent('clearprefill');
     }
   }
 });

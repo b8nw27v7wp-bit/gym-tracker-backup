@@ -3,7 +3,7 @@ module.exports = [
   {
     id: 'ohp', name: '杠铃推举', muscle: 'shoulder', type: 'compound', mechanic: 'push',
     equipment: 'barbell', difficulty: 2,
-    target: ['三角肌前束', '三角肌中束'], secondary: ['肱三头肌', '斜方肌'],
+    target: ['三角肌前束', '三角肌中束'], secondary: ['肱三头肌', '斜方肌上部'],
     steps: ['杠铃置于锁骨前，双手略宽于肩握杠', '核心收紧，将杠铃垂直推过头顶', '顶端手臂伸直、杠铃在头顶正上方', '控制下放回锁骨位置'],
     errors: ['腰部过度后仰借力', '杠铃绕头走曲线', '手肘过度外展'],
     rest: '120-180 秒', tip: '站姿推举是上肢力量的核心指标之一'
@@ -27,7 +27,7 @@ module.exports = [
   {
     id: 'lat-raise', name: '哑铃侧平举', muscle: 'shoulder', type: 'isolate', mechanic: 'push',
     equipment: 'dumbbell', difficulty: 1,
-    target: ['三角肌中束'], secondary: ['斜方肌'],
+    target: ['三角肌中束'], secondary: ['斜方肌上部'],
     steps: ['双手持哑铃自然下垂，微屈肘', '肘部引导向两侧抬起至与肩同高', '顶端略停顿，缓慢下放'],
     errors: ['耸肩用斜方肌代偿', '借惯性甩起', '抬得过高'],
     rest: '45-60 秒', tip: '侧平举练的是中束，重量要小、动作要慢'
@@ -91,7 +91,7 @@ module.exports = [
   {
     id: 'push-press', name: '借力推举', muscle: 'shoulder', type: 'compound', mechanic: 'push',
     equipment: 'barbell', difficulty: 3,
-    target: ['三角肌', '斜方肌'], secondary: ['肱三头肌', '腿部'],
+    target: ['三角肌', '斜方肌'], secondary: ['肱三头肌', '股四头肌'],
     steps: ['杠铃置于锁骨前，微屈膝', '利用腿部蹬伸的爆发力将杠铃推过头顶', '手臂伸直锁定，控制下放'],
     errors: ['腿部借力过多变成箭步蹲', '杠铃轨迹偏离'],
     rest: '120-180 秒', tip: '爆发力训练，比站姿推举能上更大重量'
@@ -132,7 +132,7 @@ module.exports = [
   {
     id: 'machine-rear-delt', name: '器械反向飞鸟', muscle: 'shoulder', type: 'isolate', mechanic: 'pull',
     equipment: 'machine', difficulty: 1,
-    target: ["三角肌后束"], secondary: ["菱形肌", "斜方肌中束"],
+    target: ["三角肌后束"], secondary: ["菱形肌", "斜方肌中部"],
     steps: ["坐于反向飞鸟机，胸口贴垫，双手握把", "双臂向两侧展开至与肩平齐", "顶端停顿 1 秒，缓慢还原"],
     errors: ["耸肩代偿", "借助惯性甩臂", "幅度过大后拉"],
     rest: '45-60 秒', tip: '固定轨迹安全稳定，后束薄弱者用小重量高频打磨'
@@ -148,7 +148,7 @@ module.exports = [
   {
     id: 'handstand-pushup', name: '倒立撑', muscle: 'shoulder', type: 'compound', mechanic: 'push',
     equipment: 'bodyweight', difficulty: 3,
-    target: ["三角肌", "肱三头肌"], secondary: ["斜方肌"],
+    target: ["三角肌", "肱三头肌"], secondary: ["斜方肌上部"],
     steps: ["靠墙倒立，双手撑地与墙保持距离", "屈肘将头顶缓慢接近地面", "肩部发力推起至手臂伸直"],
     errors: ["腰部过度反弓", "头顶直接砸地", "肘部外展过大"],
     rest: '90-120 秒', tip: '肩部王牌自重动作，进阶可做半程或加负重背心'

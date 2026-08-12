@@ -11,7 +11,7 @@ module.exports = [
   {
     id: 'front-squat', name: '前蹲', muscle: 'legs', type: 'compound', mechanic: 'squat',
     equipment: 'barbell', difficulty: 3,
-    target: ['股四头肌'], secondary: ['臀大肌', '核心', '斜方肌'],
+    target: ['股四头肌'], secondary: ['臀大肌', '核心', '斜方肌上部'],
     steps: ['杠铃架于前肩锁骨位置，肘部抬高', '挺胸下蹲至大腿平行地面', '膝盖对准脚尖站起'],
     errors: ['肘部下垂杠铃滑落', '弓背', '脚跟离地'],
     rest: '120-180 秒', tip: '前蹲对核心和股四头刺激更直接'

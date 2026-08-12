@@ -1,4 +1,11 @@
 <view class="page">
+  <!-- 从训练页跳来时的返回条 -->
+  <view class="back-bar" wx:if="{{showBack}}" hover-class="back-bar-hover" bindtap="onBackToTrain">
+    <view class="back-bar-arrow"></view>
+    <text>返回训练</text>
+    <text class="back-bar-sub">当前筛选：{{currentMuscleName}}</text>
+  </view>
+
   <!-- 搜索 -->
   <view class="search-wrap">
     <input

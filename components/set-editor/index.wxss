@@ -13,8 +13,9 @@
 
 .edit-close {
   color: #d1d5db;
-  font-size: 34rpx;
   padding: 8rpx 4rpx 8rpx 20rpx;
+  display: flex;
+  align-items: center;
 }
 
 .edit-close:active {
@@ -80,8 +81,15 @@
 
 .set-del {
   color: #d1d5db;
-  font-size: 30rpx;
   padding: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.set-del .icon {
+  width: 28rpx;
+  height: 28rpx;
 }
 
 .set-del:active {
@@ -113,6 +121,23 @@
   color: #9ca3af;
   padding: 16rpx 0 20rpx;
   line-height: 1.6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.prefill-text {
+  color: #4f46e5;
+  flex: 1;
+}
+
+.prefill-clear {
+  color: #9ca3af;
+  padding: 4rpx 0 4rpx 20rpx;
+}
+
+.prefill-clear:active {
+  color: #ef4444;
 }
 
 /* 以下为 app.wxss 全局类的组件内副本（组件样式隔离，需自带） */
@@ -164,6 +189,56 @@
   font-size: 28rpx;
   padding: 16rpx 0;
   text-align: center;
+}
+
+.btn-ghost-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-ghost-add .icon {
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 10rpx;
+}
+
+/* CSS 线性图标副本（app.wxss 全局类在组件内不生效，需自带） */
+.icon {
+  position: relative;
+  display: inline-block;
+  width: 28rpx;
+  height: 28rpx;
+  flex-shrink: 0;
+}
+
+.icon::before,
+.icon::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 66%;
+  height: 2.5rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  transform: translate(-50%, -50%);
+}
+
+.icon-x::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.icon-x::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.icon-plus::before {
+  transform: translate(-50%, -50%);
+}
+
+.icon-plus::after {
+  transform: translate(-50%, -50%) rotate(90deg);
 }
 
 .btn-ghost:active {

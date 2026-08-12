@@ -3,7 +3,7 @@ module.exports = [
   {
     id: 'deadlift', name: '硬拉', muscle: 'back', type: 'compound', mechanic: 'hinge',
     equipment: 'barbell', difficulty: 3,
-    target: ['竖脊肌', '臀大肌', '腘绳肌'], secondary: ['背阔肌', '斜方肌', '前臂'],
+    target: ['竖脊肌', '臀大肌', '腘绳肌'], secondary: ['背阔肌', '斜方肌上部', '前臂'],
     steps: ['杠铃贴近小腿，双脚与髋同宽，脚尖微外八', '屈髋俯身握杠，背部保持中立平直，肩胛在杠铃正上方', '蹬地伸髋站起，杠铃贴身竖直上拉', '顶端挺髋夹臀，不要过度后仰，然后屈髋下放'],
     errors: ['弓腰驼背，下背压力过大', '杠铃离身体太远，力矩变长', '用背部先发力把杠铃"拉"起来', '顶端过度后仰挺腰'],
     rest: '120-180 秒', tip: '硬拉是伸髋动作不是弯腰搬东西，核心永远收紧'
@@ -11,7 +11,7 @@ module.exports = [
   {
     id: 'pullup', name: '引体向上', muscle: 'back', type: 'compound', mechanic: 'pull',
     equipment: 'bodyweight', difficulty: 3,
-    target: ['背阔肌', '肱二头肌'], secondary: ['大圆肌', '斜方肌中下部'],
+    target: ['背阔肌', '肱二头肌'], secondary: ['大圆肌', '斜方肌下部'],
     steps: ['正握单杠略宽于肩，身体自然悬垂', '肩胛骨先下沉收紧，再发力上拉', '下巴过杠，肘部向下向后拉', '缓慢下放至手臂伸直'],
     errors: ['借助摆动荡身体', '半程引体不到位', '耸肩用斜方肌代偿'],
     rest: '90-120 秒', tip: '做不了就练高位下拉或弹力带辅助引体'

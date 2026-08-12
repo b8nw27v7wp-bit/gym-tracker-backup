@@ -206,23 +206,53 @@ function exportData() {
   };
 }
 
-// 导入：返回 { ok, error }；校验结构合法性
-function importData(obj) {
+// 导入预览：只校验统计，不写盘（供页面弹确认框用）
+// 返回 { ok, error, workouts, bodyweight, customPlans }
+function previewImport(obj) {
   if (!obj || typeof obj !== 'object') return { ok: false, error: '数据格式不正确' };
   if (obj.app !== 'gym-tracker') return { ok: false, error: '不是本应用的数据文件' };
   if (!Array.isArray(obj.workouts)) return { ok: false, error: '训练数据缺失' };
   if (!Array.isArray(obj.bodyweight)) return { ok: false, error: '体重数据缺失' };
-  // 校验 workout 基本结构，过滤非法项
-  var valid = obj.workouts.filter(function (w) {
-    return w && w.id && w.ts && Array.isArray(w.items);
-  });
+  var valid = obj.workouts.filter(isValidWorkout);
   var validBw = obj.bodyweight.filter(function (b) {
     return b && b.ts && Number(b.weight) > 0;
   });
-  // 自建计划（v2 老备份无此字段 → 空）
-  var validPlans = Array.isArray(obj.customPlans) ? obj.customPlans.filter(function (p) {
-    return p && p.id && p.name && Array.isArray(p.days);
-  }) : [];
+  var validPlans = Array.isArray(obj.customPlans) ? obj.customPlans.filter(isValidPlan) : [];
+  return { ok: true, workouts: valid.length, bodyweight: validBw.length, customPlans: validPlans.length };
+}
+
+// workout 结构校验：id/ts/items 数组 + 每个 item 的 exerciseId + sets 数组 + 组内 weight/reps 为数字或空
+function isValidWorkout(w) {
+  if (!w || !w.id || !w.ts || !Array.isArray(w.items)) return false;
+  return w.items.every(function (item) {
+    if (!item || !item.exerciseId || !Array.isArray(item.sets)) return false;
+    return item.sets.every(function (s) {
+      if (!s || typeof s !== 'object') return false;
+      var wgt = s.weight, rps = s.reps;
+      if (wgt !== undefined && wgt !== '' && !(typeof wgt === 'number' && isFinite(wgt))) return false;
+      if (rps !== undefined && rps !== '' && !(typeof rps === 'number' && isFinite(rps))) return false;
+      return true;
+    });
+  });
+}
+
+// 自建计划结构校验：id/name/days 数组 + 日 items 数组
+function isValidPlan(p) {
+  if (!p || !p.id || !p.name || !Array.isArray(p.days)) return false;
+  return p.days.every(function (d) {
+    return d && d.id && Array.isArray(d.items);
+  });
+}
+
+// 导入：返回 { ok, error }；校验结构合法性，过滤非法项后覆盖写入
+function importData(obj) {
+  var preview = previewImport(obj);
+  if (!preview.ok) return { ok: false, error: preview.error };
+  var valid = obj.workouts.filter(isValidWorkout);
+  var validBw = obj.bodyweight.filter(function (b) {
+    return b && b.ts && Number(b.weight) > 0;
+  });
+  var validPlans = Array.isArray(obj.customPlans) ? obj.customPlans.filter(isValidPlan) : [];
   wx.setStorageSync(KEY_WORKOUTS, valid);
   wx.setStorageSync(KEY_BODYWEIGHT, validBw);
   wx.setStorageSync(KEY_CUSTOM_PLANS, validPlans);
@@ -281,6 +311,7 @@ module.exports = {
   removeIntake: removeIntake,
   genIntakeId: genIntakeId,
   exportData: exportData,
+  previewImport: previewImport,
   importData: importData,
   clearAll: clearAll,
   dataSizeBytes: dataSizeBytes,

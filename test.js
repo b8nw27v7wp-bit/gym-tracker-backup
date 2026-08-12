@@ -92,6 +92,19 @@ assert(exercisesData.exercisesByMuscle('cardio').every(e => e.id !== 'swimming')
 const swimInfo = exercisesData.muscleInfo('swimming');
 assert(swimInfo.name === '游泳' && swimInfo.tips.length >= 2, '游泳部位知识与要点完整');
 
+// secondary 次要肌群标签规范（v2.8 统一叫法守门）：只用标准词汇表，禁止部位级宽泛名/同义混写
+const SECONDARY_TERMS = new Set([
+  '三角肌', '三角肌前束', '三角肌后束', '冈下肌', '前臂', '大圆肌', '大腿内收肌', '心肺',
+  '斜方肌上部', '斜方肌中部', '斜方肌下部', '核心', '比目鱼肌', '竖脊肌', '股四头肌', '腓肠肌',
+  '肱三头肌', '肱三头肌长头', '肱二头肌', '肱肌', '背阔肌', '胸大肌', '胸大肌下部',
+  '腘绳肌', '腰方肌', '腹斜肌', '腹横肌', '腹直肌', '臀大肌', '菱形肌', '髂腰肌', '髋屈肌'
+]);
+const secBadTerms = [];
+exercisesData.ALL.forEach(e => (e.secondary || []).forEach(s => {
+  if (!SECONDARY_TERMS.has(s)) secBadTerms.push(e.id + ':' + s);
+}));
+assert(secBadTerms.length === 0, 'secondary 标签全部在标准词汇表内' + (secBadTerms.length ? '（' + secBadTerms.join(',') + '）' : ''));
+
 // 肌肉发力分区（muscle-detail 页数据源）
 console.log('1b. 肌肉发力分区');
 let groupBad = 0, groupCount = 0, groupExTotal = 0;
@@ -316,6 +329,25 @@ assert(freq.squat === 1 && freq.pullup === 1, '深蹲/引体各 1 次');
 // 排序：使用多的在前
 const sorted = util.sortByFrequency(exercisesData.exercisesByMuscle('chest'), freq);
 assert(sorted[0].id === 'bench', '常用动作置顶（bench 排第一，实际 ' + sorted[0].id + '）');
+
+// ---------- 上次记录带入（v2.8） ----------
+const hist = [
+  { id: 'h1', ts: thisWeekMon - 7 * dayMs, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 8, warmup: true }, { weight: 70, reps: 8 }] }] },
+  { id: 'h2', ts: thisWeekMon - 3 * dayMs, items: [{ exerciseId: 'bench', sets: [{ weight: 72.5, reps: 6 }] }, { exerciseId: 'squat', sets: [{ weight: 100, reps: 5 }] }] },
+  { id: 'h3', ts: thisWeekMon - 1 * dayMs, items: [{ exerciseId: 'bench', sets: [{ weight: 20, reps: 10, warmup: true }] }] }
+];
+const lr = util.lastRecordFor(hist, 'bench');
+assert(lr && lr.weight === 72.5 && lr.reps === 6, 'lastRecordFor 取最近正式组 72.5×6（实际 ' + JSON.stringify(lr) + '）');
+assert(util.lastRecordFor(hist, 'squat').weight === 100, 'lastRecordFor 深蹲 100');
+assert(util.lastRecordFor(hist, 'pullup') === null, '无记录动作返回 null');
+assert(util.lastRecordFor([], 'bench') === null, '空历史安全');
+// 全热身组动作：无正式组 → null（不被热身上一次误导）
+const histWarmOnly = [{ id: 'w1', ts: Date.now(), items: [{ exerciseId: 'dl', sets: [{ weight: 40, reps: 8, warmup: true }] }] }];
+assert(util.lastRecordFor(histWarmOnly, 'dl') === null, '仅热身组不视为有效记录');
+// lastRecordsMap：批量索引
+const lrm = util.lastRecordsMap(hist);
+assert(lrm.bench && lrm.bench.weight === 72.5 && lrm.squat.weight === 100, 'lastRecordsMap 批量索引');
+assert(!lrm.pullup, '未出现动作不在索引中');
 
 // 时长格式化
 assert(util.fmtDuration(55) === '55分钟', '时长 55 分钟');
@@ -798,6 +830,144 @@ trPage.applyPlanDay({ planId: 'beginner-fullbody', dayId: 'a' });
 assert(trPage.data.draft.length === 5, '空草稿直接填充不弹窗');
 wx.showModal = wxModal2;
 
+// ---------- 训练页 v2.8 新功能（暂停/休息/排序/上次记录） ----------
+console.log('10g. 训练页 v2.8 体验增强');
+store.clearAll();
+store.ensureInit();
+// 造一条历史记录（bench 60×8），供"上次记录带入"验证
+store.saveWorkout({
+  id: 'hist-1', ts: Date.now() - 86400000, date: util.dateStr(Date.now() - 86400000), duration: 30,
+  items: [{ exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 60, reps: 8 }] }]
+});
+// freshRequire 等价（该 helper 定义在后面的 E2E 区块，这里手动清缓存重载）
+delete require.cache[require.resolve('./pages/train/train.js')];
+require('./pages/train/train.js');
+const trV28 = instantiate(pageCfg);
+trV28.onLoad({});
+// 上次记录标签装饰（v2.8.1 带日期）
+assert(trV28.data.exerciseList.some(x => x.id === 'bench' && x.lastText.indexOf('上次 ') === 0 && x.lastText.indexOf('60kg × 8') > 0), '动作卡显示上次记录标签（含日期，实际 ' + JSON.stringify(trV28.data.exerciseList.find(x => x.id === 'bench')) + '）');
+// 添加动作预填上次记录
+trV28.onAddExercise({ currentTarget: { dataset: { id: 'bench' } } });
+assert(trV28.data.editing.sets[0].weight === '60' && trV28.data.editing.sets[0].reps === '8', '添加动作预填上次记录 60×8');
+// 预填提示条显示
+assert(trV28.data.editing.lastPrefillText.indexOf('已带入上次记录') === 0, '组编辑器显示已带入提示条');
+// 清空预填
+trV28.onClearPrefill();
+assert(trV28.data.editing.sets[0].weight === '' && trV28.data.editing.sets[0].reps === '' && trV28.data.editing.lastPrefillText === '', '清空预填还原空白并隐藏提示');
+assert(trV28.data.editing.prefilled === false, '清空后 prefilled 标记解除');
+// 完成编辑后显示字段不泄漏进 draft
+trV28.onDoneEdit();
+assert(trV28.data.draft[0].lastPrefillText === undefined && trV28.data.draft[0].prefilled === undefined, '提示字段不进 draft');
+// 无历史动作不预填
+trV28.onBackToPick();
+trV28.data.step = 'pick';
+trV28.onAddExercise({ currentTarget: { dataset: { id: 'nordic-curl' } } });
+assert(trV28.data.editing.sets[0].weight === '' && trV28.data.editing.sets[0].reps === '' && trV28.data.editing.lastPrefillText === '', '无历史动作不预填不提示');
+trV28.onBackToPick();
+trV28.data.step = 'pick';
+// 重新编辑已有动作：不显示"已带入"（用户自己填的）
+trV28.data.draft[0].sets = [{ weight: '70', reps: '6' }];
+trV28.onEditItem({ currentTarget: { dataset: { index: 0 } } });
+assert(trV28.data.editing.lastPrefillText === '', '编辑已有动作不显示预填提示');
+trV28.onBackToPick();
+trV28.data.step = 'pick';
+// 动作排序（上移/下移）
+trV28.data.draft = [
+  { exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 60, reps: 8 }] },
+  { exerciseId: 'squat', exerciseName: '深蹲', muscle: 'legs', sets: [{ weight: 100, reps: 5 }] },
+  { exerciseId: 'pullup', exerciseName: '引体', muscle: 'back', sets: [{ weight: 0, reps: 8 }] }
+];
+trV28.onMoveItem({ currentTarget: { dataset: { index: 2, dir: -1 } } });
+assert(trV28.data.draft[1].exerciseId === 'pullup' && trV28.data.draft[2].exerciseId === 'squat', '下移动作上移成功');
+trV28.onMoveItem({ currentTarget: { dataset: { index: 0, dir: 1 } } });
+assert(trV28.data.draft[0].exerciseId === 'pullup' && trV28.data.draft[1].exerciseId === 'bench', '首个动作下移成功');
+trV28.onMoveItem({ currentTarget: { dataset: { index: 0, dir: -1 } } });
+assert(trV28.data.draft[0].exerciseId === 'pullup', '越界上移被拦截（保持原序）');
+trV28.onMoveItem({ currentTarget: { dataset: { index: 2, dir: 1 } } });
+assert(trV28.data.draft[2].exerciseId === 'squat', '越界下移被拦截');
+// 暂停/继续计时
+trV28.sessionStartTs = Date.now() - 600000; // 已练 10 分钟
+trV28.onTogglePause();
+assert(trV28.data.sessionPaused === true, '暂停计时');
+assert(trV28.sessionElapsedMinutes() === 10, '暂停后已进行分钟不变（实际 ' + trV28.sessionElapsedMinutes() + '）');
+trV28.onTogglePause();
+assert(trV28.data.sessionPaused === false, '继续计时');
+// 暂停累计分钟显示（暂停 2 分钟后暂停时长计数）
+trV28.sessionStartTs = Date.now() - 600000;
+trV28.onTogglePause();
+trV28.data.pauseStartTs = Date.now() - 120000; // 假装暂停了 2 分钟
+assert(trV28.sessionPausedMinutes() === 2, '暂停累计分钟 2（实际 ' + trV28.sessionPausedMinutes() + '）');
+trV28.onTogglePause();
+assert(trV28.data.pausedMinutes === 2, '继续后 pausedMinutes 落值 2');
+// 休息计时器启动/停止
+trV28.onRestStart({ currentTarget: { dataset: { secs: 30 } } });
+assert(trV28.data.restRunning === true && trV28.data.restRemaining === 30, '休息倒计时 30s 启动');
+trV28.onRestStart({ currentTarget: { dataset: { secs: 30 } } });
+assert(trV28.data.restRunning === false && trV28.data.restRemaining === 0, '再次点击停止休息');
+trV28.onRestStart({ currentTarget: { dataset: { secs: 90 } } });
+assert(trV28.data.restRemaining === 90, '90s 快捷启动');
+trV28.stopRestTimer();
+assert(trV28.data.restRunning === false, 'stopRestTimer 手动停止');
+// 休息自动暂停训练计时联动：休息期间训练计时暂停，结束自动恢复
+trV28.sessionStartTs = Date.now() - 600000;
+trV28.data.sessionStarted = true;
+trV28.data.sessionPaused = false;
+trV28.data.pauseAccumMs = 0;
+trV28.startRest(30);
+assert(trV28.data.sessionPaused === true, '休息期间训练计时自动暂停');
+trV28.data.pauseStartTs = Date.now() - 30000; // 假装休息了 30 秒
+trV28.stopRestTimer();
+assert(trV28.data.sessionPaused === false, '休息结束训练计时自动恢复');
+assert(trV28.data.pauseAccumMs >= 29000, '休息时长计入暂停累计（实际 ' + trV28.data.pauseAccumMs + '）');
+// 休息期间手动继续：解除自动恢复义务，休息结束不重复累计
+trV28.startRest(30);
+assert(trV28.data.sessionPaused === true, '再次休息自动暂停');
+trV28.onTogglePause(); // 用户手动继续
+assert(trV28.data.sessionPaused === false && trV28.restAutoPaused === false, '手动继续解除自动恢复义务');
+const beforeAccum = trV28.data.pauseAccumMs;
+trV28.stopRestTimer();
+assert(trV28.data.pauseAccumMs === beforeAccum, '手动继续后休息结束不再重复累计暂停');
+// 自定义秒数
+trV28.onRestCustomInput({ detail: { value: '45' } });
+trV28.onRestCustomStart();
+assert(trV28.data.restRemaining === 45 && trV28.data.restRunning === true, '自定义 45s 启动');
+assert(trV28.data.restCustomSecs === '', '自定义输入已清空');
+trV28.stopRestTimer();
+// 非法自定义秒数拦截
+trV28.onRestCustomInput({ detail: { value: '0' } });
+trV28.onRestCustomStart();
+assert(trV28.data.restRunning === false, '0 秒被拦截');
+trV28.onRestCustomInput({ detail: { value: '999' } });
+trV28.onRestCustomStart();
+assert(trV28.data.restRunning === false, '999 秒被拦截（上限 600）');
+// 保存后状态重置（暂停/休息/自定义输入全部清零）
+trV28.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '60', reps: '8' }] }];
+trV28.onSave();
+assert(trV28.data.sessionPaused === false && trV28.data.pauseAccumMs === 0 && trV28.data.restCustomSecs === '' && trV28.data.restRunning === false, '保存后暂停/休息/自定义输入全部重置');
+// 排序后保存顺序一致性：draft 顺序即存储顺序（getWorkouts 倒序，最新在 [0]）
+trV28.data.draft = [
+  { exerciseId: 'squat', exerciseName: '深蹲', muscle: 'legs', sets: [{ weight: '100', reps: '5' }] },
+  { exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '60', reps: '8' }] }
+];
+trV28.onSave();
+// 两次保存可能同毫秒 ts（Date.now 相同），不能依赖索引，按 items 长度定位本次记录
+const savedV28 = store.getWorkouts();
+const lastSorted = savedV28.find(w => w.items.length === 2);
+assert(lastSorted && lastSorted.items[0].exerciseId === 'squat' && lastSorted.items[1].exerciseId === 'bench', '排序后保存顺序与显示一致');
+store.clearAll();
+store.ensureInit();
+
+// 真实倒计时行为（异步验证）：1 秒休息到点自动停止 + 震动
+let vibrated = false;
+const wxVibrate = wx.vibrateShort;
+wx.vibrateShort = o => { vibrated = true; };
+const restReal = instantiate(pageCfg);
+restReal.sessionStartTs = Date.now();
+restReal.data.sessionStarted = true;
+restReal.startRest(1);
+assert(restReal.data.restRunning === true && restReal.data.restRemaining === 1, '真实倒计时 1s 启动');
+// 异步区（1300ms 后）验证自动停止 + 震动 + 训练计时恢复
+
 // ---------- 自建计划页冒烟（v2.3） ----------
 console.log('11. 自建计划页冒烟');
 // 重置存储，清空自定义计划
@@ -978,30 +1148,80 @@ assert(store.getBodyweights().length === 1, '体重记录入库');
 e2eStats.loadStats();
 assert(e2eStats.data.hasBodyData === true && e2eStats.data.bwLatest === 70.5, '统计页体重联动');
 
-// ⑧ 数据管理：导出 → 导入 → 清空
+// ⑧ 数据管理：导出 → 导入（v2.9 安全流程：确认后覆盖）→ 清空
 freshRequire('./pages/data/data.js');
 const e2eData = instantiate(pageCfg);
 let clipText = '';
 wx.setClipboardData = o => { clipText = o.data; o.success && o.success(); };
 e2eData.onExport();
 assert(clipText.indexOf('gym-tracker') >= 0 && clipText.indexOf('"workouts"') >= 0, '导出 JSON 到剪贴板');
+// 导入安全：先弹确认框，取消则不覆盖
 wx.getClipboardData = o => o.success && o.success({ data: clipText });
+let importModal = null;
+const wxmImport = wx.showModal;
+wx.showModal = o => { importModal = o; };
 e2eData.onImport();
-assert(store.getWorkouts().length === 2, '导入恢复 2 条训练');
+assert(importModal && importModal.title === '确认恢复备份？' && importModal.confirmText === '恢复', '导入先弹确认框');
+assert(store.getWorkouts().length === 2, '未确认前不覆盖现有数据（仍 2 条）');
+importModal.success({ confirm: false }); // 用户取消
+assert(store.getWorkouts().length === 2, '取消后数据保持原样');
+importModal.success({ confirm: true }); // 用户确认 → 覆盖恢复
+assert(store.getWorkouts().length === 2, '确认后恢复 2 条训练（覆盖语义）');
+// 导入安全：非本应用 JSON / 畸形数据拒绝
+const badApp = JSON.parse(clipText); badApp.app = 'evil-app';
+assert(store.previewImport(badApp).ok === false, '非本应用数据拒绝导入');
+const malformed = JSON.parse(clipText);
+malformed.workouts.push({ id: 'x', ts: 1, items: [{ exerciseId: 'bench', sets: 'not-array' }] });
+const malPrev = store.previewImport(malformed);
+assert(malPrev.ok === true && malPrev.workouts === 2, '畸形 workout 在预览中被过滤（2 条）');
+const malformed2 = JSON.parse(clipText);
+malformed2.workouts.push({ id: 'y', ts: 1, items: [{ exerciseId: 'bench', sets: [{ weight: 'abc', reps: {} }] }] });
+const malPrev2 = store.previewImport(malformed2);
+assert(malPrev2.ok === true && malPrev2.workouts === 2, '畸形 sets 数据被过滤');
+// 超大备份拒绝（>1MB 在页面层拦截；store 层 previewImport 不抛异常）
+assert(store.previewImport(null).ok === false && store.previewImport('str').ok === false, '非法输入 previewImport 安全返回');
 wx.showModal = o => o.success && o.success({ confirm: true });
 e2eData.onClear();
 assert(store.getWorkouts().length === 0 && store.getIntake().length === 0 && store.getBodyweights().length === 0, '清空全部数据（训练/摄入/体重）');
-wx.showModal = wxm3;
+wx.showModal = wxmImport;
+
+// ⑨ 训练页 → 动作库跳转（v2.8 携带部位）+ 返回条
+freshRequire('./pages/train/train.js');
+const e2eTrainLib = instantiate(pageCfg);
+e2eTrainLib.onPickMuscle({ currentTarget: { dataset: { key: 'legs' } } });
+assert(e2eTrainLib.data.currentMuscleName === '腿', '训练页部位名同步（实际 ' + e2eTrainLib.data.currentMuscleName + '）');
+navLog.length = 0;
+e2eTrainLib.onGoLibrary();
+assert(wx._store['pending_muscle_key'] === 'legs', '跳转前写入待选部位');
+assert(navLog[navLog.length - 1] === 'tab:/pages/exercises/exercises', 'switchTab 到动作库');
+freshRequire('./pages/exercises/exercises.js');
+const e2eLib = instantiate(pageCfg);
+e2eLib.onLoad({});
+e2eLib.onShow();
+assert(e2eLib.data.currentMuscle === 'legs' && e2eLib.data.showBack === true, '动作库接收部位 + 显示返回条');
+assert(wx._store['pending_muscle_key'] === undefined, '部位参数用完即删');
+assert(e2eLib.data.list.length > 0 && e2eLib.data.list.every(it => it.muscleName === '腿'), '动作列表已按腿筛选');
+navLog.length = 0;
+e2eLib.onBackToTrain();
+assert(navLog[navLog.length - 1] === 'tab:/pages/train/train', '返回条切回训练页');
+// 正常 tab 进入动作库不显示返回条
+e2eLib.onShow();
+assert(e2eLib.data.showBack === false, '常规进入动作库无返回条');
 
 // 恢复 wx 原始函数（navigateBack/switchTab 保持 fallback mock，badPage 的 800ms 定时器在异步阶段触发）
+// 注意：restReal 的 1s 休息倒计时 interval 会在异步阶段触发 showToast，原值 undefined 会崩 → no-op 兜底（技能：异步定时器陷阱）
 wx.navigateTo = wxNav;
 wx.redirectTo = wxRedirect || undefined;
-wx.showToast = wxToast;
+wx.showToast = wxToast || function () {};
 wx.showModal = wxModal;
 
 // 异步兜底验证：badPage 的 800ms 定时器先触发 navigateBack fail → 断言兜底切 tab
 setTimeout(function () {
   assert(fallbackChecked === true, '直达详情页无返回栈时兜底切回动作库 tab');
+  // 真实休息倒计时（1s）已到点：自动停止 + 震动 + 训练计时自动恢复
+  assert(restReal.data.restRunning === false && restReal.data.restRemaining === 0, '真实倒计时到点自动停止');
+  assert(vibrated === true, '到点触发震动提醒');
+  assert(restReal.data.sessionPaused === false, '休息结束训练计时自动恢复（真实倒计时）');
   console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
   process.exit(failed > 0 ? 1 : 0);
 }, 1300);
