@@ -256,6 +256,57 @@ function est1RMHistory(exerciseId, workouts) {
   return result;
 }
 
+// 某动作最近 n 次 1RM 估算趋势（取 est1RMHistory 末 n 个点），返回 [{ label, est, height }]（height 为相对最大值的百分比，最小 8%）
+function est1RMTrend(exerciseId, workouts, n) {
+  var hist = est1RMHistory(exerciseId, workouts);
+  var recent = hist.slice(-(n || 6));
+  if (recent.length === 0) return [];
+  var max = 1;
+  recent.forEach(function (p) { if (p.est > max) max = p.est; });
+  return recent.map(function (p) {
+    var d = new Date(p.ts);
+    return {
+      label: (d.getMonth() + 1) + '/' + d.getDate(),
+      est: p.est,
+      height: Math.max(Math.round((p.est / max) * 100), 8)
+    };
+  });
+}
+
+// 计划完成度：今日某计划日训练完成情况
+// 返回 { done: bool 今日是否已练该计划日, count 今日该计划日训练次数 }
+function planDayStatus(workouts, planId, dayId) {
+  var today = todayStr();
+  var count = 0;
+  (workouts || []).forEach(function (w) {
+    if (w.date !== today) return;
+    if (w.plan && w.plan.planId === planId && w.plan.dayId === dayId) count += 1;
+  });
+  return { done: count > 0, count: count };
+}
+
+// 某计划日动作完成率：今日训练中命中该计划日动作的数量占比
+// 返回 { total, done, pct }；无训练或无匹配时 pct=0
+function planDayCompletion(workouts, planId, dayId, planDay) {
+  var today = todayStr();
+  var total = (planDay && planDay.items) ? planDay.items.length : 0;
+  var doneSet = {};
+  (workouts || []).forEach(function (w) {
+    if (w.date !== today) return;
+    (w.items || []).forEach(function (item) {
+      doneSet[item.exerciseId] = true;
+    });
+  });
+  var done = 0;
+  if (planDay && planDay.items) {
+    planDay.items.forEach(function (it) {
+      if (doneSet[it.exerciseId]) done += 1;
+    });
+  }
+  var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  return { total: total, done: done, pct: pct };
+}
+
 // ---------- 体重 ----------
 // 体重序列 [{ ts, weight }]，时间正序；返回变化量（最新-最早）与最新值
 function bodyweightTrend(list) {
@@ -299,5 +350,8 @@ module.exports = {
   exercisePR: exercisePR,
   epley1RM: epley1RM,
   est1RMHistory: est1RMHistory,
+  est1RMTrend: est1RMTrend,
+  planDayStatus: planDayStatus,
+  planDayCompletion: planDayCompletion,
   bodyweightTrend: bodyweightTrend
 };

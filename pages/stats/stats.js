@@ -141,13 +141,19 @@ Page({
         // 最新估算 1RM
         var hist = util.est1RMHistory(id, workouts);
         var est1rm = hist.length > 0 ? hist[hist.length - 1].est : 0;
+        // 1RM 迷你趋势（≥2 个点才显示）
+        var trend = util.est1RMTrend(id, workouts, 6);
+        var maxEst = 1;
+        trend.forEach(function (t) { if (t.est > maxEst) maxEst = t.est; });
         prs.push({
           id: id,
           name: ex.name,
           maxWeight: pr.maxWeight,
           bestSet: Math.round(pr.bestSetVol),
           dateText: pr.bestDate ? util.fmtDate(pr.bestDate) : '',
-          est1rm: est1rm
+          est1rm: est1rm,
+          trend: trend.length >= 2 ? trend : [],
+          trendMax: maxEst
         });
       }
     });

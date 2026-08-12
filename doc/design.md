@@ -1,6 +1,6 @@
 # 设计文档（Design）
 
-版本：v2.2 | 更新：2026-08-12
+版本：v2.3 | 更新：2026-08-12
 
 ## 1. 技术选型
 
@@ -128,8 +128,23 @@
 - 最大重量：该动作所有组 weight 最大值
 - 最佳单组：该动作所有组 weight×reps 最大值（含日期）
 - 统计页展示 8 个招牌动作（卧推/深蹲/硬拉/推举/引体/哑铃卧推/腿举/划船），仅显示有记录的
+- 1RM 迷你趋势（v2.3）：`est1RMTrend(id, workouts, 6)` 取最近 6 次估算 1RM，按最大值归一化为高度（最小 8%），PR 行内嵌趋势柱
 
-### 4.4 1RM 估算与体重趋势
+### 4.6 计划完成度（v2.3）
+
+- 打卡标记：从计划库填充的训练保存时写入 `workout.plan = { planId, dayId }`
+- `planDayStatus(workouts, planId, dayId)`：今日是否已练该计划日（按 `w.date === today` + plan 标记匹配）
+- `planDayCompletion(workouts, planId, dayId, planDay)`：今日训练命中该计划日动作的数量占比（按动作 id 匹配，与打卡标记无关）
+- 展示：计划库页训练日卡片顶部徽标（"✅ 今日已完成" / "今日完成 X/Y"）+ 部分完成时绿色进度条
+
+### 4.7 自建计划（v2.3）
+
+- 存储：`gym_custom_plans`（schema v3 迁移补齐），结构复用内置计划 `{ id, name, level, desc, daysPerWeek, custom, days: [...] }`，id 前缀 `cp_` 与内置不冲突
+- 查询：`utils/plan.js` 全部函数增加可选参数 `customPlans`（纯函数保持可测），页面层传 `store.getCustomPlans()` 统一合并
+- 编辑器：pages/plan-edit（新建/编辑/删除，多训练日 tabs、按部位/搜索选动作、组数次数可调、空次数保存为 null 表示力竭自填）
+- 备份：导出/导入/清空/容量统计均含 customPlans
+
+### 4.8 1RM 估算与体重趋势
 
 - Epley 公式：`1RM ≈ weight × (1 + reps/30)`，仅对 reps ≤ 20 有效，超出返回 0
 - est1RMHistory：按时间正序取每日最大估算值，热身组排除

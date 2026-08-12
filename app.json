@@ -8,6 +8,7 @@
     "pages/exercise-detail/exercise-detail",
     "pages/knowledge-detail/knowledge-detail",
     "pages/plans/plans",
+    "pages/plan-edit/plan-edit",
     "pages/calculator/calculator",
     "pages/data/data",
     "pages/privacy/privacy"

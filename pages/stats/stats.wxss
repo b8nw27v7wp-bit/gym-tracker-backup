@@ -372,3 +372,21 @@
   color: #9ca3af;
   margin-top: 4rpx;
 }
+
+/* PR 1RM 迷你趋势 */
+.pr-trend {
+  width: 100%;
+  height: 56rpx;
+  display: flex;
+  align-items: flex-end;
+  gap: 6rpx;
+  padding-top: 8rpx;
+  margin-top: 4rpx;
+}
+
+.pr-trend-bar {
+  flex: 1;
+  min-height: 4rpx;
+  background: #e0e7ff;
+  border-radius: 4rpx 4rpx 0 0;
+}

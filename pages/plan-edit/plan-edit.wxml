@@ -1,0 +1,82 @@
+<view class="page">
+  <!-- 计划名 -->
+  <view class="card">
+    <view class="card-title">计划名称</view>
+    <input class="name-input" placeholder="如：我的五分化" value="{{name}}" bindinput="onNameInput" maxlength="20" />
+  </view>
+
+  <!-- 训练日管理 -->
+  <view class="card">
+    <view class="day-tabs">
+      <view
+        wx:for="{{days}}"
+        wx:key="id"
+        class="day-tab {{currentDayIdx === index ? 'day-tab-active' : ''}}"
+        data-idx="{{index}}"
+        bindtap="onPickDay"
+      >
+        <text class="day-tab-name">{{item.name}}</text>
+        <text class="day-tab-del" data-idx="{{index}}" catchtap="onRemoveDay">✕</text>
+      </view>
+      <view class="day-tab day-tab-add" bindtap="onAddDay">＋</view>
+    </view>
+    <input
+      wx:if="{{days.length > 0}}"
+      class="day-name-input"
+      placeholder="训练日名称（如：推日）"
+      value="{{days[currentDayIdx].name}}"
+      data-idx="{{currentDayIdx}}"
+      bindinput="onDayNameInput"
+      maxlength="12"
+    />
+  </view>
+
+  <!-- 当前训练日动作清单 -->
+  <view class="card" wx:if="{{days.length > 0}}">
+    <view class="card-title">{{days[currentDayIdx].name}} · 动作（{{days[currentDayIdx].items.length}}）</view>
+    <view wx:if="{{days[currentDayIdx].items.length === 0}}" class="empty-tip">下方选择动作添加</view>
+    <view wx:for="{{days[currentDayIdx].items}}" wx:key="exerciseId" class="edit-item">
+      <text class="edit-item-name">{{item.exerciseName}}</text>
+      <view class="edit-item-controls">
+        <input class="num-input" type="number" value="{{item.sets}}" data-idx="{{index}}" bindinput="onSetsInput" />
+        <text class="num-label">组</text>
+        <input class="num-input" type="number" value="{{item.reps}}" data-idx="{{index}}" bindinput="onRepsInput" />
+        <text class="num-label">次</text>
+        <text class="edit-item-del" data-idx="{{index}}" catchtap="onRemoveExercise">移除</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 动作选择器 -->
+  <view class="card">
+    <view class="card-title">添加动作</view>
+    <input class="search-input" placeholder="搜索动作（跨部位）" value="{{searchKeyword}}" bindinput="onSearchInput" confirm-type="search" />
+    <scroll-view scroll-x class="muscle-scroll" enable-flex>
+      <view
+        wx:for="{{muscles}}"
+        wx:key="key"
+        class="muscle-chip {{currentMuscle === item.key ? 'muscle-chip-active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onPickMuscle"
+      >{{item.icon}} {{item.name}}</view>
+    </scroll-view>
+    <view class="ex-grid">
+      <view
+        wx:for="{{exerciseList}}"
+        wx:key="id"
+        class="ex-cell {{item.added ? 'ex-cell-added' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onAddExercise"
+      >
+        <text class="ex-cell-name">{{item.name}}</text>
+        <text class="ex-cell-state">{{item.added ? '✓ 已添加' : '＋ 添加'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="footer">
+    <view class="save-btn" bindtap="onSave">保存计划</view>
+    <view class="del-btn" wx:if="{{isEdit}}" bindtap="onDelete">删除此计划</view>
+  </view>
+</view>

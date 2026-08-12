@@ -22,7 +22,8 @@ Page({
     sessionStarted: false,
     sessionMinutes: 0,
     note: '',
-    searchKeyword: ''
+    searchKeyword: '',
+    planInfo: null // 计划打卡标记 { planId, dayId }
   },
 
   onLoad: function () {
@@ -80,7 +81,7 @@ Page({
       wx.showToast({ title: '计划数据异常', icon: 'none' });
       return;
     }
-    this.setData({ draft: draft, step: 'pick' });
+    this.setData({ draft: draft, step: 'pick', planInfo: { planId: pending.planId, dayId: pending.dayId } });
     this.refreshDraftMeta();
     wx.showToast({ title: '已按计划填充 ' + draft.length + ' 个动作', icon: 'none' });
   },
@@ -317,13 +318,17 @@ Page({
           return item.sets.length > 0;
         })
       };
+      // 计划打卡标记（从计划库填充而来时记录，用于计划完成度统计）
+      if (self.data.planInfo && self.data.planInfo.planId && self.data.planInfo.dayId) {
+        workout.plan = { planId: self.data.planInfo.planId, dayId: self.data.planInfo.dayId };
+      }
       // 所有动作的组都为空：不保存
       if (workout.items.length === 0) {
         wx.showToast({ title: '没有可保存的有效数据', icon: 'none' });
         return;
       }
       store.saveWorkout(workout);
-      self.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '' });
+      self.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '', planInfo: null });
       self.refreshDraftMeta();
       self.sessionStartTs = Date.now();
       self.setData({ sessionMinutes: 0 });

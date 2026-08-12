@@ -266,6 +266,43 @@ const estHist = util.est1RMHistory('bench', all);
 assert(estHist.length === 2, '卧推 1RM 历史 2 个点（实际 ' + estHist.length + '）');
 assert(estHist[1].est === 93, '最新估算 1RM 93（实际 ' + estHist[1].est + '）');
 
+// 1RM 迷你趋势
+const rmTrend = util.est1RMTrend('bench', all, 6);
+assert(rmTrend.length === 2 && rmTrend[1].est === 93, '1RM 趋势 2 个点（实际 ' + rmTrend.length + '）');
+assert(rmTrend[0].height > 0 && rmTrend[0].height <= 100, '趋势高度归一化 0-100');
+assert(util.est1RMTrend('nonexistent', all).length === 0, '无记录动作趋势为空');
+const onePoint = util.est1RMTrend('bench', [w3], 6);
+assert(onePoint.length === 1 && onePoint[0].height >= 8, '单点趋势高度最小 8%');
+
+// 计划完成度
+const wPlan = {
+  id: 'wp', ts: Date.now(), date: util.todayStr(), duration: 50,
+  plan: { planId: 'beginner-fullbody', dayId: 'a' },
+  items: [
+    { exerciseId: 'squat', exerciseName: '杠铃深蹲', muscle: 'legs', sets: [{ weight: 100, reps: 5 }] },
+    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 60, reps: 10 }] }
+  ]
+};
+const st = util.planDayStatus([wPlan], 'beginner-fullbody', 'a');
+assert(st.done === true && st.count === 1, '今日计划日已打卡');
+const stNot = util.planDayStatus([wPlan], 'beginner-fullbody', 'b');
+assert(stNot.done === false, '其他计划日未打卡');
+const stNoPlan = util.planDayStatus([wPlan], 'ppl', 'push');
+assert(stNoPlan.done === false, '未带 plan 标记的训练不计入');
+// 完成率：新手 A 日共 5 个动作，今日练了 squat+bench 2 个
+const comp = util.planDayCompletion([wPlan], 'beginner-fullbody', 'a', planUtil.getPlanDay('beginner-fullbody', 'a'));
+assert(comp.total === 5 && comp.done === 2 && comp.pct === 40, '计划日完成率 2/5=40%（实际 ' + comp.done + '/' + comp.total + '=' + comp.pct + '%）');
+const compEmpty = util.planDayCompletion([], 'beginner-fullbody', 'a', planUtil.getPlanDay('beginner-fullbody', 'a'));
+assert(compEmpty.total === 5 && compEmpty.done === 0 && compEmpty.pct === 0, '无训练完成率 0');
+// 计划合并：自定义计划
+const customPlan = { id: 'cp_mine', name: '我的计划', level: '自定义', daysPerWeek: 2, desc: '', custom: true, days: [{ id: 'd1', name: '推日', items: [{ exerciseId: 'bench', sets: 4, reps: 8 }] }] };
+assert(planUtil.getPlan('cp_mine', [customPlan]).name === '我的计划', 'getPlan 命中自定义计划');
+assert(planUtil.getPlan('cp_mine') === null, '不传自定义计划则查不到');
+assert(planUtil.buildDraftFromPlan('cp_mine', 'd1', [customPlan]).length === 1, '自定义计划填充草稿');
+assert(planUtil.buildDraftFromPlan('cp_mine', 'd1', [customPlan])[0].sets.length === 4, '自定义计划组数预填');
+assert(planUtil.planSummaries([customPlan]).length === 6, '计划汇总含自定义（5+1）');
+assert(planUtil.planSummaries([customPlan])[5].custom === true, '自定义计划标记 custom');
+
 const bwList = [
   { ts: thisWeekMon - 10 * dayMs, weight: 70 },
   { ts: thisWeekMon - 5 * dayMs, weight: 71.5 },
@@ -301,9 +338,10 @@ console.log('9. 数据迁移与备份');
 // 全新安装
 global.wx._store = {};
 store.ensureInit();
-assert(wx.getStorageSync('gym_schema_version') === 2, '全新安装 schema v2');
+assert(wx.getStorageSync('gym_schema_version') === 3, '全新安装 schema v3');
 assert(Array.isArray(wx.getStorageSync('gym_workouts')), 'workouts 初始化');
 assert(Array.isArray(wx.getStorageSync('gym_bodyweight')), 'bodyweight 初始化');
+assert(Array.isArray(wx.getStorageSync('gym_custom_plans')), 'custom_plans 初始化');
 
 // 老版本迁移：只有 v1 inited 标记 + 训练数据，无 bodyweight key、无 schema
 global.wx._store = {};
@@ -311,22 +349,48 @@ wx.setStorageSync('gym_inited_v1', true);
 wx.setStorageSync('gym_workouts', [{ id: 'old1', ts: Date.now(), items: [] }]);
 store.ensureInit();
 assert(Array.isArray(wx.getStorageSync('gym_bodyweight')), 'v1 迁移补 bodyweight key');
-assert(wx.getStorageSync('gym_schema_version') === 2, 'v1 迁移到 v2');
+assert(wx.getStorageSync('gym_schema_version') === 3, 'v1 迁移到 v3');
 assert(store.getWorkouts().length === 1, '迁移保留原训练数据');
+
+// v2 老数据迁移：有 workouts/bodyweight，无 custom_plans → 补空数组
+global.wx._store = {};
+wx.setStorageSync('gym_schema_version', 2);
+wx.setStorageSync('gym_workouts', [{ id: 'v2w', ts: Date.now(), items: [] }]);
+wx.setStorageSync('gym_bodyweight', [{ ts: Date.now(), weight: 70 }]);
+store.ensureInit();
+assert(Array.isArray(wx.getStorageSync('gym_custom_plans')), 'v2 迁移补 custom_plans key');
+assert(wx.getStorageSync('gym_schema_version') === 3, 'v2 迁移到 v3');
+assert(store.getWorkouts().length === 1, 'v2 迁移保留训练数据');
 
 // 导出
 const exp = store.exportData();
-assert(exp.app === 'gym-tracker' && exp.schemaVersion === 2 && exp.workouts.length === 1, '导出结构完整（app/版本/数据）');
+assert(exp.app === 'gym-tracker' && exp.schemaVersion === 3 && exp.workouts.length === 1, '导出结构完整（app/版本/数据）');
+assert(Array.isArray(exp.customPlans), '导出含 customPlans 字段');
 
 // 导入合法数据（含非法项过滤）
 const importObj = {
-  app: 'gym-tracker', schemaVersion: 2, exportedAt: Date.now(),
+  app: 'gym-tracker', schemaVersion: 3, exportedAt: Date.now(),
   workouts: [{ id: 'ok1', ts: Date.now(), items: [] }, { bad: true }],
-  bodyweight: [{ ts: Date.now(), weight: 70 }, { nope: 1 }]
+  bodyweight: [{ ts: Date.now(), weight: 70 }, { nope: 1 }],
+  customPlans: [{ id: 'cp1', name: '我的计划', days: [{ id: 'd1', name: '推日', items: [] }] }, { bad: 1 }]
 };
 const imp = store.importData(importObj);
 assert(imp.ok && imp.workouts === 1 && imp.bodyweight === 1, '导入过滤非法项（' + imp.workouts + '/' + imp.bodyweight + '）');
 assert(store.getWorkouts()[0].id === 'ok1', '导入数据生效');
+assert(store.getCustomPlans().length === 1, '导入过滤非法计划');
+// 老备份（v2 无 customPlans 字段）导入兼容
+const impOld = store.importData({ app: 'gym-tracker', schemaVersion: 2, workouts: [], bodyweight: [] });
+assert(impOld.ok && Array.isArray(store.getCustomPlans()) && store.getCustomPlans().length === 0, 'v2 老备份导入兼容');
+
+// 自建计划 CRUD
+const cp1 = { id: 'cp_test', name: '测试计划', level: '自定义', daysPerWeek: 1, desc: '', custom: true, days: [{ id: 'd1', name: '推日', items: [{ exerciseId: 'bench', sets: 3, reps: 10 }] }] };
+store.saveCustomPlan(cp1);
+assert(store.getCustomPlans().length === 1, '保存自建计划');
+const cpRead = store.getCustomPlan('cp_test');
+assert(cpRead && cpRead.days.length === 1 && cpRead.days[0].items[0].exerciseId === 'bench', '读取自建计划');
+store.removeCustomPlan('cp_test');
+assert(store.getCustomPlans().length === 0, '删除自建计划');
+assert(store.genPlanId().indexOf('cp_') === 0, '计划 id 前缀 cp_');
 
 // 导入非法数据
 assert(!store.importData({ app: 'other' }).ok, '非本应用数据拦截');
@@ -399,9 +463,96 @@ const badPage = instantiate(pageCfg);
 badPage.onLoad({ id: 'nope' });
 assert(badPage.data.ex === null, '不存在动作显示空态');
 
+// ---------- 自建计划页冒烟（v2.3） ----------
+console.log('11. 自建计划页冒烟');
+// 重置存储，清空自定义计划
+store.clearAll();
+store.ensureInit();
+// mock showModal 自动确认（删除计划二次确认）
+const wxModal = wx.showModal;
+wx.showModal = o => o.success && o.success({ confirm: true });
+
+// 新建计划：默认 1 个训练日
+require('./pages/plan-edit/plan-edit.js');
+const pe = instantiate(pageCfg);
+pe.onLoad({});
+assert(pe.data.days.length === 1 && pe.data.days[0].items.length === 0, '新建默认 1 个训练日');
+assert(pe.data.exerciseList.length > 0, '动作列表已加载');
+
+// 添加训练日
+pe.onAddDay();
+assert(pe.data.days.length === 2, '添加训练日 → 2 个');
+assert(pe.data.currentDayIdx === 1, '自动切到新训练日');
+
+// 添加动作（第一个动作进当前训练日）
+const firstEx = pe.data.exerciseList[0];
+pe.onAddExercise({ currentTarget: { dataset: { id: firstEx.id } } });
+assert(pe.data.days[1].items.length === 1, '添加动作成功');
+assert(pe.data.days[1].items[0].exerciseId === firstEx.id, '动作 id 正确');
+assert(pe.data.days[1].items[0].sets === 3 && pe.data.days[1].items[0].reps === 10, '默认 3×10');
+// 重复添加拦截
+pe.onAddExercise({ currentTarget: { dataset: { id: firstEx.id } } });
+assert(pe.data.days[1].items.length === 1, '重复添加被拦截');
+// 添加另一动作
+const secondEx = pe.data.exerciseList[1];
+pe.onAddExercise({ currentTarget: { dataset: { id: secondEx.id } } });
+assert(pe.data.days[1].items.length === 2, '第二个动作添加成功');
+
+// 组数/次数编辑
+pe.onSetsInput({ currentTarget: { dataset: { idx: 0 } }, detail: { value: '5' } });
+pe.onRepsInput({ currentTarget: { dataset: { idx: 0 } }, detail: { value: '8' } });
+assert(pe.data.days[1].items[0].sets === 5 && pe.data.days[1].items[0].reps === 8, '组数/次数编辑生效');
+
+// 训练日改名
+pe.onDayNameInput({ currentTarget: { dataset: { idx: 1 } }, detail: { value: '胸部日' } });
+assert(pe.data.days[1].name === '胸部日', '训练日改名生效');
+
+// 计划名 + 保存
+pe.onNameInput({ detail: { value: '我的推胸计划' } });
+pe.onSave();
+assert(store.getCustomPlans().length === 1, '保存后入库');
+const savedPlan = store.getCustomPlans()[0];
+assert(savedPlan.name === '我的推胸计划' && savedPlan.custom === true, '计划名与 custom 标记');
+assert(savedPlan.days.length === 2 && savedPlan.days[1].items.length === 2, '保存的计划结构完整');
+assert(savedPlan.days[1].items[0].sets === 5 && savedPlan.days[1].items[0].reps === 8, '组次正确保存');
+// 保存时 reps 为空 → null（力竭自填）
+pe.onRepsInput({ currentTarget: { dataset: { idx: 0 } }, detail: { value: '' } });
+pe.onSave();
+assert(store.getCustomPlans()[0].days[1].items[0].reps === null, '空次数保存为 null（自填）');
+
+// 编辑已有计划
+const editPage = instantiate(pageCfg);
+editPage.onLoad({ id: savedPlan.id });
+assert(editPage.data.isEdit === true && editPage.data.name === '我的推胸计划', '编辑态加载已有计划');
+assert(editPage.data.days[1].items.length === 2, '编辑态动作已载入');
+// 删除训练日（从 2 减到 1）
+editPage.onRemoveDay({ currentTarget: { dataset: { idx: 1 } } });
+assert(editPage.data.days.length === 1, '删除训练日');
+
+// 校验：无动作不允许保存
+const badPlan = instantiate(pageCfg);
+badPlan.onLoad({});
+badPlan.onNameInput({ detail: { value: '空计划' } });
+badPlan.onSave();
+assert(store.getCustomPlans().length === 1, '无动作计划被拦截保存');
+// 校验：无名称不允许保存
+const noName = instantiate(pageCfg);
+noName.onLoad({});
+noName.onAddExercise({ currentTarget: { dataset: { id: noName.data.exerciseList[0].id } } });
+noName.onSave();
+assert(store.getCustomPlans().length === 1, '无名称计划被拦截保存');
+
+// 删除计划（编辑态）
+editPage.onDelete();
+assert(store.getCustomPlans().length === 0, '删除计划生效');
+// 清空恢复
+store.clearAll();
+store.ensureInit();
+
 // 恢复 wx 原始函数
 wx.navigateTo = wxNav;
 wx.showToast = wxToast;
+wx.showModal = wxModal;
 
 console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
 process.exit(failed > 0 ? 1 : 0);

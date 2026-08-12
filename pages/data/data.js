@@ -69,7 +69,8 @@ Page({
         }
         wx.showModal({
           title: '导入成功',
-          content: '已恢复 ' + result.workouts + ' 条训练、' + result.bodyweight + ' 条体重记录。（将覆盖当前数据）',
+          content: '已恢复 ' + result.workouts + ' 条训练、' + result.bodyweight + ' 条体重记录' +
+            (result.customPlans > 0 ? '、' + result.customPlans + ' 个自建计划' : '') + '。（将覆盖当前数据）',
           showCancel: false,
           success: function () { self.refresh(); }
         });
@@ -85,7 +86,7 @@ Page({
     var self = this;
     wx.showModal({
       title: '清空全部数据',
-      content: '将删除所有训练记录和体重记录，且无法恢复。建议先导出备份。确定继续？',
+      content: '将删除所有训练记录、体重记录和自建计划，且无法恢复。建议先导出备份。确定继续？',
       confirmText: '清空',
       confirmColor: '#ef4444',
       success: function (res) {

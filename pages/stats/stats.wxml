@@ -126,6 +126,10 @@
         <text class="pr-max">{{item.maxWeight}} <text class="pr-unit">kg</text></text>
         <text class="pr-best">最佳单组 {{item.bestSet}} kg<text wx:if="{{item.est1rm}}"> · 1RM≈{{item.est1rm}}</text></text>
       </view>
+      <!-- 1RM 迷你趋势 -->
+      <view class="pr-trend" wx:if="{{item.trend.length > 0}}">
+        <view class="pr-trend-bar" wx:for="{{item.trend}}" wx:for-item="t" wx:key="label" style="height: {{t.height}}%;" title="{{t.est}}kg"></view>
+      </view>
     </view>
   </view>
 

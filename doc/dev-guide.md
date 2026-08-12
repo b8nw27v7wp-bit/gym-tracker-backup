@@ -1,6 +1,6 @@
 # 开发指南（Developer Guide）
 
-版本：v2.2 | 更新：2026-08-12
+版本：v2.3 | 更新：2026-08-12
 
 ## 1. 环境准备
 
@@ -22,18 +22,18 @@ gym-tracker/
 ├── data/
 │   ├── exercises/                  动作库（按部位拆 10 文件 + index.js）
 │   ├── knowledge/                  知识库（按主题拆 3 文件 + index.js）
-│   └── plans.js                    训练计划模板（5 套 19 日）
+│   └── plans.js                    训练计划模板（5 套 17 日）
 ├── utils/
 │   ├── store.js                    本地存储 CRUD + schema 迁移 + 备份导入导出
-│   ├── util.js                     纯函数计算层（容量/周统计/PR/1RM/体重）
-│   ├── plan.js                     计划查询 + 训练草稿生成
+│   ├── util.js                     纯函数计算层（容量/周统计/PR/1RM/热力图/体重/计划完成度）
+│   ├── plan.js                     计划查询 + 训练草稿生成（支持自建计划合并）
 │   └── nutrition.js                营养计算器（纯函数）
-├── pages/                          11 个页面（4 tab + 7 子页）
+├── pages/                          12 个页面（4 tab + 8 子页）
 │   ├── train  exercises  knowledge  stats          # tab 页
 │   ├── history  exercise-detail  knowledge-detail  # v2.0 子页
-│   └── plans  calculator  data  privacy            # v2.1 子页
+│   └── plans  plan-edit  calculator  data  privacy  # v2.1/v2.3 子页
 ├── doc/                            项目文档
-└── test.js                         数据层单测（109 项断言）
+└── test.js                         数据层单测（157 项断言）
 ```
 
 ## 3. 开发规范

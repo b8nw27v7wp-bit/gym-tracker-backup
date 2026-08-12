@@ -1,0 +1,219 @@
+.page {
+  padding-bottom: 180rpx;
+}
+
+.name-input {
+  background: #f9fafb;
+  border-radius: 14rpx;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  margin-top: 16rpx;
+}
+
+/* 训练日 tabs */
+.day-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.day-tab {
+  display: flex;
+  align-items: center;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  padding: 10rpx 20rpx;
+  margin-right: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.day-tab-active {
+  background: #111827;
+  color: #ffffff;
+}
+
+.day-tab-name {
+  margin-right: 10rpx;
+}
+
+.day-tab-del {
+  font-size: 22rpx;
+  opacity: 0.7;
+  padding: 0 4rpx;
+}
+
+.day-tab-add {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 28rpx;
+  padding: 6rpx 26rpx;
+}
+
+.day-name-input {
+  background: #f9fafb;
+  border-radius: 12rpx;
+  padding: 16rpx 24rpx;
+  font-size: 26rpx;
+}
+
+/* 动作清单 */
+.empty-tip {
+  font-size: 24rpx;
+  color: #9ca3af;
+  padding: 12rpx 0;
+}
+
+.edit-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f9fafb;
+}
+
+.edit-item:last-child {
+  border-bottom: none;
+}
+
+.edit-item-name {
+  flex: 1;
+  font-size: 27rpx;
+  color: #111827;
+  padding-right: 16rpx;
+}
+
+.edit-item-controls {
+  display: flex;
+  align-items: center;
+}
+
+.num-input {
+  width: 80rpx;
+  background: #f9fafb;
+  border-radius: 10rpx;
+  font-size: 26rpx;
+  text-align: center;
+  padding: 10rpx 0;
+  margin-right: 8rpx;
+}
+
+.num-label {
+  font-size: 22rpx;
+  color: #9ca3af;
+  margin-right: 14rpx;
+}
+
+.edit-item-del {
+  font-size: 22rpx;
+  color: #ef4444;
+  margin-left: 12rpx;
+  padding: 8rpx;
+}
+
+/* 动作选择器 */
+.search-input {
+  background: #f9fafb;
+  border-radius: 14rpx;
+  padding: 18rpx 24rpx;
+  font-size: 26rpx;
+  margin-bottom: 16rpx;
+}
+
+.muscle-scroll {
+  white-space: nowrap;
+  margin-bottom: 8rpx;
+}
+
+.muscle-chip {
+  display: inline-block;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  padding: 10rpx 26rpx;
+  margin-right: 12rpx;
+}
+
+.muscle-chip-active {
+  background: #111827;
+  color: #ffffff;
+}
+
+.ex-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 8rpx;
+}
+
+.ex-cell {
+  width: 48%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f9fafb;
+  border-radius: 12rpx;
+  padding: 18rpx 20rpx;
+  margin-right: 2%;
+  margin-bottom: 12rpx;
+  box-sizing: border-box;
+}
+
+.ex-cell:nth-child(2n) {
+  margin-right: 0;
+}
+
+.ex-cell-added {
+  opacity: 0.55;
+}
+
+.ex-cell-name {
+  font-size: 25rpx;
+  color: #374151;
+  flex: 1;
+  padding-right: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ex-cell-state {
+  font-size: 21rpx;
+  color: #4f46e5;
+  flex-shrink: 0;
+}
+
+/* 底部 */
+.footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -2rpx 12rpx rgba(17, 24, 39, 0.05);
+}
+
+.save-btn {
+  background: #111827;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 16rpx;
+  padding: 24rpx 0;
+  text-align: center;
+}
+
+.save-btn:active {
+  opacity: 0.85;
+}
+
+.del-btn {
+  margin-top: 16rpx;
+  color: #ef4444;
+  font-size: 28rpx;
+  text-align: center;
+  padding: 12rpx 0;
+}

@@ -2,6 +2,22 @@
   padding-bottom: 60rpx;
 }
 
+.new-plan-btn {
+  margin: 20rpx 32rpx 0;
+  background: #ffffff;
+  border: 2rpx dashed #d1d5db;
+  color: #374151;
+  font-size: 28rpx;
+  font-weight: 500;
+  border-radius: 16rpx;
+  padding: 22rpx 0;
+  text-align: center;
+}
+
+.new-plan-btn:active {
+  background: #f9fafb;
+}
+
 .plan-card {
   padding: 28rpx 32rpx;
   margin: 16rpx 32rpx;
@@ -29,6 +45,32 @@
   font-size: 22rpx;
   border-radius: 10rpx;
   padding: 4rpx 16rpx;
+}
+
+.plan-level-custom {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* 自定义计划操作 */
+.plan-ops {
+  display: inline-flex;
+  margin-left: 16rpx;
+}
+
+.plan-op {
+  font-size: 24rpx;
+  color: #4f46e5;
+  font-weight: 500;
+  padding: 4rpx 20rpx;
+  background: #eef2ff;
+  border-radius: 10rpx;
+  margin-left: 12rpx;
+}
+
+.plan-op-del {
+  color: #ef4444;
+  background: #fef2f2;
 }
 
 .plan-desc {
@@ -72,6 +114,36 @@
   font-size: 22rpx;
   color: #9ca3af;
   margin-left: 14rpx;
+}
+
+/* 完成徽标 + 进度条 */
+.day-badge {
+  flex-shrink: 0;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 21rpx;
+  border-radius: 10rpx;
+  padding: 6rpx 16rpx;
+  margin-left: 12rpx;
+}
+
+.day-badge-done {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.day-progress {
+  height: 8rpx;
+  background: #f3f4f6;
+  border-radius: 4rpx;
+  margin-top: 14rpx;
+  overflow: hidden;
+}
+
+.day-progress-fill {
+  height: 100%;
+  background: #10b981;
+  border-radius: 4rpx;
 }
 
 .day-items {

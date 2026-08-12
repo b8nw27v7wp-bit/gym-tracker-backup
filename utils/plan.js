@@ -1,16 +1,24 @@
 // 计划工具：查询 + 一键填充训练草稿（纯函数，可单测）
+// 自定义计划（用户自建）通过参数传入，与内置计划统一处理；结构一致：
+// { id, name, level, desc, daysPerWeek, days: [{ id, name, items: [{ exerciseId, sets, reps }] }] }
 var plans = require('../data/plans');
 var exercisesData = require('../data/exercises');
 
-function getPlan(id) {
-  for (var i = 0; i < plans.length; i++) {
-    if (plans[i].id === id) return plans[i];
+// 合并全部计划：内置在前，自定义在后（自定义 id 以 cp_ 开头，天然不冲突）
+function allPlans(customPlans) {
+  return plans.concat(customPlans || []);
+}
+
+function getPlan(id, customPlans) {
+  var list = allPlans(customPlans);
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].id === id) return list[i];
   }
   return null;
 }
 
-function getPlanDay(planId, dayId) {
-  var plan = getPlan(planId);
+function getPlanDay(planId, dayId, customPlans) {
+  var plan = getPlan(planId, customPlans);
   if (!plan) return null;
   for (var i = 0; i < plan.days.length; i++) {
     if (plan.days[i].id === dayId) return plan.days[i];
@@ -19,8 +27,8 @@ function getPlanDay(planId, dayId) {
 }
 
 // 由计划日生成训练草稿 items（与训练页 draft 结构一致）
-function buildDraftFromPlan(planId, dayId) {
-  var day = getPlanDay(planId, dayId);
+function buildDraftFromPlan(planId, dayId, customPlans) {
+  var day = getPlanDay(planId, dayId, customPlans);
   if (!day) return [];
   var draft = [];
   day.items.forEach(function (it) {
@@ -43,8 +51,8 @@ function buildDraftFromPlan(planId, dayId) {
 }
 
 // 计划汇总信息（列表页展示）
-function planSummaries() {
-  return plans.map(function (p) {
+function planSummaries(customPlans) {
+  return allPlans(customPlans).map(function (p) {
     var exerciseCount = 0;
     p.days.forEach(function (d) { exerciseCount += d.items.length; });
     return {
@@ -54,13 +62,15 @@ function planSummaries() {
       daysPerWeek: p.daysPerWeek,
       desc: p.desc,
       dayCount: p.days.length,
-      exerciseCount: exerciseCount
+      exerciseCount: exerciseCount,
+      custom: !!(p.custom)
     };
   });
 }
 
 module.exports = {
   plans: plans,
+  allPlans: allPlans,
   getPlan: getPlan,
   getPlanDay: getPlanDay,
   buildDraftFromPlan: buildDraftFromPlan,

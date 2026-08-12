@@ -5,8 +5,9 @@ var KEY_WORKOUTS = 'gym_workouts';
 var KEY_INIT = 'gym_inited_v1';        // v1 遗留初始化标记
 var KEY_BODYWEIGHT = 'gym_bodyweight';
 var KEY_SCHEMA = 'gym_schema_version'; // 当前 schema 版本
+var KEY_CUSTOM_PLANS = 'gym_custom_plans'; // 用户自建计划
 
-var SCHEMA_VERSION = 2;
+var SCHEMA_VERSION = 3;
 
 // ---------- 版本迁移 ----------
 // 原则：migrate 从旧版本逐步升级到当前版本；每个迁移幂等（可重复执行）；
@@ -30,11 +31,13 @@ function migrate() {
   }
   // v1 → v2：当前无结构变更，预留迁移入口（未来 v2 加字段在此处理）
   if (version < 2) {
-    // 示例迁移逻辑（未来 schema v3 在此追加）：
-    // var workouts = getWorkouts();
-    // workouts.forEach(补齐新字段);
-    // wx.setStorageSync(KEY_WORKOUTS, workouts);
     version = 2;
+  }
+  // v2 → v3：新增自建计划 key（自定义计划为空数组）
+  if (version < 3) {
+    var cp = wx.getStorageSync(KEY_CUSTOM_PLANS);
+    if (!cp) wx.setStorageSync(KEY_CUSTOM_PLANS, []);
+    version = 3;
   }
   wx.setStorageSync(KEY_SCHEMA, version);
 }
@@ -94,15 +97,53 @@ function addBodyweight(weight) {
   return list;
 }
 
+// ---------- 自建计划 ----------
+// 计划结构：{ id, name, level, desc, days: [{ id, name, items: [{ exerciseId, sets, reps }] }] }
+function getCustomPlans() {
+  return wx.getStorageSync(KEY_CUSTOM_PLANS) || [];
+}
+
+function getCustomPlan(id) {
+  var list = getCustomPlans();
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].id === id) return list[i];
+  }
+  return null;
+}
+
+function saveCustomPlan(plan) {
+  var list = getCustomPlans();
+  var found = false;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].id === plan.id) {
+      list[i] = plan;
+      found = true;
+      break;
+    }
+  }
+  if (!found) list.push(plan);
+  wx.setStorageSync(KEY_CUSTOM_PLANS, list);
+}
+
+function removeCustomPlan(id) {
+  var list = getCustomPlans();
+  wx.setStorageSync(KEY_CUSTOM_PLANS, list.filter(function (p) { return p.id !== id; }));
+}
+
+function genPlanId() {
+  return 'cp_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+}
+
 // ---------- 备份导出 / 导入 ----------
-// 导出结构：{ app: 'gym-tracker', schemaVersion, exportedAt, workouts, bodyweight }
+// 导出结构：{ app: 'gym-tracker', schemaVersion, exportedAt, workouts, bodyweight, customPlans }
 function exportData() {
   return {
     app: 'gym-tracker',
     schemaVersion: wx.getStorageSync(KEY_SCHEMA) || SCHEMA_VERSION,
     exportedAt: Date.now(),
     workouts: getWorkouts(),
-    bodyweight: getBodyweights()
+    bodyweight: getBodyweights(),
+    customPlans: getCustomPlans()
   };
 }
 
@@ -119,23 +160,30 @@ function importData(obj) {
   var validBw = obj.bodyweight.filter(function (b) {
     return b && b.ts && Number(b.weight) > 0;
   });
+  // 自建计划（v2 老备份无此字段 → 空）
+  var validPlans = Array.isArray(obj.customPlans) ? obj.customPlans.filter(function (p) {
+    return p && p.id && p.name && Array.isArray(p.days);
+  }) : [];
   wx.setStorageSync(KEY_WORKOUTS, valid);
   wx.setStorageSync(KEY_BODYWEIGHT, validBw);
+  wx.setStorageSync(KEY_CUSTOM_PLANS, validPlans);
   wx.setStorageSync(KEY_SCHEMA, obj.schemaVersion || SCHEMA_VERSION);
-  return { ok: true, workouts: valid.length, bodyweight: validBw.length };
+  return { ok: true, workouts: valid.length, bodyweight: validBw.length, customPlans: validPlans.length };
 }
 
 // 清空所有数据（含确认逻辑在页面层）
 function clearAll() {
   wx.setStorageSync(KEY_WORKOUTS, []);
   wx.setStorageSync(KEY_BODYWEIGHT, []);
+  wx.setStorageSync(KEY_CUSTOM_PLANS, []);
 }
 
 // 当前数据量估算（字节）
 function dataSizeBytes() {
   var workouts = wx.getStorageSync(KEY_WORKOUTS) || [];
   var bw = wx.getStorageSync(KEY_BODYWEIGHT) || [];
-  var s = JSON.stringify({ w: workouts, b: bw });
+  var cp = wx.getStorageSync(KEY_CUSTOM_PLANS) || [];
+  var s = JSON.stringify({ w: workouts, b: bw, p: cp });
   return s ? s.length : 0;
 }
 
@@ -156,6 +204,11 @@ module.exports = {
   genId: genId,
   getBodyweights: getBodyweights,
   addBodyweight: addBodyweight,
+  getCustomPlans: getCustomPlans,
+  getCustomPlan: getCustomPlan,
+  saveCustomPlan: saveCustomPlan,
+  removeCustomPlan: removeCustomPlan,
+  genPlanId: genPlanId,
   exportData: exportData,
   importData: importData,
   clearAll: clearAll,
