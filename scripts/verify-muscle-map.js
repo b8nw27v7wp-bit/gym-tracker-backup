@@ -114,8 +114,8 @@ function edgeTest(fn, name) {
   catch (e) { edgeCrash++; console.log('  💥 崩溃: ' + name + ' → ' + e.message); }
 }
 edgeTest(() => {
-  const r = muscleMap.hitsFor(['胸大肌'], ['肱三头肌']);
-  check(Object.keys(r.primary[1]).length === 6 && Object.keys(r.primary[2]).length === 0, '正常输入结构正确（正胸 6 块 v3.0/背 0）');
+  const r = muscleMap.hitsFor(['胸大肌中部'], ['肱三头肌']);
+  check(Object.keys(r.primary[1]).length === 2 && Object.keys(r.primary[2]).length === 0, '正常输入结构正确（正中胸2块/背0）');
 }, '正常输入');
 edgeTest(() => {
   const r = muscleMap.hitsFor([], []);
@@ -131,7 +131,9 @@ edgeTest(() => {
   check(Object.keys(r.primary[1]).length === Object.keys(muscleMap.ZONES).length, '全身命中全部块');
 }, '全身词');
 edgeTest(() => {
-  check(muscleMap.zonesForSide(1).length === 24 && muscleMap.zonesForSide(2).length === 21, '正/背面块数正确（24/21，v3.0 拆分）');
+  const f1 = muscleMap.zonesForSide(1).length;
+  const f2 = muscleMap.zonesForSide(2).length;
+  check(f1 === 24 && f2 === 21, '正/背面块数正确（24/21，v3.0）');
   check(muscleMap.zonesForSide(0).length === 0 && muscleMap.zonesForSide(3).length === 0 && muscleMap.zonesForSide(null).length === 0, '非法 side 返回空数组');
 }, 'zonesForSide 边界');
 edgeTest(() => {
