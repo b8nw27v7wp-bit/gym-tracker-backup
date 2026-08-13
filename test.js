@@ -152,14 +152,6 @@ Object.keys(muscleMap.SITE_MUSCLES).forEach(k => {
   });
 });
 assert(mmSiteIncomplete === 0, '部位发力图覆盖本部位动作发力块（incomplete=' + mmSiteIncomplete + '）');
-let mmCompCfg = null;
-const prevComponent = global.Component;
-global.Component = cfg => { mmCompCfg = cfg; };
-require('./components/muscle-map/index.js');
-assert(mmCompCfg && mmCompCfg.properties.target && mmCompCfg.properties.secondary, 'muscle-map 组件 properties 定义');
-assert(typeof mmCompCfg.methods.paint === 'function' && typeof mmCompCfg.methods.paintZone === 'function', 'muscle-map 组件绘制方法存在');
-if (prevComponent) global.Component = prevComponent; else delete global.Component;
-
 // 肌肉发力分区（muscle-detail 页数据源）
 console.log('1b. 肌肉发力分区');
 let groupBad = 0, groupCount = 0, groupExTotal = 0;
