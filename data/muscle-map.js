@@ -107,18 +107,20 @@ var MUSCLES = {
   '爆发力': ALL
 };
 
-// 部位 key → 主要肌群词（部位指南页发力图：复用 MUSCLES 映射，hitsFor 直接消费）
+// 部位 key → 发力图肌群（部位指南页）
+// { primary: 该部位主肌群（深蓝）, secondary: 协同肌群（浅蓝）}
+// 完备性守门：primary+secondary 命中块必须 ⊇ 该部位所有动作 target 命中块（verify-muscle-map.js 审计）
 var SITE_MUSCLES = {
-  chest: ['胸大肌'],
-  back: ['背阔肌', '斜方肌', '菱形肌'],
-  legs: ['股四头肌', '腘绳肌', '大腿内收肌'],
-  glutes: ['臀大肌'],
-  shoulder: ['三角肌'],
-  arms: ['肱二头肌', '肱三头肌', '前臂'],
-  core: ['腹直肌', '腹斜肌', '竖脊肌'],
-  calves: ['腓肠肌', '胫骨前肌'],
-  cardio: ['心肺'],
-  swimming: ['心肺', '背阔肌', '三角肌']
+  chest: { primary: ['胸大肌'], secondary: ['肱三头肌', '三角肌前束'] },
+  back: { primary: ['背阔肌', '斜方肌', '菱形肌'], secondary: ['竖脊肌', '臀大肌', '腘绳肌', '肱二头肌', '胸大肌', '三角肌后束', '大圆肌'] },
+  legs: { primary: ['股四头肌', '腘绳肌', '大腿内收肌'], secondary: ['臀大肌', '竖脊肌'] },
+  glutes: { primary: ['臀大肌'], secondary: ['腘绳肌', '臀中肌'] },
+  shoulder: { primary: ['三角肌'], secondary: ['斜方肌上部', '斜方肌中下部', '斜方肌下部', '斜方肌', '肱三头肌'] },
+  arms: { primary: ['肱二头肌', '肱三头肌', '前臂'], secondary: [] },
+  core: { primary: ['腹直肌', '腹斜肌'], secondary: ['腹横肌', '髋屈肌', '竖脊肌', '臀中肌'] },
+  calves: { primary: ['腓肠肌', '胫骨前肌'], secondary: ['比目鱼肌', '心肺'] },
+  cardio: { primary: ['心肺'], secondary: ['心肺功能', '背部', '股四头肌', '臀部', '全身', '爆发力', '三角肌'] },
+  swimming: { primary: ['心肺', '背阔肌'], secondary: ['心肺功能', '全身', '腿部', '肱三头肌', '胸大肌', '股四头肌', '核心', '髋屈肌', '三角肌'] }
 };
 
 // 命中计算：target 词 → 主发力块，secondary 词 → 辅助块

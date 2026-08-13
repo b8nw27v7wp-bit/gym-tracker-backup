@@ -1,10 +1,10 @@
 # 测试文档（Testing）
 
-版本：v2.14 | 更新：2026-08-13
+版本：v2.14.1 | 更新：2026-08-13
 
 ## 1. 测试策略
 
-- **数据层自动化**：计算/存储/内容完整性用 node 单测，`node test.js` 一键运行，数据层断言 + 页面冒烟（共 369 项，v2.14.0）
+- **数据层自动化**：计算/存储/内容完整性用 node 单测，`node test.js` 一键运行，数据层断言 + 页面冒烟（共 370 项，v2.14.1）
 - **页面层冒烟**：mock `Page`/`wx` 实跑页面交互逻辑（编辑/保存流程），见第 4 章
 - **安全专项测试**：6 套专项验证脚本覆盖安全/边界/压力/注入/XSS/并发场景（共 315 项）
 - **手工**：页面渲染与视觉在微信开发者工具中验证（见第 5 章）
@@ -181,7 +181,7 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 
 > 训练页编辑/保存全流程冒烟（不可变更新、空数据过滤，BUG-003/004 回归）为文档方法（上文 mock 片段），当前以 doc/ 第 5 节手工清单 + 开发者工具实测为准。
 
-数据层 + 页面层（动作详情 / 部位训练页 / 计算器 / 统计热量 / 食物页 / 训练保护 / 训练页 v2.8 新功能 / 自建计划 / E2E 全链路 / secondary 词汇守门 / lastRecord 纯函数 / 边界守门 / 安全守门）= 369 项全绿为提交门槛。专项验证五件套：`node scripts/verify-page-match.js`（动作↔页面匹配）、`node scripts/verify-nav.js`（导航审计）、`node scripts/verify-boundaries.js`（边界矩阵 45 项）、`node scripts/verify-extreme.js`（极限/压力/安全威胁 64 项）、`node scripts/verify-hardening.js`（高强度安全/容量/注入 61 项）。
+数据层 + 页面层（动作详情 / 部位训练页 / 计算器 / 统计热量 / 食物页 / 训练保护 / 训练页 v2.8 新功能 / 自建计划 / E2E 全链路 / secondary 词汇守门 / lastRecord 纯函数 / 边界守门 / 安全守门 / 发力图守门）= 370 项全绿为提交门槛。专项验证六件套：`node scripts/verify-page-match.js`（动作↔页面匹配）、`node scripts/verify-nav.js`（导航审计）、`node scripts/verify-boundaries.js`（边界矩阵 45 项）、`node scripts/verify-extreme.js`（极限/压力/安全威胁 64 项）、`node scripts/verify-hardening.js`（高强度安全/容量/注入 61 项）、`node scripts/verify-muscle-map.js`（发力图↔部位卡片一致性：词映射完整 / 正向对应 / 部位图完备性）。
 
 ## 5. 手工测试清单（开发者工具）
 
@@ -201,16 +201,17 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 
 ## 6. 回归流程
 
-1. `node test.js` 全绿（369 项）
+1. `node test.js` 全绿（370 项）
 2. 页面冒烟测试全绿（动作详情 10 项 + 自建计划 22 项）
 3. `node scripts/verify-page-match.js` + `node scripts/verify-nav.js` 全绿（v2.8 起）
 4. `node scripts/verify-boundaries.js` 全绿（边界矩阵 45 项）
 5. `node scripts/verify-extreme.js` 全绿（极限/压力/安全威胁 64 项）
 6. `node scripts/verify-hardening.js` 全绿（高强度安全/容量/注入 61 项）
 7. `node scripts/verify-security-round2.js` 全绿（XSS/状态/完整性/并发/内存 73 项）
-8. 开发者工具编译无报错
-9. 手工清单按改动模块抽查
-10. 提审前完整跑一遍手工清单 + 手机真机预览
+8. `node scripts/verify-muscle-map.js` 全绿（发力图↔部位卡片一致性，v2.14.1 起）
+9. 开发者工具编译无报错
+10. 手工清单按改动模块抽查
+11. 提审前完整跑一遍手工清单 + 手机真机预览
 
 ## 7. 安全测试覆盖矩阵（v2.13）
 
@@ -320,7 +321,7 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 
 | 脚本 | 用途 | 项数 |
 |------|------|------|
-| `test.js` | 主测试套件（数据层 + 页面冒烟 + 发力图守门） | 369 |
+| `test.js` | 主测试套件（数据层 + 页面冒烟 + 发力图守门） | 370 |
 | `scripts/verify-boundaries.js` | 边界测试矩阵 | 45 |
 | `scripts/verify-extreme.js` | 极限/压力/安全威胁 | 64 |
 | `scripts/verify-hardening.js` | 高强度安全/容量/注入 | 61 |

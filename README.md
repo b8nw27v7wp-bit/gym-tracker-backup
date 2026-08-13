@@ -65,7 +65,7 @@
 
 - 微信原生小程序（JS），无构建依赖，微信开发者工具直接导入运行
 - 数据全部存于 wx.setStorageSync，单用户本地数据模型，带 schema 版本迁移机制（v1→v2→v3，v3 新增自建计划）
-- 数据层与页面层分离：`utils/util.js` 纯函数计算容量/统计，node 可单测（`node test.js`，369 项断言）
+- 数据层与页面层分离：`utils/util.js` 纯函数计算容量/统计，node 可单测（`node test.js`，370 项断言）
 - 页面交互用不可变更新约定（深拷贝/路径 setData），避免同引用 diff 失效（BUG-003 教训）
 - 组件化：set-editor（组编辑器）/ ex-card（动作卡片）/ empty-state（空态）/ muscle-map（肌肉发力图）自定义组件，样式隔离组件内自带全局类副本
 - 内容数据模块化：动作库按 10 个部位拆文件，知识库按 3 大主题拆文件，便于维护扩展
@@ -113,7 +113,7 @@ gym-tracker/
 │   ├── ex-card/                         # 动作卡片（动作库）
 │   └── empty-state/                     # 空态提示
 ├── doc/                                # 项目文档（见下方）
-├── test.js                             # 数据层单测（369 项断言）
+├── test.js                             # 数据层单测（370 项断言）
 └── README.md
 ```
 
@@ -156,7 +156,7 @@ exercise = {
 
 1. 下载安装[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
 2. 导入项目：选择 `E:\ts\gym-tracker` 目录，填入自己的小程序 AppID（未注册前可选游客模式预览）
-3. `node test.js` 验证数据层（369 项断言）
+3. `node test.js` 验证数据层（370 项断言）
 4. 页面逻辑改动后跑 mock Page/wx 冒烟测试（方法见 doc/testing.md 第 4 章）
 
 ## 上线流程（个人主体）

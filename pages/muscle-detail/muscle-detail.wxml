@@ -22,10 +22,10 @@
     </view>
   </view>
 
-  <!-- 部位发力图（v2.14）：当前部位主要肌群高亮 -->
+  <!-- 部位发力图（v2.14）：主肌群深蓝 + 协同肌群浅蓝 -->
   <view class="card" wx:if="{{siteTarget.length > 0}}">
     <view class="card-title">肌肉发力</view>
-    <muscle-map target="{{siteTarget}}" secondary="{{[]}}" />
+    <muscle-map target="{{siteTarget}}" secondary="{{siteSecondary}}" />
   </view>
 
   <!-- 肌肉发力分区 -->

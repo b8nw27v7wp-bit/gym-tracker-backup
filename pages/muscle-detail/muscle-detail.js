@@ -9,7 +9,8 @@ Page({
     currentKey: '',
     current: null,   // muscleInfo 结果
     groups: [],      // muscleGroups 结果
-    siteTarget: []   // 部位发力图肌群词（v2.14）
+    siteTarget: [],      // 部位发力图主肌群（v2.14）
+    siteSecondary: []    // 部位发力图协同肌群（v2.14.1）
   },
 
   onLoad: function (options) {
@@ -29,11 +30,13 @@ Page({
       groups = exercisesData.muscleGroups(key);
     }
     var info = exercisesData.muscleInfo(key);
+    var site = muscleMap.SITE_MUSCLES[key] || { primary: [], secondary: [] };
     this.setData({
       currentKey: key,
       current: info,
       groups: groups,
-      siteTarget: muscleMap.SITE_MUSCLES[key] || []
+      siteTarget: site.primary || [],
+      siteSecondary: site.secondary || []
     });
     wx.setNavigationBarTitle({ title: info.name + '部训练' });
   },

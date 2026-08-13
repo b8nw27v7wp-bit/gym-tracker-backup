@@ -126,13 +126,27 @@ assert(muscleMap.zonesForSide(1).indexOf('upper-back') < 0 && muscleMap.zonesFor
 assert(muscleMap.zonesForSide(2).indexOf('heart') < 0 && muscleMap.zonesForSide(2).indexOf('upper-back') >= 0, '背面含上背、不含心肺');
 const mmAll = muscleMap.hitsFor(['全身'], []);
 assert(Object.keys(mmAll.primary[1]).length === Object.keys(muscleMap.ZONES).length && Object.keys(mmAll.primary[2]).length === Object.keys(muscleMap.ZONES).length, '全身映射全部块（正/背面）');
-// 部位级发力图（v2.14）：SITE_MUSCLES 全部 key 为有效部位、词有映射；组件冒烟（mock Component）
+// 部位级发力图（v2.14.1）：SITE_MUSCLES primary/secondary 结构有效 + 词有映射 + 块层面完备性
 let mmSiteBad = 0;
 Object.keys(muscleMap.SITE_MUSCLES).forEach(k => {
-  if (exercisesData.MUSCLES.indexOf(exercisesData.MUSCLES.find(m => m.key === k)) < 0) mmSiteBad++;
-  muscleMap.SITE_MUSCLES[k].forEach(n => { if (!muscleMap.MUSCLES[n]) mmSiteBad++; });
+  const site = muscleMap.SITE_MUSCLES[k];
+  if (!Array.isArray(site.primary) || !Array.isArray(site.secondary)) mmSiteBad++;
+  (site.primary || []).concat(site.secondary || []).forEach(n => { if (!muscleMap.MUSCLES[n]) mmSiteBad++; });
 });
 assert(mmSiteBad === 0, '部位发力图映射有效（bad=' + mmSiteBad + '）');
+// 完备性守门：部位图命中块 ⊇ 该部位所有动作 target 命中块（新增动作 target 越出部位图立即失败）
+let mmSiteIncomplete = 0;
+Object.keys(muscleMap.SITE_MUSCLES).forEach(k => {
+  const site = muscleMap.SITE_MUSCLES[k];
+  const siteBlocks = new Set();
+  [1, 2].forEach(side => Object.keys(muscleMap.hitsFor((site.primary || []).concat(site.secondary || []), []).primary[side]).forEach(b => siteBlocks.add(side + ':' + b)));
+  exercisesData.exercisesByMuscle(k).forEach(e => {
+    [1, 2].forEach(side => Object.keys(muscleMap.hitsFor(e.target || [], []).primary[side]).forEach(b => {
+      if (!siteBlocks.has(side + ':' + b)) mmSiteIncomplete++;
+    }));
+  });
+});
+assert(mmSiteIncomplete === 0, '部位发力图覆盖本部位动作发力块（incomplete=' + mmSiteIncomplete + '）');
 let mmCompCfg = null;
 const prevComponent = global.Component;
 global.Component = cfg => { mmCompCfg = cfg; };
