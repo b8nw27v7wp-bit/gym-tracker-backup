@@ -48,12 +48,15 @@ function analyzeBalance(workouts, exercisesData) {
   var totalVolume = 0;
 
   // 遍历训练记录
+  if (!workouts || !Array.isArray(workouts)) return { stats: stats, totalVolume: 0, ratios: {}, recommendations: [{ type: "info", message: "暂无训练数据" }] };
   for (var i = 0; i < workouts.length; i++) {
     var w = workouts[i];
     if (!w.items) continue;
 
+    if (!w.items || !Array.isArray(w.items)) continue;
     for (var j = 0; j < w.items.length; j++) {
       var item = w.items[j];
+      if (!item) continue;
       var exercise = exercisesData.getExercise(item.exerciseId);
       if (!exercise) continue;
 

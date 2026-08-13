@@ -14,10 +14,11 @@
  */
 function getSubstitutes(exerciseId, exercisesData, options) {
   var opts = options || {};
-  var limit = opts.limit || 3;
+  var limit = (typeof opts.limit === "number") ? Math.max(0, opts.limit) : 3;
   var excludeEquipment = opts.excludeEquipment || [];
   var sameTypeOnly = opts.sameTypeOnly !== false;
 
+  if (!exercisesData) return [];
   var current = exercisesData.getExercise(exerciseId);
   if (!current) return [];
 
