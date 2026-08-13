@@ -248,7 +248,7 @@ assert(hiitDraft.length === 5 && hiitDraft[0].exerciseId === 'burpee', 'HIIT 日
 
 // ---------- 知识库 ----------
 console.log('3. 知识库');
-assert(knowledge.ALL.length === 14, '共 ' + knowledge.ALL.length + ' 篇文章');
+assert(knowledge.ALL.length === 15, '共 ' + knowledge.ALL.length + ' 篇文章');
 assert(knowledge.CATEGORIES.length === 5, '5 个分类');
 const kIds = new Set();
 knowledge.ALL.forEach(a => { if (kIds.has(a.id)) dup++; kIds.add(a.id); });
