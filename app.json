@@ -13,7 +13,8 @@
     "pages/calculator/calculator",
     "pages/food/food",
     "pages/data/data",
-    "pages/privacy/privacy"
+    "pages/privacy/privacy",
+    "pages/profile/profile"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",
@@ -29,10 +30,22 @@
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/train/train", "text": "训练" },
-      { "pagePath": "pages/exercises/exercises", "text": "动作库" },
-      { "pagePath": "pages/knowledge/knowledge", "text": "知识" },
-      { "pagePath": "pages/stats/stats", "text": "统计" }
+      {
+        "pagePath": "pages/train/train",
+        "text": "训练"
+      },
+      {
+        "pagePath": "pages/exercises/exercises",
+        "text": "动作库"
+      },
+      {
+        "pagePath": "pages/knowledge/knowledge",
+        "text": "知识"
+      },
+      {
+        "pagePath": "pages/stats/stats",
+        "text": "统计"
+      }
     ]
   },
   "style": "v2",

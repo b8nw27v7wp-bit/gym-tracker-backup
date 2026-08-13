@@ -1,0 +1,64 @@
+<view class="page">
+  <!-- 用户信息卡片 -->
+  <view class="card user-card">
+    <view class="user-info" wx:if="{{isLoggedIn}}">
+      <image class="avatar" src="{{wxUser.avatarUrl}}" mode="aspectFill"></image>
+      <view class="user-detail">
+        <text class="nickname">{{wxUser.nickName}}</text>
+        <text class="user-id">已登录</text>
+      </view>
+      <view class="logout-btn" bindtap="onLogout">退出</view>
+    </view>
+    <view class="login-prompt" wx:else>
+      <view class="login-icon">👤</view>
+      <text class="login-text">登录后可同步数据</text>
+      <button class="login-btn" bindtap="onLogin">微信登录</button>
+    </view>
+  </view>
+
+  <!-- 身体资料 -->
+  <view class="card" bindtap="onEditProfile">
+    <view class="card-title">身体资料</view>
+    <view class="profile-info" wx:if="{{profile}}">
+      <view class="profile-row">
+        <text class="profile-label">性别</text>
+        <text class="profile-value">{{profile.gender === 'male' ? '男' : '女'}}</text>
+      </view>
+      <view class="profile-row">
+        <text class="profile-label">年龄</text>
+        <text class="profile-value">{{profile.age}} 岁</text>
+      </view>
+      <view class="profile-row">
+        <text class="profile-label">身高</text>
+        <text class="profile-value">{{profile.heightCm}} cm</text>
+      </view>
+      <view class="profile-row">
+        <text class="profile-label">体重</text>
+        <text class="profile-value">{{profile.weightKg}} kg</text>
+      </view>
+    </view>
+    <view class="profile-empty" wx:else>
+      <text class="profile-empty-text">点击设置身体资料</text>
+    </view>
+  </view>
+
+  <!-- 功能入口 -->
+  <view class="card">
+    <view class="card-title">功能</view>
+    <view class="menu-item" bindtap="onDataManage">
+      <text class="menu-text">数据管理</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="onPrivacy">
+      <text class="menu-text">隐私说明</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 应用信息 -->
+  <view class="card app-info">
+    <text class="app-name">铁馆日志</text>
+    <text class="app-version">v2.15.0</text>
+    <text class="app-desc">专业健身训练记录工具</text>
+  </view>
+</view>

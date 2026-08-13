@@ -280,6 +280,10 @@ Page({
     });
   },
 
+  onOpenProfile: function () {
+    wx.navigateTo({ url: '/pages/profile/profile' });
+  },
+
   onOpenCalculator: function () {
     wx.navigateTo({ url: '/pages/calculator/calculator' });
   },

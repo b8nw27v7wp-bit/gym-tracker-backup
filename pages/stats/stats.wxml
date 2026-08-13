@@ -1,4 +1,8 @@
 <view class="page">
+  <!-- 个人中心入口 -->
+  <view class="profile-entry" bindtap="onOpenProfile">
+    <text class="profile-icon">👤</text>
+  </view>
   <!-- 本周简报 -->
   <view class="card" wx:if="{{hasData}}">
     <view class="card-title">本周简报</view>

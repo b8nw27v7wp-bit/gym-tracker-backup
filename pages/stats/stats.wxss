@@ -634,3 +634,22 @@
   height: 440rpx;
   display: block;
 }
+
+/* 个人中心入口 */
+.profile-entry {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.profile-icon {
+  font-size: 32rpx;
+}

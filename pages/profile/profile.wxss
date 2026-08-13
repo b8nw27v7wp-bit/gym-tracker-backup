@@ -1,0 +1,169 @@
+.page {
+  padding: 20rpx;
+  background: #f7f7f8;
+  min-height: 100vh;
+}
+
+/* 用户信息卡片 */
+.user-card {
+  padding: 40rpx;
+  margin-bottom: 20rpx;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  margin-right: 30rpx;
+  border: 4rpx solid #f0f0f0;
+}
+
+.user-detail {
+  flex: 1;
+}
+
+.nickname {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: block;
+}
+
+.user-id {
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.logout-btn {
+  padding: 16rpx 32rpx;
+  background: #f3f4f6;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: #6b7280;
+}
+
+.login-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 0;
+}
+
+.login-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.login-text {
+  font-size: 28rpx;
+  color: #9ca3af;
+  margin-bottom: 30rpx;
+}
+
+.login-btn {
+  background: #07c160;
+  color: #ffffff;
+  font-size: 28rpx;
+  padding: 20rpx 60rpx;
+  border-radius: 8rpx;
+  border: none;
+}
+
+.login-btn::after {
+  border: none;
+}
+
+/* 身体资料 */
+.profile-info {
+  margin-top: 20rpx;
+}
+
+.profile-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f3f4f6;
+}
+
+.profile-row:last-child {
+  border-bottom: none;
+}
+
+.profile-label {
+  font-size: 28rpx;
+  color: #6b7280;
+}
+
+.profile-value {
+  font-size: 28rpx;
+  color: #1d1d1f;
+  font-weight: 500;
+}
+
+.profile-empty {
+  padding: 40rpx 0;
+  text-align: center;
+}
+
+.profile-empty-text {
+  font-size: 28rpx;
+  color: #9ca3af;
+}
+
+/* 功能菜单 */
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f3f4f6;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-text {
+  font-size: 30rpx;
+  color: #1d1d1f;
+}
+
+.menu-arrow {
+  font-size: 32rpx;
+  color: #d1d5db;
+}
+
+/* 应用信息 */
+.app-info {
+  text-align: center;
+  padding: 40rpx;
+  margin-top: 20rpx;
+}
+
+.app-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: block;
+}
+
+.app-version {
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.app-desc {
+  font-size: 24rpx;
+  color: #6b7280;
+  margin-top: 8rpx;
+  display: block;
+}
