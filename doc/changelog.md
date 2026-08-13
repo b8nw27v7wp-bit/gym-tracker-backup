@@ -2,6 +2,14 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试）
 
+## v2.14.2（2026-08-13）— 发力图安全与边界测试
+
+- fix(security): hitsFor 原型链 key 注入崩溃——`MUSCLES['__proto__'/'constructor']` 命中 Object.prototype 继承属性致 TypeError（未来外部输入驱动发力图即白屏）；hasOwnProperty 查表 + 非字符串元素跳过
+- fix(security): hitsFor 非数组输入崩溃——字符串/对象/数字无 forEach 致 TypeError；Array.isArray 防御
+- fix: zonesForSide 非法 side（0/3/null）返回全部块 → 返回空数组；新增 siteMuscle() 查询（hasOwnProperty 防注入，muscle-detail 页改用）
+- test: verify-muscle-map.js 扩充安全/边界区块（43 项：原型链注入×5/非数组输入/原型污染/siteMuscle 注入/超长词 10 万字符/空数组/块坐标越界），test.js 固化 4 项回归断言，374 项全绿
+- 路由复查：新增内容跳转全链路核对（组件注册路径/redirectTo 同页链式/navigateBack 兜底），muscle-map 组件 detached 补定时器清理
+
 ## v2.14.1（2026-08-13）— 发力图 ↔ 部位卡片一致性审计
 
 - fix: 部位代表集 SITE_MUSCLES 不全——5 个动作（硬拉/背伸展/蛙泳/蝶泳/打腿）target 命中块落在部位图外（卡片标"背/游泳"但发力图不亮竖脊肌/臀/腿/胸），卡片与发力图不对应

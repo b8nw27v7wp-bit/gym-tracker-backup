@@ -30,7 +30,7 @@ Page({
       groups = exercisesData.muscleGroups(key);
     }
     var info = exercisesData.muscleInfo(key);
-    var site = muscleMap.SITE_MUSCLES[key] || { primary: [], secondary: [] };
+    var site = muscleMap.siteMuscle(key);
     this.setData({
       currentKey: key,
       current: info,

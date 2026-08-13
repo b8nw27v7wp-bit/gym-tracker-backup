@@ -126,6 +126,11 @@ assert(muscleMap.zonesForSide(1).indexOf('upper-back') < 0 && muscleMap.zonesFor
 assert(muscleMap.zonesForSide(2).indexOf('heart') < 0 && muscleMap.zonesForSide(2).indexOf('upper-back') >= 0, '背面含上背、不含心肺');
 const mmAll = muscleMap.hitsFor(['全身'], []);
 assert(Object.keys(mmAll.primary[1]).length === Object.keys(muscleMap.ZONES).length && Object.keys(mmAll.primary[2]).length === Object.keys(muscleMap.ZONES).length, '全身映射全部块（正/背面）');
+// 安全回归（v2.14.2）：原型链 key 注入/非数组输入不崩、非法 side 空数组（verify-muscle-map ④⑤ 的 test.js 固化）
+assert(Object.keys(muscleMap.hitsFor(['__proto__', 'constructor', 'toString'], []).primary[1]).length === 0, '原型链 key 注入零命中不崩（v2.14.2 回归）');
+assert(muscleMap.hitsFor('胸大肌', null).primary[1] && muscleMap.hitsFor(123, undefined).primary[1], '非数组输入不崩返回完整结构（v2.14.2 回归）');
+assert(muscleMap.zonesForSide(0).length === 0 && muscleMap.zonesForSide(3).length === 0, '非法 side 返回空数组（v2.14.2 回归）');
+assert(muscleMap.siteMuscle('__proto__').primary.length === 0 && muscleMap.siteMuscle('chest').primary[0] === '胸大肌', 'siteMuscle 注入空配置/合法正常（v2.14.2 回归）');
 // 部位级发力图（v2.14.1）：SITE_MUSCLES primary/secondary 结构有效 + 词有映射 + 块层面完备性
 let mmSiteBad = 0;
 Object.keys(muscleMap.SITE_MUSCLES).forEach(k => {

@@ -126,13 +126,17 @@ var SITE_MUSCLES = {
 // 命中计算：target 词 → 主发力块，secondary 词 → 辅助块
 // 返回按视角分组的映射：{ primary: {1:{块:true}, 2:{块:true}}, secondary: {...} }
 // （side=3 的词两面都命中；块 key 在两面上代表不同肌群，必须按面隔离，否则背面误亮正面肌群）
+// 安全：MUSCLES 查表用 hasOwnProperty 排除原型链继承属性（__proto__/constructor 注入不崩），
+//       list 非数组（字符串/对象/null）直接忽略（防御未来外部输入驱动发力图）
 function hitsFor(target, secondary) {
   var pri = { 1: {}, 2: {} };
   var sec = { 1: {}, 2: {} };
   function apply(list, out) {
-    (list || []).forEach(function (name) {
+    if (!Array.isArray(list)) return;
+    list.forEach(function (name) {
+      if (typeof name !== 'string') return;
+      if (!Object.prototype.hasOwnProperty.call(MUSCLES, name)) return;
       var m = MUSCLES[name];
-      if (!m) return;
       var sides = m.zones === 'ALL' ? [1, 2] : (m.side === 3 ? [1, 2] : [m.side]);
       var keys = m.zones === 'ALL' ? Object.keys(ZONES) : m.zones;
       sides.forEach(function (s) {
@@ -145,13 +149,22 @@ function hitsFor(target, secondary) {
   return { primary: pri, secondary: sec };
 }
 
-// 某视角要绘制的块列表（正面不含 upper-back，背面不含 heart）
+// 某视角要绘制的块列表（正面不含 upper-back，背面不含 heart）；非法 side 返回空数组
 function zonesForSide(side) {
+  if (side !== 1 && side !== 2) return [];
   return Object.keys(ZONES).filter(function (k) {
     if (side === 1 && k === 'upper-back') return false;
     if (side === 2 && k === 'heart') return false;
     return true;
   });
+}
+
+// 部位发力图配置查询（hasOwnProperty 防原型链注入；非法 key 返回空配置）
+function siteMuscle(key) {
+  if (typeof key !== 'string' || !Object.prototype.hasOwnProperty.call(SITE_MUSCLES, key)) {
+    return { primary: [], secondary: [] };
+  }
+  return SITE_MUSCLES[key];
 }
 
 module.exports = {
@@ -161,5 +174,6 @@ module.exports = {
   SITE_MUSCLES: SITE_MUSCLES,
   ALL: ALL,
   hitsFor: hitsFor,
-  zonesForSide: zonesForSide
+  zonesForSide: zonesForSide,
+  siteMuscle: siteMuscle
 };

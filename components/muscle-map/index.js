@@ -14,6 +14,10 @@ Component({
   lifetimes: {
     attached: function () {
       this.scheduleDraw();
+    },
+    detached: function () {
+      // 页面卸载后清理绘制定时器，避免对已销毁节点的延迟查询
+      if (this._mmTimer) clearTimeout(this._mmTimer);
     }
   },
   methods: {
