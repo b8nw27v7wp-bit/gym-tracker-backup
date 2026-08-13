@@ -1,6 +1,7 @@
-// 肌肉发力图组件（v2.14）
+// 肌肉发力图组件（v3.0）
 // canvas 2d 绘制正/背面极简人体，按 target/secondary 肌群高亮发力块
-// 零图片依赖：人体 = 圆角块拼装（data/muscle-map.js 坐标），高亮 = 程序填充
+// v3.0 升级：渐变填充 + 发光边框 + 解剖分区 + 改进配色
+// 零图片依赖：人体 = 圆角块拼装（data/muscle-map.js 坐标），高亮 = 渐变填充
 Component({
   properties: {
     target: { type: Array, value: [] },
@@ -16,7 +17,6 @@ Component({
       this.scheduleDraw();
     },
     detached: function () {
-      // 页面卸载后清理绘制定时器，避免对已销毁节点的延迟查询
       if (this._mmTimer) clearTimeout(this._mmTimer);
     }
   },
@@ -24,7 +24,6 @@ Component({
     scheduleDraw: function () {
       var self = this;
       if (this._mmTimer) clearTimeout(this._mmTimer);
-      // canvas 节点需等视图渲染后查询（wx:if/card 挂载延迟，参照 stats 页 80ms 经验）
       this._mmTimer = setTimeout(function () { self.draw(); }, 80);
     },
 
@@ -53,7 +52,7 @@ Component({
       var muscleMap = require('../../data/muscle-map');
       var hits = muscleMap.hitsFor(this.data.target, this.data.secondary);
       // 两个小人并排：正面左 / 背面右，中间留间隔
-      var gap = 14;
+      var gap = 16;
       var figW = (W - gap) / 2;
       ctx.clearRect(0, 0, W, H);
       this.paintFigure(ctx, 1, hits, figW, H, 0, muscleMap);
@@ -66,34 +65,33 @@ Component({
         base: '#f3f4f6',
         baseLine: '#e5e7eb',
         primary: '#4f46e5',
-        primaryLine: '#4f46e5',
+        primaryLight: '#818cf8',
+        primaryLine: '#4338ca',
         secondary: '#c7d2fe',
         secondaryLine: '#a5b4fc',
-        text: '#9ca3af'
+        text: '#9ca3af',
+        labelBg: 'rgba(255,255,255,0.92)',
+        labelText: '#4f46e5',
+        secondaryLabel: '#6b7280'
       };
       var zones = muscleMap.zonesForSide(side);
       var priHit = hits.primary[side] || {};
       var secHit = hits.secondary[side] || {};
       var i, k, z, px, py, pw, ph;
 
-      // 底：先画 heart（会被胸/上背块覆盖，避免胸块中央留灰洞），再画其余块
-      if (zones.indexOf('heart') >= 0) {
-        k = 'heart';
-        z = muscleMap.ZONES[k];
-        px = offX + z.x * figW;
-        py = z.y * H;
-        pw = z.w * figW;
-        ph = z.h * H;
-        this.roundRect(ctx, px, py, pw, ph, z.round * Math.min(pw, ph));
-        ctx.fillStyle = COLORS.base;
-        ctx.fill();
-        ctx.strokeStyle = COLORS.baseLine;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
+      // 底：先画共用区域（forearm），再画其余块
+      var sharedZones = ['forearm-l', 'forearm-r', 'neck'];
+      var drawOrder = [];
       for (i = 0; i < zones.length; i++) {
-        k = zones[i];
-        if (k === 'heart') continue;
+        if (sharedZones.indexOf(zones[i]) < 0) drawOrder.push(zones[i]);
+      }
+      // forearm 在最底层（手臂在身体后面）
+      for (i = 0; i < zones.length; i++) {
+        if (sharedZones.indexOf(zones[i]) >= 0) drawOrder.push(zones[i]);
+      }
+
+      for (i = 0; i < drawOrder.length; i++) {
+        k = drawOrder[i];
         z = muscleMap.ZONES[k];
         px = offX + z.x * figW;
         py = z.y * H;
@@ -103,9 +101,10 @@ Component({
         ctx.fillStyle = COLORS.base;
         ctx.fill();
         ctx.strokeStyle = COLORS.baseLine;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 0.5;
         ctx.stroke();
       }
+
       // 头（圆）
       var hr = muscleMap.HEAD.r * figW;
       ctx.beginPath();
@@ -113,50 +112,70 @@ Component({
       ctx.fillStyle = COLORS.base;
       ctx.fill();
       ctx.strokeStyle = COLORS.baseLine;
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 0.5;
       ctx.stroke();
 
-      // 高亮块：辅助（浅）→ 主发力（深，盖住辅助）；heart 跳过，最后单独补（保证辅助心肺高亮不被主色胸块覆盖）
-      this.paintHits(ctx, side, secHit, zones, COLORS.secondary, COLORS.secondaryLine, offX, figW, H, muscleMap);
-      this.paintHits(ctx, side, priHit, zones, COLORS.primary, COLORS.primaryLine, offX, figW, H, muscleMap);
-      if (zones.indexOf('heart') >= 0) {
-        if (priHit['heart']) {
-          this.paintZone(ctx, 'heart', COLORS.primary, COLORS.primaryLine, offX, figW, H, muscleMap);
-        } else if (secHit['heart']) {
-          this.paintZone(ctx, 'heart', COLORS.secondary, COLORS.secondaryLine, offX, figW, H, muscleMap);
-        }
-      }
+      // 高亮块：辅助（浅）→ 主发力（深，盖住辅助）
+      this.paintHits(ctx, side, secHit, zones, COLORS.secondary, COLORS.secondaryLine, offX, figW, H, muscleMap, false);
+      this.paintHits(ctx, side, priHit, zones, COLORS.primary, COLORS.primaryLine, offX, figW, H, muscleMap, true);
 
       // 视角标签
       ctx.fillStyle = COLORS.text;
-      ctx.font = '11px sans-serif';
+      ctx.font = '11px -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(side === 1 ? '正面' : '背面', offX + figW / 2, H - 4);
     },
 
-    paintHits: function (ctx, side, hitMap, zones, fill, line, offX, figW, H, muscleMap) {
+    paintHits: function (ctx, side, hitMap, zones, fill, line, offX, figW, H, muscleMap, isPrimary) {
       for (var i = 0; i < zones.length; i++) {
         var k = zones[i];
-        if (k === 'heart' || !hitMap[k]) continue;
-        this.paintZone(ctx, k, fill, line, offX, figW, H, muscleMap);
+        if (!hitMap[k]) continue;
+        this.paintZone(ctx, k, fill, line, offX, figW, H, muscleMap, isPrimary);
       }
     },
 
-    paintZone: function (ctx, key, fill, line, offX, figW, H, muscleMap) {
+    paintZone: function (ctx, key, fill, line, offX, figW, H, muscleMap, isPrimary) {
       var z = muscleMap.ZONES[key];
       var px = offX + z.x * figW;
       var py = z.y * H;
       var pw = z.w * figW;
       var ph = z.h * H;
-      this.roundRect(ctx, px, py, pw, ph, z.round * Math.min(pw, ph));
-      ctx.fillStyle = fill;
+      var r = z.round * Math.min(pw, ph);
+
+      // 创建渐变填充
+      var grad = ctx.createLinearGradient(px, py, px, py + ph);
+      if (isPrimary) {
+        // 主发力：深蓝渐变
+        grad.addColorStop(0, '#6366f1');
+        grad.addColorStop(1, '#4338ca');
+      } else {
+        // 辅助发力：浅蓝渐变
+        grad.addColorStop(0, '#e0e7ff');
+        grad.addColorStop(1, '#c7d2fe');
+      }
+
+      this.roundRect(ctx, px, py, pw, ph, r);
+      ctx.fillStyle = grad;
       ctx.fill();
-      ctx.strokeStyle = line;
-      ctx.lineWidth = 1;
+
+      // 发光边框效果
+      if (isPrimary) {
+        ctx.strokeStyle = '#4338ca';
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = 'rgba(79, 70, 229, 0.3)';
+        ctx.shadowBlur = 4;
+      } else {
+        ctx.strokeStyle = '#a5b4fc';
+        ctx.lineWidth = 1;
+        ctx.shadowColor = 'rgba(165, 180, 252, 0.2)';
+        ctx.shadowBlur = 2;
+      }
       ctx.stroke();
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
     },
 
-    // 手写圆角矩形路径（canvas 2d roundRect 兼容性兜底，参照 canvas-charts 配方）
+    // 手写圆角矩形路径（canvas 2d roundRect 兼容性兜底）
     roundRect: function (ctx, x, y, w, h, r) {
       r = Math.max(0, Math.min(r, w / 2, h / 2));
       ctx.beginPath();

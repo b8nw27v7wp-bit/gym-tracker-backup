@@ -100,7 +100,7 @@ module.exports = [
   {
     id: 'band-glute-bridge', name: '弹力带臀桥', muscle: 'glutes', type: 'isolate', mechanic: 'other',
     equipment: 'band', difficulty: 1,
-    target: ["臀大肌"], secondary: ["腘绳肌"],
+    target: ['臀大肌'], secondary: ["腘绳肌"],
     steps: ["弹力带套于膝上方，仰卧屈膝双脚踩地", "臀部发力将髋部顶起至躯干与大腿成直线", "顶端夹紧臀部停顿 2 秒，缓慢下放"],
     errors: ["腰部代偿顶髋", "膝盖内扣", "顶端不夹臀"],
     rest: '45-60 秒', tip: '膝上弹力带迫使臀中肌同步发力，居家练臀性价比高'
@@ -108,7 +108,7 @@ module.exports = [
   {
     id: 'single-leg-hip-thrust', name: '单腿臀推', muscle: 'glutes', type: 'isolate', mechanic: 'other',
     equipment: 'bodyweight', difficulty: 2,
-    target: ["臀大肌"], secondary: ["腘绳肌"],
+    target: ['臀大肌'], secondary: ["腘绳肌"],
     steps: ["肩背靠凳，单腿屈膝踩地，另一腿伸直悬空", "单腿发力将髋部顶起至躯干与大腿成直线", "顶端夹臀停顿 2 秒，缓慢下放"],
     errors: ["腰部反弓顶髋", "悬空腿乱晃", "幅度不足"],
     rest: '60-90 秒', tip: '单腿消除两侧臀肌不平衡，居家可负重进阶'
@@ -116,7 +116,7 @@ module.exports = [
   {
     id: 'cable-pull-through', name: '绳索挺身', muscle: 'glutes', type: 'compound', mechanic: 'other',
     equipment: 'cable', difficulty: 2,
-    target: ["臀大肌", "腘绳肌"], secondary: ["竖脊肌"],
+    target: ['臀大肌', '腘绳肌'], secondary: ["竖脊肌"],
     steps: ["背对低位滑轮，绳头从腿间穿过，双手握绳于裆前", "屈髋俯身，保持背部平直", "髋部发力向前顶，躯干直立时夹紧臀部"],
     errors: ["用腰代偿而非伸髋", "膝盖过度弯曲", "顶端身体后仰"],
     rest: '60-90 秒', tip: '髋铰链模式比硬拉更易上手，臀部持续张力'
