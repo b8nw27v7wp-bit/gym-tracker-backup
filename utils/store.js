@@ -341,5 +341,42 @@ module.exports = {
   importData: importData,
   clearAll: clearAll,
   dataSizeBytes: dataSizeBytes,
-  formatSize: formatSize
+  formatSize: formatSize,
+  getWxUser: getWxUser,
+  setWxUser: setWxUser,
+  clearWxUser: clearWxUser,
+  wxLogin: wxLogin
 };
+
+// ---------- 微信用户信息 ----------
+var KEY_WX_USER = 'gym_wx_user'; // 微信用户信息 { nickName, avatarUrl, code }
+
+function getWxUser() {
+  return wx.getStorageSync(KEY_WX_USER) || null;
+}
+
+function setWxUser(userInfo) {
+  wx.setStorageSync(KEY_WX_USER, userInfo);
+}
+
+function clearWxUser() {
+  wx.removeStorageSync(KEY_WX_USER);
+}
+
+// 微信登录获取 code
+function wxLogin() {
+  return new Promise(function (resolve, reject) {
+    wx.login({
+      success: function (res) {
+        if (res.code) {
+          resolve(res.code);
+        } else {
+          reject(new Error('登录失败'));
+        }
+      },
+      fail: function (err) {
+        reject(err);
+      }
+    });
+  });
+}
