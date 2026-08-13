@@ -4,7 +4,7 @@
 
 ## 1. 测试策略
 
-- **数据层自动化**：计算/存储/内容完整性用 node 单测，`node test.js` 一键运行，数据层断言 + 页面冒烟（共 374 项，v2.14.2）
+- **数据层自动化**：计算/存储/内容完整性用 node 单测，`node test.js` 一键运行，数据层断言 + 页面冒烟（共 372 项，v2.14.2）
 - **页面层冒烟**：mock `Page`/`wx` 实跑页面交互逻辑（编辑/保存流程），见第 4 章
 - **安全专项测试**：6 套专项验证脚本覆盖安全/边界/压力/注入/XSS/并发场景（共 315 项）
 - **手工**：页面渲染与视觉在微信开发者工具中验证（见第 5 章）
@@ -28,7 +28,7 @@ global.wx = {
 
 | # | 断言 | 验证点 |
 |---|------|-------|
-| 1 | 共 180 个动作 | 动作总量（v2.2 起） |
+| 1 | 共 173 个动作 | 动作总量（v2.2 起） |
 | 2 | 10 个部位 | 部位总量 |
 | 3 | 动作 id 无重复 | 数据一致性 |
 | 4 | 全部动作字段完整 | steps≥2 / errors≥2 / target≥1 / rest / tip / difficulty∈1-3 / equipment |
@@ -123,7 +123,7 @@ global.wx = {
 
 ### 3.10 内容扩充（方向四，12 项）
 
-- 动作库总量 180、新增动作字段完整
+- 动作库总量 173、新增动作字段完整
 - 新计划（减脂 4 日 / 居家 3 日）可解析
 - 营养计算器：BMR/TDEE/蛋白质区间/增肌减脂热量、男女性差异、非法性别/活动水平/年龄拦截
 
@@ -181,7 +181,7 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 
 > 训练页编辑/保存全流程冒烟（不可变更新、空数据过滤，BUG-003/004 回归）为文档方法（上文 mock 片段），当前以 doc/ 第 5 节手工清单 + 开发者工具实测为准。
 
-数据层 + 页面层（动作详情 / 部位训练页 / 计算器 / 统计热量 / 食物页 / 训练保护 / 训练页 v2.8 新功能 / 自建计划 / E2E 全链路 / secondary 词汇守门 / lastRecord 纯函数 / 边界守门 / 安全守门 / 发力图守门）= 374 项全绿为提交门槛。专项验证六件套：`node scripts/verify-page-match.js`（动作↔页面匹配）、`node scripts/verify-nav.js`（导航审计）、`node scripts/verify-boundaries.js`（边界矩阵 45 项）、`node scripts/verify-extreme.js`（极限/压力/安全威胁 64 项）、`node scripts/verify-hardening.js`（高强度安全/容量/注入 61 项）、`node scripts/verify-muscle-map.js`（发力图↔部位卡片：一致性 3 项 + 安全注入 / 边界极端 40 项，共 43 项）。
+数据层 + 页面层（动作详情 / 部位训练页 / 计算器 / 统计热量 / 食物页 / 训练保护 / 训练页 v2.8 新功能 / 自建计划 / E2E 全链路 / secondary 词汇守门 / lastRecord 纯函数 / 边界守门 / 安全守门 / 发力图守门）= 372 项全绿为提交门槛。专项验证六件套：`node scripts/verify-page-match.js`（动作↔页面匹配）、`node scripts/verify-nav.js`（导航审计）、`node scripts/verify-boundaries.js`（边界矩阵 45 项）、`node scripts/verify-extreme.js`（极限/压力/安全威胁 64 项）、`node scripts/verify-hardening.js`（高强度安全/容量/注入 61 项）、`node scripts/verify-muscle-map.js`（发力图↔部位卡片：一致性 3 项 + 安全注入 / 边界极端 40 项，共 43 项）。
 
 ## 5. 手工测试清单（开发者工具）
 
