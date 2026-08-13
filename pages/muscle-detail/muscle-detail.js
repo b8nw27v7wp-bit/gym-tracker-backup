@@ -1,13 +1,15 @@
 // 部位训练页：按具体肌肉发力分区展示某部位的训练动作
 // 入口：动作库页"部位训练指南"；?key=chest 指定部位，页内可切换全部 10 个部位
 var exercisesData = require('../../data/exercises/index');
+var muscleMap = require('../../data/muscle-map');
 
 Page({
   data: {
     muscles: [],
     currentKey: '',
     current: null,   // muscleInfo 结果
-    groups: []       // muscleGroups 结果
+    groups: [],      // muscleGroups 结果
+    siteTarget: []   // 部位发力图肌群词（v2.14）
   },
 
   onLoad: function (options) {
@@ -27,7 +29,12 @@ Page({
       groups = exercisesData.muscleGroups(key);
     }
     var info = exercisesData.muscleInfo(key);
-    this.setData({ currentKey: key, current: info, groups: groups });
+    this.setData({
+      currentKey: key,
+      current: info,
+      groups: groups,
+      siteTarget: muscleMap.SITE_MUSCLES[key] || []
+    });
     wx.setNavigationBarTitle({ title: info.name + '部训练' });
   },
 

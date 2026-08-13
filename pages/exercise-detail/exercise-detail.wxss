@@ -24,55 +24,53 @@
   font-size: 23rpx;
   padding: 8rpx 20rpx;
   margin-right: 12rpx;
+  margin-bottom: 10rpx;
   box-shadow: 0 2rpx 12rpx rgba(17, 24, 39, 0.04);
 }
 
-.info-card {
-  padding: 24rpx 32rpx;
+/* 肌肉发力图（v2.14）：canvas 人体 + 肌群标签 */
+.map-tags {
+  margin-top: 8rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f3f4f6;
 }
 
-.info-row {
+.map-tag-row {
   display: flex;
-  align-items: center;
-  padding: 14rpx 0;
-  border-bottom: 1rpx solid #f9fafb;
+  align-items: flex-start;
+  padding: 8rpx 0;
 }
 
-.info-row:last-child {
-  border-bottom: none;
-}
-
-.info-label {
-  width: 150rpx;
-  font-size: 25rpx;
+.map-tag-label {
+  width: 90rpx;
+  font-size: 23rpx;
   color: #9ca3af;
   flex-shrink: 0;
+  padding-top: 6rpx;
 }
 
-.info-tags {
+.map-tags-wrap {
+  flex: 1;
   display: flex;
   flex-wrap: wrap;
-  flex: 1;
 }
 
-.info-tag {
-  background: #f9fafb;
+.map-chip {
   border-radius: 10rpx;
   font-size: 23rpx;
-  color: #6b7280;
   padding: 6rpx 16rpx;
   margin-right: 12rpx;
-  margin-bottom: 6rpx;
+  margin-bottom: 10rpx;
 }
 
-.info-tag-primary {
+.map-chip-primary {
   background: #eef2ff;
   color: #4f46e5;
 }
 
-.info-value {
-  font-size: 25rpx;
-  color: #374151;
+.map-chip-secondary {
+  background: #f9fafb;
+  color: #6b7280;
 }
 
 /* 步骤 */

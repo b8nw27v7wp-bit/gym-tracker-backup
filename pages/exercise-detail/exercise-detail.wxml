@@ -7,26 +7,27 @@
       <text class="hero-tag">{{ex.typeText}}</text>
       <text class="hero-tag">{{ex.diffText}}</text>
       <text class="hero-tag">{{ex.equipText}}</text>
+      <text class="hero-tag">{{ex.rest}}</text>
     </view>
   </view>
 
-  <!-- 基本信息 -->
-  <view class="card info-card">
-    <view class="info-row">
-      <text class="info-label">目标肌群</text>
-      <view class="info-tags">
-        <text wx:for="{{ex.target}}" wx:for-item="t" wx:key="*this" class="info-tag info-tag-primary">{{t}}</text>
+  <!-- 肌肉发力图（v2.14）：canvas 人体高亮 + 肌群标签 -->
+  <view class="card">
+    <view class="card-title">肌肉发力</view>
+    <muscle-map target="{{ex.target}}" secondary="{{ex.secondary}}" />
+    <view class="map-tags">
+      <view class="map-tag-row" wx:if="{{ex.target.length > 0}}">
+        <text class="map-tag-label">主要</text>
+        <view class="map-tags-wrap">
+          <text wx:for="{{ex.target}}" wx:for-item="t" wx:key="*this" class="map-chip map-chip-primary">{{t}}</text>
+        </view>
       </view>
-    </view>
-    <view class="info-row" wx:if="{{ex.secondary.length > 0}}">
-      <text class="info-label">辅助肌群</text>
-      <view class="info-tags">
-        <text wx:for="{{ex.secondary}}" wx:for-item="s" wx:key="*this" class="info-tag">{{s}}</text>
+      <view class="map-tag-row" wx:if="{{ex.secondary.length > 0}}">
+        <text class="map-tag-label">辅助</text>
+        <view class="map-tags-wrap">
+          <text wx:for="{{ex.secondary}}" wx:for-item="s" wx:key="*this" class="map-chip map-chip-secondary">{{s}}</text>
+        </view>
       </view>
-    </view>
-    <view class="info-row">
-      <text class="info-label">组间休息</text>
-      <text class="info-value">{{ex.rest}}</text>
     </view>
   </view>
 

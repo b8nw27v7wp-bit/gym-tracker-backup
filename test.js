@@ -105,6 +105,42 @@ exercisesData.ALL.forEach(e => (e.secondary || []).forEach(s => {
 }));
 assert(secBadTerms.length === 0, 'secondary 标签全部在标准词汇表内' + (secBadTerms.length ? '（' + secBadTerms.join(',') + '）' : ''));
 
+// 肌肉发力图映射完整性（v2.14）：全部 target/secondary 词有发力块映射 + 块引用有效 + hitsFor 纯函数
+const muscleMap = require('./data/muscle-map');
+let mmMissing = 0, mmBadRef = 0;
+exercisesData.ALL.forEach(e => (e.target || []).concat(e.secondary || []).forEach(n => {
+  if (!muscleMap.MUSCLES[n]) mmMissing++;
+}));
+Object.keys(muscleMap.MUSCLES).forEach(n => {
+  const m = muscleMap.MUSCLES[n];
+  if (m.zones === 'ALL') return;
+  (m.zones || []).forEach(z => { if (!muscleMap.ZONES[z]) mmBadRef++; });
+});
+assert(mmMissing === 0, '发力图映射覆盖全部肌群词（missing=' + mmMissing + '）');
+assert(mmBadRef === 0, '发力图块引用有效（bad=' + mmBadRef + '）');
+const mmHits = muscleMap.hitsFor(['胸大肌', '三角肌前束'], ['肱三头肌', '前臂']);
+assert(mmHits.primary[1]['chest-l'] && mmHits.primary[1]['chest-r'] && mmHits.primary[1]['shoulder-l'], 'hitsFor 主发力块正确（正面）');
+assert(!mmHits.primary[2]['chest-l'], 'hitsFor side 隔离：正面肌群不在背面命中（v2.14 回归）');
+assert(mmHits.secondary[2]['arm-r'] && mmHits.secondary[1]['forearm-l'] && mmHits.secondary[2]['forearm-l'], 'hitsFor 辅助发力块正确（背面臂/两面前臂）');
+assert(muscleMap.zonesForSide(1).indexOf('upper-back') < 0 && muscleMap.zonesForSide(1).indexOf('heart') >= 0, '正面不含上背、含心肺');
+assert(muscleMap.zonesForSide(2).indexOf('heart') < 0 && muscleMap.zonesForSide(2).indexOf('upper-back') >= 0, '背面含上背、不含心肺');
+const mmAll = muscleMap.hitsFor(['全身'], []);
+assert(Object.keys(mmAll.primary[1]).length === Object.keys(muscleMap.ZONES).length && Object.keys(mmAll.primary[2]).length === Object.keys(muscleMap.ZONES).length, '全身映射全部块（正/背面）');
+// 部位级发力图（v2.14）：SITE_MUSCLES 全部 key 为有效部位、词有映射；组件冒烟（mock Component）
+let mmSiteBad = 0;
+Object.keys(muscleMap.SITE_MUSCLES).forEach(k => {
+  if (exercisesData.MUSCLES.indexOf(exercisesData.MUSCLES.find(m => m.key === k)) < 0) mmSiteBad++;
+  muscleMap.SITE_MUSCLES[k].forEach(n => { if (!muscleMap.MUSCLES[n]) mmSiteBad++; });
+});
+assert(mmSiteBad === 0, '部位发力图映射有效（bad=' + mmSiteBad + '）');
+let mmCompCfg = null;
+const prevComponent = global.Component;
+global.Component = cfg => { mmCompCfg = cfg; };
+require('./components/muscle-map/index.js');
+assert(mmCompCfg && mmCompCfg.properties.target && mmCompCfg.properties.secondary, 'muscle-map 组件 properties 定义');
+assert(typeof mmCompCfg.methods.paint === 'function' && typeof mmCompCfg.methods.paintZone === 'function', 'muscle-map 组件绘制方法存在');
+if (prevComponent) global.Component = prevComponent; else delete global.Component;
+
 // 肌肉发力分区（muscle-detail 页数据源）
 console.log('1b. 肌肉发力分区');
 let groupBad = 0, groupCount = 0, groupExTotal = 0;
@@ -746,6 +782,7 @@ assert(mdNone.data.currentKey === 'chest', '无参数默认胸部');
 md.onPickMuscle({ currentTarget: { dataset: { key: 'swimming' } } });
 assert(md.data.currentKey === 'swimming' && md.data.groups.length === 3, '切换游泳部位（3 个分区）');
 assert(md.data.groups[0].exercises[0].id === 'swimming', '游泳拉主导分区动作正确');
+assert(md.data.siteTarget.length > 0 && md.data.siteTarget.indexOf('心肺') >= 0, '部位发力图肌群词联动（游泳 → 心肺）');
 // 动作跳转
 md.onOpenExercise({ currentTarget: { dataset: { id: 'freestyle' } } });
 assert(navLog[navLog.length - 1] === 'nav:/pages/exercise-detail/exercise-detail?id=freestyle', '点击动作跳详情');

@@ -22,6 +22,12 @@
     </view>
   </view>
 
+  <!-- 部位发力图（v2.14）：当前部位主要肌群高亮 -->
+  <view class="card" wx:if="{{siteTarget.length > 0}}">
+    <view class="card-title">肌肉发力</view>
+    <muscle-map target="{{siteTarget}}" secondary="{{[]}}" />
+  </view>
+
   <!-- 肌肉发力分区 -->
   <view class="card group-card" wx:for="{{groups}}" wx:key="name">
     <view class="group-head">

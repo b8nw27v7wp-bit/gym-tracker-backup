@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "部位训练",
-  "usingComponents": {}
+  "usingComponents": {
+    "muscle-map": "/components/muscle-map/index"
+  }
 }

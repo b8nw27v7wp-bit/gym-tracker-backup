@@ -1,0 +1,13 @@
+<view class="mm-wrap">
+  <canvas type="2d" id="mmCanvas" class="mm-canvas"></canvas>
+  <view class="mm-legend">
+    <view class="mm-legend-item">
+      <view class="mm-dot mm-dot-primary"></view>
+      <text class="mm-legend-text">主要发力</text>
+    </view>
+    <view class="mm-legend-item">
+      <view class="mm-dot mm-dot-secondary"></view>
+      <text class="mm-legend-text">辅助发力</text>
+    </view>
+  </view>
+</view>

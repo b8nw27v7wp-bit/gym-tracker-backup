@@ -1,0 +1,45 @@
+/* 肌肉发力图组件（v2.14）— 浅色极简，灰阶 + indigo 点缀 */
+.mm-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mm-canvas {
+  width: 100%;
+  height: 400rpx;
+}
+
+.mm-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12rpx;
+}
+
+.mm-legend-item {
+  display: flex;
+  align-items: center;
+  margin: 0 18rpx;
+}
+
+.mm-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 4rpx;
+  margin-right: 8rpx;
+}
+
+.mm-dot-primary {
+  background: #4f46e5;
+}
+
+.mm-dot-secondary {
+  background: #c7d2fe;
+  border: 2rpx solid #a5b4fc;
+}
+
+.mm-legend-text {
+  font-size: 21rpx;
+  color: #9ca3af;
+}
