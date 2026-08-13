@@ -345,7 +345,9 @@ module.exports = {
   getWxUser: getWxUser,
   setWxUser: setWxUser,
   clearWxUser: clearWxUser,
-  wxLogin: wxLogin
+  wxLogin: wxLogin,
+  isLoginValid: isLoginValid,
+  getLoginStatus: getLoginStatus
 };
 
 // ---------- 微信用户信息 ----------
@@ -379,4 +381,24 @@ function wxLogin() {
       }
     });
   });
+}
+
+// 检查登录是否有效（7天内）
+function isLoginValid() {
+  var wxUser = getWxUser();
+  if (!wxUser || !wxUser.loginTime) return false;
+  var now = Date.now();
+  var loginTime = wxUser.loginTime;
+  var daysDiff = (now - loginTime) / (1000 * 60 * 60 * 24);
+  return daysDiff < 7; // 7天内有效
+}
+
+// 获取登录状态
+function getLoginStatus() {
+  var wxUser = getWxUser();
+  return {
+    isLoggedIn: !!wxUser,
+    isValid: isLoginValid(),
+    user: wxUser
+  };
 }

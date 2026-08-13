@@ -1,4 +1,17 @@
 <view class="page">
+  <!-- 授权引导弹窗 -->
+  <view class="auth-guide" wx:if="{{showAuthGuide}}">
+    <view class="auth-guide-mask" bindtap="closeAuthGuide"></view>
+    <view class="auth-guide-content">
+      <view class="auth-guide-title">需要授权</view>
+      <view class="auth-guide-desc">请在设置中开启"用户信息"权限，以便展示您的头像和昵称</view>
+      <view class="auth-guide-btns">
+        <button class="auth-guide-btn cancel" bindtap="closeAuthGuide">取消</button>
+        <button class="auth-guide-btn confirm" bindtap="openSetting">去设置</button>
+      </view>
+    </view>
+  </view>
+
   <!-- 用户信息卡片 -->
   <view class="card user-card">
     <view class="user-info" wx:if="{{isLoggedIn}}">
@@ -13,6 +26,7 @@
       <view class="login-icon">👤</view>
       <text class="login-text">登录后可同步数据</text>
       <button class="login-btn" bindtap="onLogin">微信登录</button>
+      <text class="auth-hint" wx:if="{{authDenied}}">之前拒绝了授权？点击登录重新授权</text>
     </view>
   </view>
 
