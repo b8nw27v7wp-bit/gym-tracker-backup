@@ -1,6 +1,4 @@
 {
   "navigationBarTitleText": "动作详情",
-  "usingComponents": {
-    "muscle-map": "/components/muscle-map/index"
-  }
+  "usingComponents": {}
 }

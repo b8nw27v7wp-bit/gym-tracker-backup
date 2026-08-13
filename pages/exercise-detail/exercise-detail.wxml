@@ -11,10 +11,9 @@
     </view>
   </view>
 
-  <!-- 肌肉发力图（v2.14）：canvas 人体高亮 + 肌群标签 -->
+  <!-- 肌肉发力：文字描述 -->
   <view class="card">
-    <view class="card-title">肌肉发力</view>
-    <muscle-map target="{{ex.target}}" secondary="{{ex.secondary}}" />
+    <view class="card-title">发力肌群</view>
     <view class="map-tags">
       <view class="map-tag-row" wx:if="{{ex.target.length > 0}}">
         <text class="map-tag-label">主要</text>

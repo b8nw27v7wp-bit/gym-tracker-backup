@@ -22,10 +22,23 @@
     </view>
   </view>
 
-  <!-- 部位发力图（v2.14）：主肌群深蓝 + 协同肌群浅蓝 -->
+  <!-- 部位发力肌群 -->
   <view class="card" wx:if="{{siteTarget.length > 0}}">
-    <view class="card-title">肌肉发力</view>
-    <muscle-map target="{{siteTarget}}" secondary="{{siteSecondary}}" />
+    <view class="card-title">发力肌群</view>
+    <view class="site-muscles">
+      <view class="site-row" wx:if="{{siteTarget.length > 0}}">
+        <text class="site-label">主要</text>
+        <view class="site-chips">
+          <text wx:for="{{siteTarget}}" wx:for-item="t" wx:key="*this" class="map-chip map-chip-primary">{{t}}</text>
+        </view>
+      </view>
+      <view class="site-row" wx:if="{{siteSecondary.length > 0}}">
+        <text class="site-label">协同</text>
+        <view class="site-chips">
+          <text wx:for="{{siteSecondary}}" wx:for-item="s" wx:key="*this" class="map-chip map-chip-secondary">{{s}}</text>
+        </view>
+      </view>
+    </view>
   </view>
 
   <!-- 肌肉发力分区 -->
