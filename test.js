@@ -1294,3 +1294,91 @@ setTimeout(function () {
   console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
   process.exit(failed > 0 ? 1 : 0);
 }, 2500);
+
+// ---------- 新工具函数测试（v2.15） ----------
+console.log('12. 新工具函数测试');
+
+// 12.1 杠铃片计算器
+const plateCalc = require('./utils/plate-calculator');
+const plate60 = plateCalc.calculatePlates(60, 20);
+assert(plate60.totalWeight === 60, '60kg 杠铃片组合正确（实际 ' + plate60.totalWeight + '）');
+assert(plate60.plateCount[20] === 1, '60kg 每侧 1 个 20kg 片');
+assert(plate60.possible === true, '60kg 精确匹配');
+
+const plate100 = plateCalc.calculatePlates(100, 20);
+assert(plate100.totalWeight === 100, '100kg 杠铃片组合正确（实际 ' + plate100.totalWeight + '）');
+assert(plate100.plateCount[25] === 1 && plate100.plateCount[15] === 1, '100kg 每侧 25kg+15kg');
+
+const plateEmpty = plateCalc.calculatePlates(20, 20);
+assert(plateEmpty.totalWeight === 20, '空杠 20kg');
+assert(plateEmpty.plates.length === 0, '空杠无杠铃片');
+
+const plateBelow = plateCalc.calculatePlates(15, 20);
+assert(plateBelow.possible === false, '15kg 低于杠铃重量');
+
+const plateFormat = plateCalc.formatPlates(plate60);
+assert(plateFormat.indexOf('20kg') >= 0, '格式化包含 20kg');
+
+const combos = plateCalc.getCommonCombinations(20);
+assert(combos.length === 12, '常用组合 12 种（实际 ' + combos.length + '）');
+
+// 12.2 热身组生成器
+const warmup = require('./utils/warmup');
+const warmup60 = warmup.generateWarmupSets(60);
+assert(warmup60.length === 3, '60kg 热身 3 组（实际 ' + warmup60.length + '）');
+assert(warmup60.every(s => s.warmup === true), '全部标记为热身组');
+assert(warmup60.every(s => s.weight < 60), '热身重量均小于工作重量');
+assert(warmup60.every(s => s.weight >= 20), '热身重量不小于杠铃');
+
+const warmup120 = warmup.generateWarmupSets(120);
+assert(warmup120.length === 4, '120kg 热身 4 组（实际 ' + warmup120.length + '）');
+
+const warmup150 = warmup.generateWarmupSets(150);
+assert(warmup150.length === 5, '150kg 热身 5 组（实际 ' + warmup150.length + '）');
+
+const warmup30 = warmup.generateWarmupSets(30);
+assert(warmup30.length === 2, '30kg 热身 2 组（实际 ' + warmup30.length + '）');
+
+const warmupFormat = warmup.formatWarmupSets(warmup60);
+assert(warmupFormat.indexOf('kg') >= 0, '热身格式化包含 kg');
+
+const warmupAdvice = warmup.getWarmupAdvice(100);
+assert(warmupAdvice.length > 0, '热身建议非空');
+
+// 12.3 动作替代系统
+const substitute = require('./utils/substitute');
+const benchAlts = substitute.getSubstitutes('bench', exercisesData, { limit: 3 });
+assert(benchAlts.length === 3, '杠铃卧推推荐 3 个替代（实际 ' + benchAlts.length + '）');
+assert(benchAlts.every(a => a.id !== 'bench'), '不推荐自己');
+assert(benchAlts.every(a => a.reason.length > 0), '替代原因非空');
+
+// 排除杠铃器械
+const benchNoBarbell = substitute.getSubstitutes('bench', exercisesData, { excludeEquipment: ['barbell'] });
+assert(benchNoBarbell.every(a => a.equipment !== 'barbell'), '排除杠铃后无杠铃动作');
+
+const squatAlts = substitute.getSubstitutes('squat', exercisesData, { limit: 2 });
+assert(squatAlts.length === 2, '深蹲推荐 2 个替代');
+
+const equipName = substitute.equipmentName('barbell');
+assert(equipName === '杠铃', '器械中文名正确');
+
+// 12.4 肌群平衡分析
+const balance = require('./utils/balance');
+const mockWorkouts = [
+  {
+    id: 'w1', ts: Date.now(), date: '2026-08-13', duration: 60,
+    items: [
+      { exerciseId: 'bench', muscle: 'chest', sets: [{ weight: 80, reps: 8 }, { weight: 80, reps: 8 }] },
+      { exerciseId: 'squat', muscle: 'legs', sets: [{ weight: 100, reps: 8 }, { weight: 100, reps: 8 }] },
+      { exerciseId: 'deadlift', muscle: 'back', sets: [{ weight: 120, reps: 5 }] }
+    ]
+  }
+];
+const bal = balance.analyzeBalance(mockWorkouts, exercisesData);
+assert(bal.totalVolume > 0, '总容量大于 0');
+assert(bal.ratios.push + bal.ratios.pull + bal.ratios.legs === 100, '推拉腿比例之和为 100%');
+assert(bal.recommendations.length > 0, '有训练建议');
+
+const catName = balance.getCategoryName('push');
+assert(catName === '推类（胸/肩/三头）', '分类名正确');
+
