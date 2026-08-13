@@ -12,6 +12,10 @@
  * @returns {Array} 热身组方案
  */
 function generateWarmupSets(workingWeight, options) {
+  // 如果工作重量小于等于杠铃重量，不需要热身组
+  if (workingWeight <= (options && options.barWeight || 20)) {
+    return [];
+  }
   var opts = options || {};
   var bar = opts.barWeight || 20;
   var increment = opts.increment || 0.25;
