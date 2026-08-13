@@ -11,7 +11,7 @@ module.exports = [
   {
     id: 'crunch', name: '卷腹', muscle: 'core', type: 'isolate', mechanic: 'core',
     equipment: 'bodyweight', difficulty: 1,
-    target: ['腹直肌'], secondary: [],
+    target: ['腹直肌上部'], secondary: [],
     steps: ['仰卧屈膝，双手轻扶头侧', '腹部发力卷起肩胛骨离地', '顶端收缩后缓慢下放'],
     errors: ['用手拉扯头部', '整个上半身坐起变成仰卧起坐', '下放速度过快'],
     rest: '30-45 秒', tip: '卷腹是脊柱弯曲的动作，腰部始终贴地'
@@ -67,7 +67,7 @@ module.exports = [
   {
     id: 'leg-raise-floor', name: '仰卧举腿', muscle: 'core', type: 'isolate', mechanic: 'core',
     equipment: 'bodyweight', difficulty: 1,
-    target: ['腹直肌下部'], secondary: ['髋屈肌'],
+    target: ['腹直肌下部', '髋屈肌'], secondary: ['髋屈肌'],
     steps: ['仰卧，双腿伸直并拢', '双腿抬起至垂直地面', '缓慢下放至接近地面'],
     errors: ['腰部离地', '下放过快', '借助惯性'],
     rest: '30-45 秒', tip: '下放越慢下腹刺激越强，腰部保持贴地'
@@ -75,7 +75,7 @@ module.exports = [
   {
     id: 'cable-crunch', name: '绳索卷腹', muscle: 'core', type: 'isolate', mechanic: 'core',
     equipment: 'cable', difficulty: 2,
-    target: ['腹直肌'], secondary: [],
+    target: ['腹直肌上部'], secondary: [],
     steps: ['跪姿面对高位滑轮，双手握绳于头侧', '腹部发力卷曲躯干向下', '顶端收缩，缓慢还原'],
     errors: ['用髋部屈伸代偿', '手臂拉扯'],
     rest: '45-60 秒', tip: '可加载重量的卷腹，腹肌渐进超负荷的好选择'
@@ -83,7 +83,7 @@ module.exports = [
   {
     id: 'flutter-kick', name: '仰卧交替抬腿', muscle: 'core', type: 'isolate', mechanic: 'core',
     equipment: 'bodyweight', difficulty: 2,
-    target: ['腹直肌下部'], secondary: ['髋屈肌'],
+    target: ['腹直肌下部', '髋屈肌'], secondary: ['髋屈肌'],
     steps: ['仰卧，双手置于臀下，双腿抬起离地', '双腿交替上下小幅摆动', '保持下背贴地'],
     errors: ['腰部离地', '摆动幅度过大'],
     rest: '30-45 秒', tip: '小幅度快频率，下腹持续紧张'
@@ -124,7 +124,7 @@ module.exports = [
   {
     id: 'captain-chair', name: '将军椅举腿', muscle: 'core', type: 'isolate', mechanic: 'other',
     equipment: 'bodyweight', difficulty: 2,
-    target: ["腹直肌下部"], secondary: ["髂腰肌"],
+    target: ['腹直肌下部', '髋屈肌'], secondary: ["髂腰肌"],
     steps: ["双肘支撑于将军椅，背部贴垫", "双腿并拢屈膝向上抬起至髋部", "顶端挤压下腹，缓慢下放"],
     errors: ["身体前后摆动", "只抬腿不卷腹", "下放过快"],
     rest: '45-60 秒', tip: '下腹专项，比悬垂举腿门槛低，腰部无负担'
@@ -132,7 +132,7 @@ module.exports = [
   {
     id: 'windshield-wiper', name: '雨刷器', muscle: 'core', type: 'isolate', mechanic: 'other',
     equipment: 'bodyweight', difficulty: 3,
-    target: ["腹斜肌", "腹直肌"], secondary: ["髂腰肌"],
+    target: ['腹斜肌', '腹直肌'], secondary: ["髂腰肌"],
     steps: ["仰卧举腿至与地面垂直，双手平放两侧", "双腿并拢向一侧缓慢下放至接近地面", "核心发力回到中间，再向另一侧下放"],
     errors: ["借助惯性甩腿", "下放触地", "肩部离地"],
     rest: '60-90 秒', tip: '侧腹旋转控制高级动作，先做小幅摆动再加大幅度'
@@ -140,7 +140,7 @@ module.exports = [
   {
     id: 'side-bend', name: '哑铃体侧屈', muscle: 'core', type: 'isolate', mechanic: 'other',
     equipment: 'dumbbell', difficulty: 1,
-    target: ["腹斜肌"], secondary: ["腰方肌"],
+    target: ['腹斜肌'], secondary: ["腰方肌"],
     steps: ["单手负重站立，另一手叉腰", "躯干向负重侧缓慢侧屈至最大幅度", "腹斜肌发力回到中立位"],
     errors: ["身体前倾或旋转", "用杠铃大重量甩动", "幅度不足"],
     rest: '45-60 秒', tip: '腹斜肌孤立动作，轻重量高次数，注意不要练成腰方肌'

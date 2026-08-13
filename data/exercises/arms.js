@@ -164,7 +164,7 @@ module.exports = [
   {
     id: 'spider-curl', name: '蜘蛛弯举', muscle: 'arms', type: 'isolate', mechanic: 'pull',
     equipment: 'dumbbell', difficulty: 2,
-    target: ["肱二头肌"], secondary: ["肱肌"],
+    target: ['肱二头肌'], secondary: ["肱肌"],
     steps: ["俯卧于上斜凳，双臂下垂握哑铃", "保持上臂固定，弯举哑铃至肩部", "顶端挤压二头停顿，缓慢下放"],
     errors: ["上臂随动作摆动", "借惯性甩起", "下放不完全"],
     rest: '45-60 秒', tip: '俯卧角度让二头在拉伸位全程受力，泵感极强'
@@ -172,7 +172,7 @@ module.exports = [
   {
     id: 'single-arm-pushdown', name: '单臂下压', muscle: 'arms', type: 'isolate', mechanic: 'push',
     equipment: 'cable', difficulty: 1,
-    target: ["肱三头肌"], secondary: [],
+    target: ['肱三头肌'], secondary: [],
     steps: ["高位滑轮单手握把，肘部贴紧体侧", "前臂下压至手臂完全伸直", "顶端挤压三头停顿，缓慢还原"],
     errors: ["肘部外张", "身体前倾借力", "下压轨迹内偏"],
     rest: '45-60 秒', tip: '单臂便于集中注意力，纠正两侧三头力量不平衡'

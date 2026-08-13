@@ -119,11 +119,11 @@ Object.keys(muscleMap.MUSCLES).forEach(n => {
 assert(mmMissing === 0, '发力图映射覆盖全部肌群词（missing=' + mmMissing + '）');
 assert(mmBadRef === 0, '发力图块引用有效（bad=' + mmBadRef + '）');
 const mmHits = muscleMap.hitsFor(['胸大肌', '三角肌前束'], ['肱三头肌', '前臂']);
-assert(mmHits.primary[1]['chest-l'] && mmHits.primary[1]['chest-r'] && mmHits.primary[1]['shoulder-l'], 'hitsFor 主发力块正确（正面）');
-assert(!mmHits.primary[2]['chest-l'], 'hitsFor side 隔离：正面肌群不在背面命中（v2.14 回归）');
-assert(mmHits.secondary[2]['arm-r'] && mmHits.secondary[1]['forearm-l'] && mmHits.secondary[2]['forearm-l'], 'hitsFor 辅助发力块正确（背面臂/两面前臂）');
-assert(muscleMap.zonesForSide(1).indexOf('upper-back') < 0 && muscleMap.zonesForSide(1).indexOf('heart') >= 0, '正面不含上背、含心肺');
-assert(muscleMap.zonesForSide(2).indexOf('heart') < 0 && muscleMap.zonesForSide(2).indexOf('upper-back') >= 0, '背面含上背、不含心肺');
+assert(mmHits.primary[1]['chest-mid-l'] && mmHits.primary[1]['chest-mid-r'] && mmHits.primary[1]['shoulder-f-l'], 'hitsFor 主发力块正确（正面，v3.0 细分命名）');
+assert(!mmHits.primary[2]['chest-mid-l'], 'hitsFor side 隔离：正面肌群不在背面命中（v2.14 回归）');
+assert(mmHits.secondary[2]['tricep-r'] && mmHits.secondary[1]['forearm-l'] && mmHits.secondary[2]['forearm-l'], 'hitsFor 辅助发力块正确（背面臂/两面前臂，v3.0 命名）');
+assert(muscleMap.zonesForSide(1).indexOf('trap-b-l') < 0 && muscleMap.zonesForSide(1).indexOf('heart') >= 0, '正面不含上背、含心肺');
+assert(muscleMap.zonesForSide(2).indexOf('heart') < 0 && muscleMap.zonesForSide(2).indexOf('trap-b-l') >= 0, '背面含上背、不含心肺（v3.0 命名）');
 const mmAll = muscleMap.hitsFor(['全身'], []);
 assert(Object.keys(mmAll.primary[1]).length === Object.keys(muscleMap.ZONES).length && Object.keys(mmAll.primary[2]).length === Object.keys(muscleMap.ZONES).length, '全身映射全部块（正/背面）');
 // 安全回归（v2.14.2）：原型链 key 注入/非数组输入不崩、非法 side 空数组（verify-muscle-map ④⑤ 的 test.js 固化）
