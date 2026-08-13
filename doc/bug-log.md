@@ -9,6 +9,14 @@
 
 ## 已关闭
 
+### BUG-007 | 2026-08-13 | S2 | 已关闭
+- 模块：存储层 getWorkouts()（第三轮安全测试发现）
+- 描述：当 workouts 数组包含 null 元素时（脏数据/迁移遗留），getWorkouts() 排序时读取 null.ts 抛 TypeError 崩溃
+- 复现步骤：手动设置 gym_workouts = [{id:'good', ts:1, items:[]}, null, {id:'bad', ts:2, items:null}] → 调用 getWorkouts() → 崩溃
+- 根因：getWorkouts() 的 sort 回调直接访问 b.ts，未过滤 null/undefined 元素
+- 修复：sort 前增加 filter 过滤 null/非对象/无 id 元素；sort 内使用 `(b.ts || 0)` 兜底
+- 验证：`node scripts/verify-security-round2.js` 脏数据迁移测试通过 + `node test.js` 357 项全绿
+
 ### BUG-001 | 2026-08-11 | S4 | 已关闭
 - 模块：训练页保存（方向一计划填充引入）
 - 描述：计划填充的力竭动作（reps 留空）若用户直接保存，空组会存成 0 次，历史显示"0kg×0"

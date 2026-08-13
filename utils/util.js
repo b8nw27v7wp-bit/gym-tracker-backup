@@ -3,8 +3,15 @@ var exercises = require('../data/exercises/index');
 
 // ---------- 训练容量 ----------
 // 单组容量 = 重量 × 次数；训练容量 = Σ(组容量)；自重动作 weight 记 0，容量按附加重量算
+// 安全数字转换：对象/数组/非有限数一律归 0（Number({toString:'x'}) 会抛 TypeError，需捕获）
+function toNum(v) {
+  var n;
+  try { n = Number(v); } catch (e) { return 0; }
+  return isFinite(n) ? n : 0;
+}
+
 function setVolume(set) {
-  return (Number(set.weight) || 0) * (Number(set.reps) || 0);
+  return toNum(set && set.weight) * toNum(set && set.reps);
 }
 
 // 是否热身组（热身组不纳入统计）
@@ -21,18 +28,21 @@ function calcWorkout(workout) {
   var reps = 0;
   var maxWeight = 0;
   var warmupSets = 0;
-  (workout.items || []).forEach(function (item) {
-    (item.sets || []).forEach(function (s) {
+  var items = (workout && workout.items) || [];
+  items.forEach(function (item) {
+    var setList = (item && item.sets) || [];
+    setList.forEach(function (s) {
       if (isWarmup(s)) {
         warmupSets += 1;
         return;
       }
       var v = setVolume(s);
       volume += v;
-      if (Number(s.weight) > 0) weightVolume += v;
+      var w = toNum(s && s.weight);
+      if (w > 0) weightVolume += v;
       sets += 1;
-      reps += Number(s.reps) || 0;
-      if (Number(s.weight) > maxWeight) maxWeight = Number(s.weight);
+      reps += toNum(s && s.reps);
+      if (w > maxWeight) maxWeight = w;
     });
   });
   return { volume: volume, weightVolume: weightVolume, sets: sets, reps: reps, maxWeight: maxWeight, warmupSets: warmupSets };
@@ -63,6 +73,7 @@ function sortByFrequency(exercises, freqMap) {
 
 // 某动作最近一次有效记录：从最新训练往回找该动作，取第一个正式组（跳过热身组/全空组）
 // 返回 { weight, reps, ts } 或 null（无历史 / 历史组全空）；ts 为该组所属训练的日期戳
+// weight=0 是合法自重记录（引体/俯卧撑）；负数与 NaN 视为脏数据跳过
 function lastRecordFor(workouts, exerciseId) {
   var list = (workouts || []).slice();
   list.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
@@ -73,9 +84,10 @@ function lastRecordFor(workouts, exerciseId) {
       var sets = items[j].sets || [];
       for (var k = 0; k < sets.length; k++) {
         var s = sets[k];
-        if (s.warmup) continue;
-        var w = Number(s.weight), r = Number(s.reps);
-        if (w > 0 && r > 0) return { weight: w, reps: r, ts: list[i].ts || 0 };
+        if (!s || s.warmup) continue;
+        var w = toNum(s.weight), r = toNum(s.reps);
+        if (w < 0 || r <= 0) continue;
+        return { weight: w, reps: r, ts: list[i].ts || 0 };
       }
     }
   }
@@ -268,8 +280,8 @@ function exercisePR(exerciseId, workouts) {
 // ---------- 1RM 估算 ----------
 // Epley 公式：1RM ≈ weight × (1 + reps/30)，仅对 reps <= 20 有效，体重单位 kg
 function epley1RM(weight, reps) {
-  var w = Number(weight) || 0;
-  var r = Number(reps) || 0;
+  var w = toNum(weight);
+  var r = toNum(reps);
   if (w <= 0 || r <= 0 || r > 20) return 0;
   return Math.round(w * (1 + r / 30));
 }
@@ -285,7 +297,7 @@ function est1RMHistory(exerciseId, workouts) {
         if (isWarmup(s)) return;
         var est = epley1RM(s.weight, s.reps);
         if (est > 0 && (!best || est > best.est)) {
-          best = { ts: w.ts, est: est, weight: Number(s.weight), reps: Number(s.reps) };
+          best = { ts: w.ts, est: est, weight: toNum(s.weight), reps: toNum(s.reps) };
         }
       });
     });
@@ -380,13 +392,15 @@ function weeklyPlanProgress(workouts, plan, weekStartTs) {
 // 力量训练 MET 5.0；有氧/游泳 7.0（按本次训练涉及的最高 MET 计）
 var MET_BY_MUSCLE = { cardio: 7, swimming: 7 };
 function workoutCalories(workout, weightKg) {
-  var wt = Number(weightKg) || 60;
+  var wt = toNum(weightKg) || 60;
   var met = 5;
-  (workout && workout.items || []).forEach(function (item) {
-    var m = MET_BY_MUSCLE[item.muscle];
+  var items = (workout && workout.items) || [];
+  items.forEach(function (item) {
+    var m = MET_BY_MUSCLE[item && item.muscle];
     if (m && m > met) met = m;
   });
-  var minutes = Number(workout && workout.duration) || 45;
+  // 时长缺失默认 45 分钟；负数/非有限数按 0 处理（避免负卡路里）
+  var minutes = Math.max(toNum(workout && workout.duration) || 45, 0);
   return Math.round(met * 3.5 * wt * minutes / 200);
 }
 
@@ -411,8 +425,8 @@ function dailyIntakeSum(records, date) {
   var items = [];
   var total = 0;
   (records || []).forEach(function (r) {
-    if (r.date !== d) return;
-    var kcal = Math.round(Number(r.kcal) || 0);
+    if (!r || r.date !== d) return;
+    var kcal = Math.round(toNum(r.kcal));
     total += kcal;
     items.push({ id: r.id, name: r.name, grams: r.grams, kcal: kcal });
   });
@@ -425,20 +439,23 @@ function dailyIntakeSum(records, date) {
 // y = 值对应纵坐标（画布内，越大越靠上），h = 柱高（0 值时 0），baseline = 底部基线 y
 function scaleSeries(values, H, topPad, bottomPad) {
   var max = 1;
-  (values || []).forEach(function (v) { if (v > max) max = v; });
-  var innerH = H - topPad - bottomPad;
-  var base = H - bottomPad;
+  (values || []).forEach(function (v) { var n = toNum(v); if (n > max) max = n; });
+  var innerH = Math.max((H || 0) - (topPad || 0) - (bottomPad || 0), 0);
+  var base = H - (bottomPad || 0);
   var points = (values || []).map(function (v, i) {
-    var ratio = v > 0 ? v / max : 0;
+    var n = toNum(v);
+    var ratio = n > 0 ? n / max : 0;
     var h = Math.round(ratio * innerH);
-    return { i: i, value: v, y: Math.round(base - h), h: h };
+    return { i: i, value: n, y: Math.round(base - h), h: h };
   });
   return { points: points, max: max, baseline: base, innerH: innerH };
 }
 
 // 容量/数量数字缩写：≥1 万 → "1.2万"，≥1 千 → "1.5k"，否则原样
+// 非有限数（NaN/Infinity）与负数 → "0"（canvas 数值标签防脏字符串）
 function fmtCompact(n) {
-  n = Math.round(n);
+  n = Math.round(toNum(n));
+  if (n < 0) return '0';
   if (n >= 10000) {
     var wan = n / 10000;
     return (wan >= 100 ? Math.round(wan) : Math.round(wan * 10) / 10) + '万';
@@ -455,11 +472,11 @@ function fmtCompact(n) {
 function bodyweightTrend(list) {
   var sorted = (list || []).slice().sort(function (a, b) { return a.ts - b.ts; });
   if (sorted.length === 0) return { latest: 0, delta: 0, min: 0, max: 0, points: [] };
-  var latest = Number(sorted[sorted.length - 1].weight) || 0;
-  var first = Number(sorted[0].weight) || 0;
+  var latest = toNum(sorted[sorted.length - 1].weight);
+  var first = toNum(sorted[0].weight);
   var min = latest, max = latest;
   sorted.forEach(function (p) {
-    var v = Number(p.weight) || 0;
+    var v = toNum(p.weight);
     if (v < min) min = v;
     if (v > max) max = v;
   });
@@ -468,7 +485,7 @@ function bodyweightTrend(list) {
     delta: Math.round((latest - first) * 10) / 10,
     min: min,
     max: max,
-    points: sorted.map(function (p) { return { ts: p.ts, weight: Number(p.weight) || 0 }; })
+    points: sorted.map(function (p) { return { ts: p.ts, weight: toNum(p.weight) }; })
   };
 }
 

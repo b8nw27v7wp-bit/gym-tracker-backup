@@ -46,7 +46,7 @@ module.exports = [
     target: ['腹横肌', '腹直肌'], secondary: [],
     steps: ['仰卧，四肢朝天，腰背贴地', '对侧手脚同时缓慢放低', '回到起始位换边'],
     errors: ['腰部离开地面', '动作速度过快'],
-    rest: '30-45 秒', tip: '核心抗伸展训练，腰椎康复期安全动作'
+    rest: '30-45 秒', tip: '核心抗伸展训练，腰背不适时建议放慢速度或缩短时长'
   },
   {
     id: 'side-plank', name: '侧平板支撑', muscle: 'core', type: 'isolate', mechanic: 'core',

@@ -24,16 +24,17 @@ function weekStartOf(ts) {
 // 未知字段保留（向后兼容），升级只做"补字段/补结构"，不做破坏性修改。
 function migrate() {
   var version = wx.getStorageSync(KEY_SCHEMA);
-  if (!version) {
-    // 老版本（v2.0 之前）：只有 gym_inited_v1 标记
+  // 版本号必须是非 0 数字（0 是非法值：!version 会把 0 当"无版本"误判全新安装 → 清空数据）
+  // 只允许数字版本推进；字符串/NaN/0 一律视为"未知"，保留数据仅补缺
+  if (typeof version !== 'number' || !isFinite(version) || version <= 0) {
     var legacy = wx.getStorageSync(KEY_INIT);
-    if (legacy) {
-      // v1 → v2：确保 bodyweight key 存在（v1 可能没有）
-      var bw = wx.getStorageSync(KEY_BODYWEIGHT);
-      if (!bw) wx.setStorageSync(KEY_BODYWEIGHT, []);
+    var hasWorkouts = Array.isArray(wx.getStorageSync(KEY_WORKOUTS));
+    if (legacy || hasWorkouts) {
+      // 有旧数据：不覆盖，仅确保结构 key 存在，从 v1 开始补迁移
+      if (!Array.isArray(wx.getStorageSync(KEY_BODYWEIGHT))) wx.setStorageSync(KEY_BODYWEIGHT, []);
       version = 1;
     } else {
-      // 全新安装
+      // 全新安装（无任何数据）
       wx.setStorageSync(KEY_WORKOUTS, []);
       wx.setStorageSync(KEY_BODYWEIGHT, []);
       version = 1;
@@ -57,9 +58,13 @@ function ensureInit() {
 }
 
 function getWorkouts() {
-  var list = wx.getStorageSync(KEY_WORKOUTS) || [];
+  var list = wx.getStorageSync(KEY_WORKOUTS);
+  // 存储被篡改/损坏为非数组时防御（.slice 对对象/字符串/数字直接崩）
+  if (!Array.isArray(list)) return [];
+  // 过滤 null/undefined/非对象元素（脏数据防御）
+  var valid = list.filter(function (w) { return w && typeof w === 'object' && w.id; });
   // 拷贝后按时间倒序，避免原地修改存储引用
-  return list.slice().sort(function (a, b) { return b.ts - a.ts; });
+  return valid.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
 }
 
 function getWorkout(id) {
@@ -72,7 +77,8 @@ function getWorkout(id) {
 
 // 保存训练记录（新建或覆盖同 id）
 function saveWorkout(workout) {
-  var list = wx.getStorageSync(KEY_WORKOUTS) || [];
+  var list = wx.getStorageSync(KEY_WORKOUTS);
+  if (!Array.isArray(list)) list = [];
   var found = false;
   for (var i = 0; i < list.length; i++) {
     if (list[i].id === workout.id) {
@@ -86,7 +92,8 @@ function saveWorkout(workout) {
 }
 
 function removeWorkout(id) {
-  var list = wx.getStorageSync(KEY_WORKOUTS) || [];
+  var list = wx.getStorageSync(KEY_WORKOUTS);
+  if (!Array.isArray(list)) return;
   var next = list.filter(function (w) { return w.id !== id; });
   wx.setStorageSync(KEY_WORKOUTS, next);
 }
@@ -97,7 +104,8 @@ function genId() {
 
 // ---------- 体重记录 ----------
 function getBodyweights() {
-  return wx.getStorageSync(KEY_BODYWEIGHT) || [];
+  var list = wx.getStorageSync(KEY_BODYWEIGHT);
+  return Array.isArray(list) ? list : [];
 }
 
 function addBodyweight(weight) {
@@ -110,7 +118,8 @@ function addBodyweight(weight) {
 // ---------- 自建计划 ----------
 // 计划结构：{ id, name, level, desc, days: [{ id, name, items: [{ exerciseId, sets, reps }] }] }
 function getCustomPlans() {
-  return wx.getStorageSync(KEY_CUSTOM_PLANS) || [];
+  var list = wx.getStorageSync(KEY_CUSTOM_PLANS);
+  return Array.isArray(list) ? list : [];
 }
 
 function getCustomPlan(id) {
@@ -174,7 +183,8 @@ function setProfile(profile) {
 // ---------- 饮食记录（食物热量摄入）----------
 // 记录结构 { id, ts, date: 'YYYY-MM-DD', name, grams, kcal }
 function getIntake() {
-  return wx.getStorageSync(KEY_INTAKE) || [];
+  var list = wx.getStorageSync(KEY_INTAKE);
+  return Array.isArray(list) ? list : [];
 }
 
 function addIntake(record) {
@@ -215,15 +225,26 @@ function previewImport(obj) {
   if (!Array.isArray(obj.bodyweight)) return { ok: false, error: '体重数据缺失' };
   var valid = obj.workouts.filter(isValidWorkout);
   var validBw = obj.bodyweight.filter(function (b) {
-    return b && b.ts && Number(b.weight) > 0;
+    return b && b.ts !== undefined && b.ts !== null && safeNum(b.weight) > 0;
   });
   var validPlans = Array.isArray(obj.customPlans) ? obj.customPlans.filter(isValidPlan) : [];
   return { ok: true, workouts: valid.length, bodyweight: validBw.length, customPlans: validPlans.length };
 }
 
+// 安全数字转换（importData/previewImport 共用，防对象型 weight 抛 TypeError）
+function safeNum(v) {
+  try {
+    var n = Number(v);
+    return isFinite(n) ? n : NaN;
+  } catch (e) {
+    return NaN;
+  }
+}
+
 // workout 结构校验：id/ts/items 数组 + 每个 item 的 exerciseId + sets 数组 + 组内 weight/reps 为数字或空
+// 注意 ts=0 是合法 epoch 时间戳，不能用 !w.ts 判断（0 是 falsy）
 function isValidWorkout(w) {
-  if (!w || !w.id || !w.ts || !Array.isArray(w.items)) return false;
+  if (!w || !w.id || w.ts === undefined || w.ts === null || typeof w.ts !== 'number' || !Array.isArray(w.items)) return false;
   return w.items.every(function (item) {
     if (!item || !item.exerciseId || !Array.isArray(item.sets)) return false;
     return item.sets.every(function (s) {
@@ -245,18 +266,23 @@ function isValidPlan(p) {
 }
 
 // 导入：返回 { ok, error }；校验结构合法性，过滤非法项后覆盖写入
+// 写入超限（微信单 key 1MB / 总 10MB quota）时返回错误而非崩溃，避免半写入
 function importData(obj) {
   var preview = previewImport(obj);
   if (!preview.ok) return { ok: false, error: preview.error };
   var valid = obj.workouts.filter(isValidWorkout);
   var validBw = obj.bodyweight.filter(function (b) {
-    return b && b.ts && Number(b.weight) > 0;
+    return b && b.ts !== undefined && b.ts !== null && safeNum(b.weight) > 0;
   });
   var validPlans = Array.isArray(obj.customPlans) ? obj.customPlans.filter(isValidPlan) : [];
-  wx.setStorageSync(KEY_WORKOUTS, valid);
-  wx.setStorageSync(KEY_BODYWEIGHT, validBw);
-  wx.setStorageSync(KEY_CUSTOM_PLANS, validPlans);
-  wx.setStorageSync(KEY_SCHEMA, obj.schemaVersion || SCHEMA_VERSION);
+  try {
+    wx.setStorageSync(KEY_WORKOUTS, valid);
+    wx.setStorageSync(KEY_BODYWEIGHT, validBw);
+    wx.setStorageSync(KEY_CUSTOM_PLANS, validPlans);
+    wx.setStorageSync(KEY_SCHEMA, obj.schemaVersion || SCHEMA_VERSION);
+  } catch (e) {
+    return { ok: false, error: '数据过大，写入失败（超出存储上限）' };
+  }
   return { ok: true, workouts: valid.length, bodyweight: validBw.length, customPlans: validPlans.length };
 }
 

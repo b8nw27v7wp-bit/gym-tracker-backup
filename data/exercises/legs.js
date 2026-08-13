@@ -118,7 +118,7 @@ module.exports = [
     target: ['股四头肌'], secondary: [],
     steps: ['背贴墙，双脚前移一步，下滑至大腿平行地面', '保持姿势 30-60 秒', '站起休息'],
     errors: ['膝盖超过脚尖过多', '腰部离墙'],
-    rest: '30-45 秒', tip: '静力训练，保护膝盖的经典康复动作'
+    rest: '30-45 秒', tip: '静力训练，对膝关节负担小，适合作为腿部热身或收尾'
   },
   {
     id: 'sissy-squat', name: '西西深蹲', muscle: 'legs', type: 'isolate', mechanic: 'squat',

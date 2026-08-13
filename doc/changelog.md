@@ -2,6 +2,48 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试）
 
+## v2.13.1（2026-08-13）— 测试稳定性修复
+
+- fix(test): test.js E2E 两处 flaky 修复——①"计划标记写入"用 `getWorkouts()[0]` 索引定位，连续保存同毫秒 ts 时倒序稳定排序取到前一条（假失败），改为按 plan 内容特征 filter 定位；②异步区 1300ms 容差不足，高负载下 1s 休息倒计时 interval 节流导致"真实倒计时"断言偶发失败，容差提升至 2500ms
+- test: `node test.js` 连跑 5 次全绿（357 项）；专项六件套全绿（边界 45 / 极限 64 / 加固 61 / 安全 73 / 页面匹配 / 导航）
+
+## v2.13.0（2026-08-13）— 第三轮安全测试 + 脏数据防御
+
+- fix(security): getWorkouts() 在数组含 null 元素时崩溃——脏数据/迁移遗留的 null 元素导致 sort 回调读取 null.ts 抛 TypeError；增加 filter 过滤 null/非对象/无 id 元素 + sort 内 `(b.ts || 0)` 兜底
+- test: 新增 scripts/verify-security-round2.js（73 项：XSS 注入防护×4 / 状态管理隔离×3 / 数据完整性×8 / 并发安全×4 / 内存安全×3 / 边界值回归×16 / 数据迁移安全×6 / 计算精度×7 / 搜索安全×5 / 食物数据安全×3）
+- test: 全部专项 + 主套件回归全绿（357 + 73 + 61 + 64 + 45 + 页面匹配 + 导航 = 605 项）
+- docs: bug-log.md 新增 BUG-007（getWorkouts null 崩溃）；testing.md 同步 v2.13 安全测试矩阵
+
+## v2.12.0（2026-08-12）— 高强度安全测试 + 上线预检
+
+- fix(security): importData 写入超限崩溃——微信 1MB/key quota 抛异常未捕获 → 半写入/崩溃；try/catch 返回"数据过大，写入失败"错误
+- fix(security): isValidWorkout 误杀 ts=0——`!w.ts` 把合法 epoch 时间戳（0）当非法，2 万条导入丢 1 条；改为显式 undefined/null/typeof 判断
+- fix(content): 2 处动作 tip 含"康复"医疗用语（拒审风险）→ 改写为训练语境（"腰背不适时放慢速度"/"对膝关节负担小"）
+- chore(pack): project.config.json packOptions.ignore 加入 doc/scripts/test.js/README——未引用文件不再进包（主包 539KB → 更小）
+- test: 新增 scripts/verify-hardening.js（61 项：存储容量/循环引用/日期边界/内容库完整性/页面参数注入×17/存储并发/数字极端/30 天高频路径），专项验证升级"五件套"
+- test: 全部专项 + 主套件回归全绿（357 + 61 + 64 + 45 + 页面匹配 + 导航）
+- docs: release-checklist/testing.md 同步 v2.12
+
+## v2.11.0（2026-08-12）— 极限测试 + 安全威胁修复
+
+- fix(security): migrate 对 schema=0/字符串/NaN 误判"全新安装"→ 清空已有数据（!version 把 0 当 falsy）。改为仅接受正数字版本，非法版本且已有数据时保留数据只补结构
+- fix(security): 存储 getter 全量防御——getWorkouts/getBodyweights/getCustomPlans/getIntake 对非数组存储值（对象/字符串/数字/null 篡改）返回空数组而非 TypeError 崩溃；saveWorkout/removeWorkout 同步防御
+- fix(security): 数字注入——新增 toNum() 安全转换（try/catch + isFinite），对象型 weight（Number 抛 TypeError）/NaN/Infinity 全部归零；统一替换 setVolume/calcWorkout/epley1RM/est1RMHistory/bodyweightTrend/dailyIntakeSum/workoutCalories 里的裸 Number()
+- fix(logic): 负时长训练消耗产生负卡路里 → Math.max(...,0) 归零
+- fix(logic): fmtCompact(NaN/Infinity/负数) 输出脏字符串（"NaN"/"Infinity万"）→ 归 0；scaleSeries 负 innerH → 钳制 0
+- test: 新增 scripts/verify-extreme.js（64 项：全函数边界补漏 + 1000 条/500 组/52 周压力 + 7 大安全威胁假设：migrate 版本篡改/存储类型篡改/结构畸形/数字注入/路径注入 id/超长字符串/原型污染）
+- test: test.js 固化安全守门 5 项（存储篡改/schema=0/对象 weight/负时长/非有限数），共 357 项全绿
+- docs: README/testing.md 同步 v2.11
+
+## v2.10.0（2026-08-12）— 边界测试加固
+
+- fix(bug): calcWorkout(null) 崩溃（workout.items 读 null）——统计层对存储数据信任度过高，改为 `(workout && workout.items) || []` + item 级兜底
+- fix(bug): lastRecordFor 忽略自重动作——原条件 `weight > 0` 使引体/俯卧撑（weight=0）历史永不命中，"上次记录"对自重动作空白；改为 `weight >= 0` 且拒绝负数/NaN/0 次脏数据
+- test: 新增 scripts/verify-boundaries.js 边界测试矩阵（45 项：数值/1RM/存储/保存/搜索/日期极限），与 verify-nav/verify-page-match 并列
+- test: test.js 固化边界守门 4 项（calcWorkout null/空、自重 lastRecord、NaN 组），共 352 项全绿
+- 边界测试过程核实：epley1RM 对 reps≤0 或 >20 返回 0 为设计行为（Epley 公式有效域），非 bug；epoch 周起点负时间戳为正常（1970-01-01 周四）
+- docs: README/testing.md 同步 v2.10
+
 ## v2.9.0（2026-08-12）— 安全审计加固
 
 - fix(security): 数据导入改为**先预览确认后覆盖**——importData 不再直接写盘，页面先 previewImport 校验统计并弹"确认恢复备份？"（confirmText 恢复/cancelText 取消），用户取消零写入；原流程先覆盖后弹窗且无取消按钮（数据丢失风险）

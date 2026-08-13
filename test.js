@@ -330,6 +330,25 @@ assert(freq.squat === 1 && freq.pullup === 1, '深蹲/引体各 1 次');
 const sorted = util.sortByFrequency(exercisesData.exercisesByMuscle('chest'), freq);
 assert(sorted[0].id === 'bench', '常用动作置顶（bench 排第一，实际 ' + sorted[0].id + '）');
 
+// 边界守卫（v2.10）：calcWorkout 空/null 安全 + 自重动作 lastRecord 可命中（回归防止）
+assert(util.calcWorkout(null).volume === 0 && util.calcWorkout({ items: [] }).sets === 0, 'calcWorkout null/空安全（v2.10 边界回归）');
+const selfWeight = [{ id: 'sw', ts: 100, items: [{ exerciseId: 'pullup', sets: [{ weight: 0, reps: 12 }] }] }];
+assert(util.lastRecordFor(selfWeight, 'pullup') !== null, '自重动作（0×12）lastRecord 可命中（v2.10 边界回归）');
+assert(util.lastRecordFor(selfWeight, 'pullup').weight === 0, '自重记录重量保留 0');
+assert(util.calcWorkout({ items: [{ sets: [{ weight: NaN, reps: 5 }] }] }).volume === 0, 'NaN 组容量安全');
+
+// 安全守卫（v2.11）：存储篡改/数字注入/版本篡改（回归防止）
+const wxStoreBackup = wx._store;
+wx._store = { gym_workouts: { evil: true } };
+assert(Array.isArray(store.getWorkouts()) && store.getWorkouts().length === 0, 'workouts 篡改为对象 → 返回空数组（v2.11 安全回归）');
+wx._store = { gym_workouts: [{ id: 'keep', ts: 1, items: [] }], gym_schema_version: 0 };
+store.ensureInit();
+assert(store.getWorkouts().length === 1, 'schema=0 不误判全新安装清空数据（v2.11 安全回归）');
+wx._store = wxStoreBackup;
+assert(util.calcWorkout({ items: [{ sets: [{ weight: { toString: 'x' }, reps: 8 }] }] }).volume === 0, '对象型 weight 不崩溃归零（v2.11 安全回归）');
+assert(util.workoutCalories({ items: [], duration: -30 }, 60) === 0, '负时长消耗归 0（v2.11 安全回归）');
+assert(util.fmtCompact(NaN) === '0' && util.fmtCompact(Infinity) === '0', 'fmtCompact 非有限数 → 0（v2.11 安全回归）');
+
 // ---------- 上次记录带入（v2.8） ----------
 const hist = [
   { id: 'h1', ts: thisWeekMon - 7 * dayMs, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 8, warmup: true }, { weight: 70, reps: 8 }] }] },
@@ -1099,8 +1118,9 @@ assert(e2eTrain.data.draft.length === 5 && e2eTrain.data.planInfo.dayId === 'a',
 e2eTrain.data.draft = e2eTrain.data.draft.map(it => Object.assign({}, it, { sets: it.sets.map(s => ({ weight: '50', reps: s.reps })) }));
 e2eTrain.sessionStartTs = Date.now() - 1800000;
 e2eTrain.onSave();
-const planWorkout = store.getWorkouts()[0];
-assert(planWorkout.plan && planWorkout.plan.planId === 'beginner-fullbody' && planWorkout.plan.dayId === 'a', '计划标记写入');
+// 同毫秒 ts 陷阱：连续保存 ts 相同 → 倒序稳定排序下 [0] 可能取到前一条；按内容特征定位
+const planWorkout = store.getWorkouts().filter(function (w) { return w.plan && w.plan.planId === 'beginner-fullbody'; })[0];
+assert(planWorkout && planWorkout.plan.planId === 'beginner-fullbody' && planWorkout.plan.dayId === 'a', '计划标记写入');
 // 计划完成度联动
 const pStat = util.planDayStatus(store.getWorkouts(), 'beginner-fullbody', 'a');
 assert(pStat.done === true, '计划库完成度联动（今日已打卡）');
@@ -1216,6 +1236,7 @@ wx.showToast = wxToast || function () {};
 wx.showModal = wxModal;
 
 // 异步兜底验证：badPage 的 800ms 定时器先触发 navigateBack fail → 断言兜底切 tab
+// 2500ms 容差：给 1s 休息倒计时 interval + 800ms 兜底定时器留足余量（高负载下 interval 可能节流，1300ms 会偶发假失败）
 setTimeout(function () {
   assert(fallbackChecked === true, '直达详情页无返回栈时兜底切回动作库 tab');
   // 真实休息倒计时（1s）已到点：自动停止 + 震动 + 训练计时自动恢复
@@ -1224,4 +1245,4 @@ setTimeout(function () {
   assert(restReal.data.sessionPaused === false, '休息结束训练计时自动恢复（真实倒计时）');
   console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
   process.exit(failed > 0 ? 1 : 0);
-}, 1300);
+}, 2500);
