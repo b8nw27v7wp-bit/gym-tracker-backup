@@ -43,5 +43,13 @@ Page({
 
   onOpenExercise: function (e) {
     wx.navigateTo({ url: '/pages/exercise-detail/exercise-detail?id=' + e.currentTarget.dataset.id });
+  },
+
+  onShareAppMessage: function () {
+    var name = this.data.current ? this.data.current.name : '训练';
+    return {
+      title: '铁馆日志 · ' + name + '部训练指南',
+      path: '/pages/muscle-detail/muscle-detail?key=' + this.data.currentKey
+    };
   }
 });

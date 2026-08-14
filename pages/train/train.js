@@ -3,6 +3,8 @@ var exercisesData = require('../../data/exercises/index');
 var store = require('../../utils/store');
 var util = require('../../utils/util');
 var planUtil = require('../../utils/plan');
+var plateCalc = require('../../utils/plate-calculator');
+var warmupGen = require('../../utils/warmup');
 
 var timer = null; // 计时器句柄
 
@@ -35,7 +37,19 @@ Page({
     note: '',
     searchKeyword: '',
     planInfo: null, // 计划打卡标记 { planId, dayId }
-    planReminder: null // 本周计划今日提醒 { planId, planName, dayName, dayId }
+    planReminder: null, // 本周计划今日提醒 { planId, planName, dayName, dayId }
+    // 训练功能扩展
+    templates: [], // 训练模板列表
+    showTemplatePanel: false, // 是否显示模板面板
+    showSupersetPanel: false, // 是否显示超级组面板
+    supersetGroup: [], // 当前超级组动作索引
+    showTabataPanel: false, // 是否显示 Tabata 面板
+    tabataSettings: null, // Tabata 设置
+    tabataRunning: false, // Tabata 运行中
+    tabataPhase: 'idle', // idle/work/rest/cycleRest
+    tabataRound: 0, // 当前轮数
+    tabataCycle: 0, // 当前组数
+    tabataRemaining: 0 // 当前阶段剩余秒数
   },
 
   onLoad: function () {
@@ -43,6 +57,8 @@ Page({
     this.freqMap = util.frequencyByExercise(store.getWorkouts());
     // 历史记录索引（动作卡"上次重量"标签 + 添加时预填）
     this.lastRecords = util.lastRecordsMap(store.getWorkouts());
+    // 加载训练模板
+    this.setData({ templates: store.getWorkoutTemplates() });
     this.refreshDraftMeta();
     this.refreshExerciseList();
   },
@@ -261,6 +277,7 @@ Page({
   onUnload: function () {
     if (timer) { clearInterval(timer); timer = null; }
     this.stopRestTimer();
+    this.stopTabata(); // 清理 Tabata 计时器，防止内存泄漏
   },
 
   onGoHistory: function () {
@@ -520,7 +537,7 @@ Page({
     draft.forEach(function (item) {
       var v = 0;
       item.sets.forEach(function (s) {
-        v += (Number(s.weight) || 0) * (Number(s.reps) || 0);
+        v += util.setVolume(s);
       });
       volumes.push(v);
       total += v;
@@ -567,11 +584,16 @@ Page({
                 return !((s.weight === '' || s.weight === undefined) && (s.reps === '' || s.reps === undefined));
               })
               .map(function (s) {
+                // 使用安全数字转换，防御对象型/NaN/Infinity
                 var savedSet = {
-                  weight: Number(s.weight) || 0,
-                  reps: Number(s.reps) || 0
+                  weight: util.toNum(s.weight),
+                  reps: util.toNum(s.reps)
                 };
-                if (s.rpe !== '' && s.rpe !== undefined) savedSet.rpe = Number(s.rpe) || 0;
+                // RPE 可选字段，1-10 有效范围
+                if (s.rpe !== '' && s.rpe !== undefined) {
+                  var rpe = util.toNum(s.rpe);
+                  savedSet.rpe = Math.max(0, Math.min(10, rpe));
+                }
                 if (s.warmup) savedSet.warmup = true;
                 return savedSet;
               })
@@ -613,5 +635,356 @@ Page({
     } else {
       doSave();
     }
+  },
+
+  // ---------- 超级组功能 ----------
+  // 切换超级组面板
+  onToggleSupersetPanel: function () {
+    this.setData({ showSupersetPanel: !this.data.showSupersetPanel });
+  },
+
+  // 标记/取消标记动作为超级组
+  onToggleSuperset: function (e) {
+    var idx = Number(e.currentTarget.dataset.index);
+    var draft = this.data.draft.slice();
+    if (!draft[idx]) return;
+
+    // 如果已有 supersetId，取消标记
+    if (draft[idx].supersetId) {
+      draft[idx] = Object.assign({}, draft[idx], { supersetId: null });
+    } else {
+      // 生成新的超级组 ID
+      var supersetId = 'ss_' + Date.now();
+      draft[idx] = Object.assign({}, draft[idx], { supersetId: supersetId });
+    }
+    this.setData({ draft: draft });
+    this.refreshDraftMeta();
+  },
+
+  // 获取超级组信息
+  getSupersetInfo: function () {
+    var supersetMap = {};
+    this.data.draft.forEach(function (item, idx) {
+      if (item.supersetId) {
+        if (!supersetMap[item.supersetId]) supersetMap[item.supersetId] = [];
+        supersetMap[item.supersetId].push(idx);
+      }
+    });
+    return supersetMap;
+  },
+
+  // ---------- 递减组功能 ----------
+  // 添加递减组（在当前组基础上减重继续做）
+  onAddDropSet: function () {
+    var editing = this.data.editing;
+    if (!editing) return;
+    var lastSet = editing.sets[editing.sets.length - 1];
+    if (!lastSet || lastSet.weight === '') {
+      wx.showToast({ title: '请先填写当前组重量', icon: 'none' });
+      return;
+    }
+    // 减重 20-30%
+    var currentWeight = util.toNum(lastSet.weight);
+    var dropWeight = Math.round(currentWeight * 0.75 * 10) / 10;
+    var newSet = {
+      uid: this.genSetUid(),
+      weight: String(dropWeight),
+      reps: lastSet.reps,
+      rpe: lastSet.rpe,
+      warmup: false,
+      dropset: true // 标记为递减组
+    };
+    var sets = editing.sets.concat([newSet]);
+    this.setData({ 'editing.sets': sets });
+    wx.showToast({ title: '已添加递减组 ' + dropWeight + 'kg', icon: 'none' });
+  },
+
+  // ---------- 杠铃片计算器 ----------
+  // 显示杠铃片组合（在组编辑器中输入重量后调用）
+  getPlateInfo: function (weight) {
+    var w = util.toNum(weight);
+    if (w <= 0) return null;
+    var result = plateCalc.calculatePlates(w, 20);
+    return plateCalc.formatPlates(result);
+  },
+
+  // ---------- 热身组建议 ----------
+  // 根据工作重量生成热身组方案
+  getWarmupAdvice: function (weight) {
+    var w = util.toNum(weight);
+    if (w <= 0) return null;
+    var sets = warmupGen.generateWarmupSets(w);
+    return warmupGen.formatWarmupSets(sets);
+  },
+
+  // 添加热身组到当前编辑的动作
+  onAddWarmupSets: function () {
+    var editing = this.data.editing;
+    if (!editing) return;
+    // 获取当前最大重量作为工作重量
+    var maxWeight = 0;
+    editing.sets.forEach(function (s) {
+      var w = util.toNum(s.weight);
+      if (w > maxWeight) maxWeight = w;
+    });
+    if (maxWeight <= 0) {
+      wx.showToast({ title: '请先填写工作重量', icon: 'none' });
+      return;
+    }
+    var warmupSets = warmupGen.generateWarmupSets(maxWeight);
+    if (warmupSets.length === 0) {
+      wx.showToast({ title: '重量过轻，无需热身', icon: 'none' });
+      return;
+    }
+    // 添加热身组到现有组前面
+    var newSets = warmupSets.map(function (ws) {
+      return {
+        uid: 'w_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+        weight: String(ws.weight),
+        reps: String(ws.reps),
+        rpe: '',
+        warmup: true
+      };
+    }).concat(editing.sets);
+    this.setData({ 'editing.sets': newSets });
+    wx.showToast({ title: '已添加 ' + warmupSets.length + ' 组热身', icon: 'none' });
+  },
+
+  // ---------- 训练模板功能 ----------
+  // 切换模板面板
+  onToggleTemplatePanel: function () {
+    this.setData({
+      showTemplatePanel: !this.data.showTemplatePanel,
+      templates: store.getWorkoutTemplates()
+    });
+  },
+
+  // 保存当前训练为模板
+  onSaveAsTemplate: function () {
+    var draft = this.data.draft;
+    if (draft.length === 0) {
+      wx.showToast({ title: '还没有添加动作', icon: 'none' });
+      return;
+    }
+    var self = this;
+    wx.showModal({
+      title: '保存为模板',
+      editable: true,
+      placeholderText: '输入模板名称',
+      confirmText: '保存',
+      success: function (res) {
+        if (!res.confirm) return;
+        var name = (res.content || '').trim();
+        if (!name) {
+          wx.showToast({ title: '请输入模板名称', icon: 'none' });
+          return;
+        }
+        var template = store.saveWorkoutTemplate({
+          name: name,
+          items: draft.map(function (item) {
+            return {
+              exerciseId: item.exerciseId,
+              exerciseName: item.exerciseName,
+              muscle: item.muscle,
+              sets: item.sets.length
+            };
+          }),
+          note: self.data.note
+        });
+        if (template) {
+          self.setData({ templates: store.getWorkoutTemplates() });
+          wx.showToast({ title: '模板已保存', icon: 'success' });
+        }
+      }
+    });
+  },
+
+  // 加载模板
+  onLoadTemplate: function (e) {
+    var templateId = e.currentTarget.dataset.id;
+    var templates = this.data.templates;
+    var template = null;
+    for (var i = 0; i < templates.length; i++) {
+      if (templates[i].id === templateId) { template = templates[i]; break; }
+    }
+    if (!template) return;
+
+    var self = this;
+    if (this.data.draft.length > 0) {
+      wx.showModal({
+        title: '替换当前训练？',
+        content: '已添加 ' + this.data.draft.length + ' 个动作，加载模板将替换它们',
+        confirmText: '替换',
+        success: function (res) {
+          if (res.confirm) self.applyTemplate(template);
+        }
+      });
+    } else {
+      this.applyTemplate(template);
+    }
+  },
+
+  // 应用模板
+  applyTemplate: function (template) {
+    var draft = (template.items || []).map(function (item) {
+      var ex = exercisesData.getExercise(item.exerciseId);
+      if (!ex) return null;
+      var sets = [];
+      var numSets = item.sets || 3;
+      for (var i = 0; i < numSets; i++) {
+        sets.push({ weight: '', reps: '', rpe: '', warmup: false });
+      }
+      return {
+        exerciseId: ex.id,
+        exerciseName: ex.name,
+        muscle: ex.muscle,
+        sets: sets
+      };
+    }).filter(Boolean);
+
+    this.setData({
+      draft: draft,
+      step: 'pick',
+      showTemplatePanel: false,
+      note: template.note || ''
+    });
+    this.refreshDraftMeta();
+    wx.showToast({ title: '已加载模板 ' + template.name, icon: 'success' });
+  },
+
+  // 删除模板
+  onDeleteTemplate: function (e) {
+    var templateId = e.currentTarget.dataset.id;
+    var self = this;
+    wx.showModal({
+      title: '删除模板',
+      content: '确定删除此模板？',
+      confirmText: '删除',
+      confirmColor: '#ef4444',
+      success: function (res) {
+        if (res.confirm) {
+          store.removeWorkoutTemplate(templateId);
+          self.setData({ templates: store.getWorkoutTemplates() });
+          wx.showToast({ title: '已删除', icon: 'success' });
+        }
+      }
+    });
+  },
+
+  // ---------- Tabata 计时器 ----------
+  // 切换 Tabata 面板
+  onToggleTabataPanel: function () {
+    this.setData({
+      showTabataPanel: !this.data.showTabataPanel,
+      tabataSettings: store.getTabataSettings()
+    });
+  },
+
+  // Tabata 设置输入
+  onTabataInput: function (e) {
+    var field = e.currentTarget.dataset.field;
+    var value = Number(e.detail.value);
+    var settings = this.data.tabataSettings || {};
+    settings[field] = value;
+    this.setData({ tabataSettings: settings });
+  },
+
+  // 保存 Tabata 设置
+  onSaveTabataSettings: function () {
+    var settings = store.saveTabataSettings(this.data.tabataSettings);
+    this.setData({ tabataSettings: settings });
+    wx.showToast({ title: '设置已保存', icon: 'success' });
+  },
+
+  // 开始/停止 Tabata
+  onToggleTabata: function () {
+    if (this.data.tabataRunning) {
+      this.stopTabata();
+    } else {
+      this.startTabata();
+    }
+  },
+
+  // 开始 Tabata
+  startTabata: function () {
+    var settings = this.data.tabataSettings || store.getTabataSettings();
+    this.setData({
+      tabataRunning: true,
+      tabataPhase: 'work',
+      tabataRound: 1,
+      tabataCycle: 1,
+      tabataRemaining: settings.workSecs
+    });
+    this.runTabataTimer();
+  },
+
+  // 运行 Tabata 计时器
+  runTabataTimer: function () {
+    var self = this;
+    var settings = this.data.tabataSettings || store.getTabataSettings();
+    this.tabataTimer = setInterval(function () {
+      var remaining = self.data.tabataRemaining - 1;
+      var phase = self.data.tabataPhase;
+      var round = self.data.tabataRound;
+      var cycle = self.data.tabataCycle;
+
+      if (remaining <= 0) {
+        // 切换阶段
+        if (phase === 'work') {
+          // 运动结束 → 休息
+          phase = 'rest';
+          remaining = settings.restSecs;
+        } else if (phase === 'rest') {
+          // 休息结束 → 下一轮或下一组
+          if (round < settings.rounds) {
+            round++;
+            phase = 'work';
+            remaining = settings.workSecs;
+          } else if (cycle < settings.cycles) {
+            cycle++;
+            round = 1;
+            phase = 'cycleRest';
+            remaining = settings.cycleRestSecs;
+          } else {
+            // 全部完成
+            self.stopTabata();
+            wx.showToast({ title: 'Tabata 完成！', icon: 'success' });
+            return;
+          }
+        } else if (phase === 'cycleRest') {
+          // 组间休息结束 → 下一组
+          phase = 'work';
+          remaining = settings.workSecs;
+        }
+        // 震动提醒
+        if (wx.vibrateShort) wx.vibrateShort({ type: 'medium' });
+      }
+
+      self.setData({
+        tabataRemaining: remaining,
+        tabataPhase: phase,
+        tabataRound: round,
+        tabataCycle: cycle
+      });
+    }, 1000);
+  },
+
+  // 停止 Tabata
+  stopTabata: function () {
+    if (this.tabataTimer) {
+      clearInterval(this.tabataTimer);
+      this.tabataTimer = null;
+    }
+    this.setData({
+      tabataRunning: false,
+      tabataPhase: 'idle',
+      tabataRemaining: 0
+    });
+  },
+
+  // Tabata 阶段中文
+  tabataPhaseText: function (phase) {
+    var map = { idle: '准备', work: '运动', rest: '休息', cycleRest: '组间休息' };
+    return map[phase] || phase;
   }
 });

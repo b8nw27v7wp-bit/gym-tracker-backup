@@ -9,6 +9,7 @@ var PR_EXERCISES = ['bench', 'squat', 'deadlift', 'ohp', 'pullup', 'db-bench', '
 
 Page({
   data: {
+    wxUser: null, // 用户信息
     hasData: false,
     weekVolume: 0,
     deltaText: '',
@@ -51,6 +52,8 @@ Page({
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 3 });
     }
+    // 加载用户信息
+    this.setData({ wxUser: store.getWxUser() });
     this.loadStats();
   },
 
@@ -90,7 +93,7 @@ Page({
       }
     });
     var totalCount = workouts.length;
-    var firstTs = workouts[workouts.length - 1].ts; // 已按时间倒序
+    var firstTs = workouts.length > 0 ? workouts[workouts.length - 1].ts : Date.now(); // 已按时间倒序
     var weeks = Math.max(Math.round((Date.now() - firstTs) / (7 * 86400000)), 1);
     var avgPerWeek = Math.round((totalCount / weeks) * 10) / 10;
     var coveredMuscles = Object.keys(coveredSet).map(function (key) {
@@ -168,13 +171,24 @@ Page({
       if (pr.maxWeight > 0) {
         // 破纪录判断：最佳成绩产生于本周
         if (pr.bestDate >= thisWeekStart) prBreakCount += 1;
-        // 最新估算 1RM
+        // 1RM 历史只计算一次，est1rm 与趋势共用（est1RMTrend 内部会再算，这里直接基于 hist 构造）
         var hist = util.est1RMHistory(id, workouts);
         var est1rm = hist.length > 0 ? hist[hist.length - 1].est : 0;
-        // 1RM 迷你趋势（≥2 个点才显示）
-        var trend = util.est1RMTrend(id, workouts, 6);
-        var maxEst = 1;
-        trend.forEach(function (t) { if (t.est > maxEst) maxEst = t.est; });
+        // 1RM 迷你趋势（≥2 个点才显示）——直接基于 hist 计算，避免 est1RMTrend 重复调用
+        var recent = hist.slice(-6);
+        var trend = [];
+        if (recent.length > 0) {
+          var maxEst = 1;
+          recent.forEach(function (p) { if (p.est > maxEst) maxEst = p.est; });
+          trend = recent.map(function (p) {
+            var d = new Date(p.ts);
+            return {
+              label: (d.getMonth() + 1) + '/' + d.getDate(),
+              est: p.est,
+              height: Math.max(Math.round((p.est / maxEst) * 100), 8)
+            };
+          });
+        }
         prs.push({
           id: id,
           name: ex.name,
@@ -183,7 +197,7 @@ Page({
           dateText: pr.bestDate ? util.fmtDate(pr.bestDate) : '',
           est1rm: est1rm,
           trend: trend.length >= 2 ? trend : [],
-          trendMax: maxEst
+          trendMax: maxEst || 1
         });
       }
     });
@@ -235,9 +249,40 @@ Page({
       muscleDist: muscleDist,
       prs: prs
     });
-    // 等 canvas 挂载后绘制容量图
+
+    // 数据分析增强
+    this.loadAnalytics(workouts);
+
+    // 等 canvas 挂载后绘制容量图（用 nextTick 替代 setTimeout，避免低端机取不到节点）
     var self = this;
-    setTimeout(function () { self.drawVolumeChart(); }, 80);
+    if (wx.nextTick) {
+      wx.nextTick(function () { self.drawVolumeChart(); });
+    } else {
+      setTimeout(function () { self.drawVolumeChart(); }, 80);
+    }
+  },
+
+  // ---------- 数据分析增强 ----------
+  loadAnalytics: function (workouts) {
+    // 月度总结
+    var monthly = util.monthlySummary(workouts);
+
+    // 肌群平衡分析
+    var balance = util.muscleBalance(workouts);
+
+    // 训练密度趋势
+    var density = util.densityTrend(workouts, 8);
+
+    // 周训练频率趋势
+    var freqTrend = util.weeklyFrequencyTrend(workouts, 8);
+
+    this.setData({
+      monthly: monthly,
+      balance: balance,
+      density: density,
+      freqTrend: freqTrend,
+      balanceReady: balance.total > 0
+    });
   },
 
   // ---------- 热量板块 ----------
@@ -253,10 +298,14 @@ Page({
       this.setData({ calHas: false });
       return;
     }
-    var weight = Number(profile.weightKg);
+    // 使用安全数字转换
+    var weight = util.toNum(profile.weightKg) || 60;
     // 运动消耗体重优先取最新体重记录（更贴近当前）
     var bws = store.getBodyweights();
-    if (bws.length > 0) weight = Number(bws[bws.length - 1].weight) || weight;
+    if (bws.length > 0) {
+      var lastBw = util.toNum(bws[bws.length - 1].weight);
+      if (lastBw > 0 && lastBw <= 500) weight = lastBw;
+    }
     var weekKcal = util.workoutCaloriesSum(workouts, weight, util.weekStart(Date.now())).total;
     // 今日摄入与热量缺口（今日可吃 = TDEE + 今日运动消耗；缺口 = 可吃 - 摄入）
     var d = new Date();
@@ -410,8 +459,10 @@ Page({
       chartVisible: true,
       chartName: ex ? ex.name : id,
       chartEst: chartHist[chartHist.length - 1].est
+    }, function () {
+      // setData 回调中 canvas 已挂载，直接绘制（低端机更可靠）
+      self.drawRmChart(chartHist);
     });
-    setTimeout(function () { self.drawRmChart(chartHist); }, 80);
   },
 
   drawRmChart: function (hist) {
@@ -549,14 +600,22 @@ Page({
       confirmText: '保存',
       success: function (res) {
         if (!res.confirm) return;
-        var v = parseFloat(res.content);
-        if (!v || v < 20 || v > 300) {
+        // 安全解析：防御非数字输入
+        var input = String(res.content || '').trim();
+        var v = parseFloat(input);
+        // 边界验证：20-300kg 有效范围，且必须是正数
+        if (!isFinite(v) || v < 20 || v > 300) {
           wx.showToast({ title: '请输入有效体重（20-300kg）', icon: 'none' });
           return;
         }
-        store.addBodyweight(Math.round(v * 10) / 10);
-        self.loadStats();
-        wx.showToast({ title: '已记录', icon: 'success' });
+        // 使用 store 的安全函数保存
+        var result = store.addBodyweight(Math.round(v * 10) / 10);
+        if (result) {
+          self.loadStats();
+          wx.showToast({ title: '已记录', icon: 'success' });
+        } else {
+          wx.showToast({ title: '保存失败，请重试', icon: 'none' });
+        }
       }
     });
   }

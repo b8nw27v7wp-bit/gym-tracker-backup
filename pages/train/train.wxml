@@ -70,6 +70,81 @@
     <view class="rest-custom-go" bindtap="onRestCustomStart">开始</view>
   </view>
 
+  <!-- Tabata 计时器面板 -->
+  <view class="tabata-section" wx:if="{{showTabataPanel}}">
+    <!-- Tabata 设置 -->
+    <view class="card tabata-card" wx:if="{{!tabataRunning}}">
+      <view class="card-title">Tabata 设置</view>
+      <view class="tabata-form">
+        <view class="tabata-row">
+          <text class="tabata-label">运动时间</text>
+          <view class="tabata-input-wrap">
+            <input class="tabata-input" type="number" value="{{tabataSettings.workSecs}}" data-field="workSecs" bindinput="onTabataInput" />
+            <text class="tabata-unit">秒</text>
+          </view>
+        </view>
+        <view class="tabata-row">
+          <text class="tabata-label">休息时间</text>
+          <view class="tabata-input-wrap">
+            <input class="tabata-input" type="number" value="{{tabataSettings.restSecs}}" data-field="restSecs" bindinput="onTabataInput" />
+            <text class="tabata-unit">秒</text>
+          </view>
+        </view>
+        <view class="tabata-row">
+          <text class="tabata-label">轮数</text>
+          <view class="tabata-input-wrap">
+            <input class="tabata-input" type="number" value="{{tabataSettings.rounds}}" data-field="rounds" bindinput="onTabataInput" />
+            <text class="tabata-unit">轮</text>
+          </view>
+        </view>
+        <view class="tabata-row">
+          <text class="tabata-label">组数</text>
+          <view class="tabata-input-wrap">
+            <input class="tabata-input" type="number" value="{{tabataSettings.cycles}}" data-field="cycles" bindinput="onTabataInput" />
+            <text class="tabata-unit">组</text>
+          </view>
+        </view>
+        <view class="tabata-row" wx:if="{{tabataSettings.cycles > 1}}">
+          <text class="tabata-label">组间休息</text>
+          <view class="tabata-input-wrap">
+            <input class="tabata-input" type="number" value="{{tabataSettings.cycleRestSecs}}" data-field="cycleRestSecs" bindinput="onTabataInput" />
+            <text class="tabata-unit">秒</text>
+          </view>
+        </view>
+      </view>
+      <view class="tabata-preview">
+        <text>总计 {{tabataSettings.rounds * tabataSettings.cycles}} 轮 · 约 {{Math.round((tabataSettings.workSecs + tabataSettings.restSecs) * tabataSettings.rounds * tabataSettings.cycles / 60)}} 分钟</text>
+      </view>
+      <view class="tabata-btns">
+        <view class="tabata-save-btn" bindtap="onSaveTabataSettings">保存设置</view>
+        <view class="tabata-start-btn" bindtap="onToggleTabata">开始 Tabata</view>
+      </view>
+    </view>
+
+    <!-- Tabata 计时器运行中 -->
+    <view class="card tabata-card tabata-running" wx:if="{{tabataRunning}}">
+      <view class="tabata-phase tabata-phase-{{tabataPhase}}">
+        {{tabataPhase === 'work' ? '运动' : tabataPhase === 'rest' ? '休息' : '组间休息'}}
+      </view>
+      <view class="tabata-timer">
+        <text class="tabata-time-num">{{tabataRemaining}}</text>
+        <text class="tabata-time-unit">秒</text>
+      </view>
+      <view class="tabata-progress">
+        <text>第 {{tabataRound}} / {{tabataSettings.rounds}} 轮</text>
+        <text wx:if="{{tabataSettings.cycles > 1}}"> · 第 {{tabataCycle}} / {{tabataSettings.cycles}} 组</text>
+      </view>
+      <view class="tabata-stop-btn" bindtap="onToggleTabata">停止</view>
+    </view>
+  </view>
+
+  <!-- Tabata 快捷入口（面板关闭时显示） -->
+  <view class="tabata-quick" wx:if="{{!showTabataPanel}}" bindtap="onToggleTabataPanel">
+    <view class="tabata-quick-icon">⏱</view>
+    <text class="tabata-quick-text">Tabata 计时器</text>
+    <view class="tabata-quick-arrow">›</view>
+  </view>
+
   <!-- 选部位 + 选动作 -->
   <view class="card" wx:if="{{step === 'pick'}}">
     <view class="search-mini">

@@ -71,9 +71,11 @@ Page({
   // ---------- 分享训练总结 ----------
   onShareWorkout: function (e) {
     var id = e.currentTarget.dataset.id;
-    this.setData({ showShare: true, shareWorkoutId: id });
     var self = this;
-    setTimeout(function () { self.drawShareCard(id); }, 60);
+    this.setData({ showShare: true, shareWorkoutId: id }, function () {
+      // setData 回调中 canvas 已挂载，直接绘制（低端机更可靠）
+      self.drawShareCard(id);
+    });
   },
 
   onCloseShare: function () {

@@ -5,6 +5,8 @@ Page({
   data: {
     workoutCount: 0,
     bodyweightCount: 0,
+    intakeCount: 0,
+    templateCount: 0,
     sizeBytes: 0,
     sizeText: '',
     schemaVersion: 0
@@ -17,10 +19,14 @@ Page({
   refresh: function () {
     var workouts = store.getWorkouts();
     var bw = store.getBodyweights();
+    var intake = store.getIntake();
+    var templates = store.getWorkoutTemplates();
     var size = store.dataSizeBytes();
     this.setData({
       workoutCount: workouts.length,
       bodyweightCount: bw.length,
+      intakeCount: intake.length,
+      templateCount: templates.length,
       sizeBytes: size,
       sizeText: store.formatSize(size),
       schemaVersion: store.SCHEMA_VERSION
@@ -73,11 +79,16 @@ Page({
           wx.showToast({ title: preview.error, icon: 'none' });
           return;
         }
+        // 构建预览内容
+        var parts = [preview.workouts + ' 条训练', preview.bodyweight + ' 条体重'];
+        if (preview.customPlans > 0) parts.push(preview.customPlans + ' 个自建计划');
+        if (preview.intake > 0) parts.push(preview.intake + ' 条饮食记录');
+        if (preview.workoutTemplates > 0) parts.push(preview.workoutTemplates + ' 个训练模板');
+        if (preview.profile > 0) parts.push('身体资料');
+
         wx.showModal({
           title: '确认恢复备份？',
-          content: '将恢复 ' + preview.workouts + ' 条训练、' + preview.bodyweight + ' 条体重记录' +
-            (preview.customPlans > 0 ? '、' + preview.customPlans + ' 个自建计划' : '') +
-            '。当前数据会被覆盖，建议先导出当前备份。',
+          content: '将恢复 ' + parts.join('、') + '。当前数据会被覆盖，建议先导出当前备份。',
           confirmText: '恢复',
           cancelText: '取消',
           success: function (res) {
@@ -87,10 +98,15 @@ Page({
               wx.showToast({ title: result.error, icon: 'none' });
               return;
             }
+            // 构建成功内容
+            var resultParts = [result.workouts + ' 条训练', result.bodyweight + ' 条体重'];
+            if (result.customPlans > 0) resultParts.push(result.customPlans + ' 个自建计划');
+            if (result.intake > 0) resultParts.push(result.intake + ' 条饮食记录');
+            if (result.workoutTemplates > 0) resultParts.push(result.workoutTemplates + ' 个训练模板');
+
             wx.showModal({
               title: '恢复成功',
-              content: '已恢复 ' + result.workouts + ' 条训练、' + result.bodyweight + ' 条体重记录' +
-                (result.customPlans > 0 ? '、' + result.customPlans + ' 个自建计划' : '') + '。',
+              content: '已恢复 ' + resultParts.join('、') + '。',
               showCancel: false,
               success: function () { self.refresh(); }
             });
@@ -108,7 +124,7 @@ Page({
     var self = this;
     wx.showModal({
       title: '清空全部数据',
-      content: '将删除所有训练记录、体重记录和自建计划，且无法恢复。建议先导出备份。确定继续？',
+      content: '将删除所有训练记录、体重记录、自建计划、饮食记录和训练模板，且无法恢复。建议先导出备份。确定继续？',
       confirmText: '清空',
       confirmColor: '#ef4444',
       success: function (res) {

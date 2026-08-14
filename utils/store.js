@@ -1,4 +1,5 @@
 // 本地存储封装：训练记录/体重 CRUD + schema 版本迁移 + 备份导出
+var util = require('./util');
 var KEY_WORKOUTS = 'gym_workouts';
 var KEY_INIT = 'gym_inited_v1';        // v1 遗留初始化标记
 var KEY_BODYWEIGHT = 'gym_bodyweight';
@@ -12,7 +13,11 @@ var SCHEMA_VERSION = 3;
 
 // 某 ts 所在周的周一 0 点（本地实现，避免依赖 util）
 function weekStartOf(ts) {
-  var d = new Date(ts);
+  // 边界：无效时间戳返回当前周
+  var n = Number(ts);
+  if (!isFinite(n) || n < 0) n = Date.now();
+  var d = new Date(n);
+  if (isNaN(d.getTime())) d = new Date(); // 极端情况：Date 构造失败
   var day = d.getDay() || 7; // 周日=7
   d.setDate(d.getDate() - day + 1);
   d.setHours(0, 0, 0, 0);
@@ -77,24 +82,35 @@ function getWorkout(id) {
 
 // 保存训练记录（新建或覆盖同 id）
 function saveWorkout(workout) {
+  // 边界：workout 必须是有效对象且有 id
+  if (!workout || typeof workout !== 'object' || !workout.id) {
+    return false;
+  }
   var list = wx.getStorageSync(KEY_WORKOUTS);
   if (!Array.isArray(list)) list = [];
   var found = false;
   for (var i = 0; i < list.length; i++) {
-    if (list[i].id === workout.id) {
+    // 边界：防御数组中的 null/undefined 元素
+    if (list[i] && list[i].id === workout.id) {
       list[i] = workout;
       found = true;
       break;
     }
   }
   if (!found) list.push(workout);
-  wx.setStorageSync(KEY_WORKOUTS, list);
+  try {
+    wx.setStorageSync(KEY_WORKOUTS, list);
+    return true;
+  } catch (e) {
+    // 存储超限等异常
+    return false;
+  }
 }
 
 function removeWorkout(id) {
   var list = wx.getStorageSync(KEY_WORKOUTS);
   if (!Array.isArray(list)) return;
-  var next = list.filter(function (w) { return w.id !== id; });
+  var next = list.filter(function (w) { return w && w.id !== id; });
   wx.setStorageSync(KEY_WORKOUTS, next);
 }
 
@@ -109,10 +125,20 @@ function getBodyweights() {
 }
 
 function addBodyweight(weight) {
+  // 边界：weight 必须是有效数字且在合理范围内
+  var w = Number(weight);
+  if (!isFinite(w) || w <= 0 || w > 500) {
+    return null;
+  }
   var list = getBodyweights();
-  list.push({ ts: Date.now(), weight: weight });
-  wx.setStorageSync(KEY_BODYWEIGHT, list);
-  return list;
+  var record = { ts: Date.now(), weight: Math.round(w * 10) / 10 }; // 保留一位小数
+  list.push(record);
+  try {
+    wx.setStorageSync(KEY_BODYWEIGHT, list);
+    return record;
+  } catch (e) {
+    return null;
+  }
 }
 
 // ---------- 自建计划 ----------
@@ -131,17 +157,30 @@ function getCustomPlan(id) {
 }
 
 function saveCustomPlan(plan) {
+  // 边界：plan 必须是有效对象且有 id 和 name
+  if (!plan || typeof plan !== 'object' || !plan.id || !plan.name) {
+    return false;
+  }
+  // 边界：确保 days 是数组
+  if (!Array.isArray(plan.days)) {
+    plan.days = [];
+  }
   var list = getCustomPlans();
   var found = false;
   for (var i = 0; i < list.length; i++) {
-    if (list[i].id === plan.id) {
+    if (list[i] && list[i].id === plan.id) {
       list[i] = plan;
       found = true;
       break;
     }
   }
   if (!found) list.push(plan);
-  wx.setStorageSync(KEY_CUSTOM_PLANS, list);
+  try {
+    wx.setStorageSync(KEY_CUSTOM_PLANS, list);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 function removeCustomPlan(id) {
@@ -177,7 +216,24 @@ function getProfile() {
 }
 
 function setProfile(profile) {
-  wx.setStorageSync(KEY_PROFILE, profile);
+  // 边界：profile 必须是有效对象
+  if (!profile || typeof profile !== 'object') {
+    return false;
+  }
+  // 验证并规范化字段
+  var safeProfile = {
+    gender: (profile.gender === 'male' || profile.gender === 'female') ? profile.gender : 'male',
+    age: Math.max(10, Math.min(100, util.toNum(profile.age) || 25)),
+    heightCm: Math.max(100, Math.min(250, util.toNum(profile.heightCm) || 170)),
+    weightKg: Math.max(30, Math.min(300, util.toNum(profile.weightKg) || 70)),
+    activity: Math.max(1, Math.min(5, util.toNum(profile.activity) || 3))
+  };
+  try {
+    wx.setStorageSync(KEY_PROFILE, safeProfile);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 // ---------- 饮食记录（食物热量摄入）----------
@@ -188,10 +244,26 @@ function getIntake() {
 }
 
 function addIntake(record) {
+  // 边界：record 必须是有效对象且有必要字段
+  if (!record || typeof record !== 'object' || !record.name) {
+    return null;
+  }
+  var safeRecord = {
+    id: record.id || genIntakeId(),
+    ts: record.ts || Date.now(),
+    date: record.date || '',
+    name: String(record.name).slice(0, 50), // 限制名称长度
+    grams: Math.max(0, util.toNum(record.grams)),
+    kcal: Math.max(0, Math.round(util.toNum(record.kcal)))
+  };
   var list = getIntake();
-  list.push(record);
-  wx.setStorageSync(KEY_INTAKE, list);
-  return list;
+  list.push(safeRecord);
+  try {
+    wx.setStorageSync(KEY_INTAKE, list);
+    return safeRecord;
+  } catch (e) {
+    return null;
+  }
 }
 
 function removeIntake(id) {
@@ -204,7 +276,7 @@ function genIntakeId() {
 }
 
 // ---------- 备份导出 / 导入 ----------
-// 导出结构：{ app: 'gym-tracker', schemaVersion, exportedAt, workouts, bodyweight, customPlans }
+// 导出结构：{ app: 'gym-tracker', schemaVersion, exportedAt, workouts, bodyweight, customPlans, intake, waterIntake, workoutTemplates, profile }
 function exportData() {
   return {
     app: 'gym-tracker',
@@ -212,12 +284,18 @@ function exportData() {
     exportedAt: Date.now(),
     workouts: getWorkouts(),
     bodyweight: getBodyweights(),
-    customPlans: getCustomPlans()
+    customPlans: getCustomPlans(),
+    // v2.20.0 新增导出
+    intake: getIntake(),
+    waterIntake: wx.getStorageSync(KEY_WATER) || null,
+    workoutTemplates: getWorkoutTemplates(),
+    profile: getProfile(),
+    tabataSettings: getTabataSettings()
   };
 }
 
 // 导入预览：只校验统计，不写盘（供页面弹确认框用）
-// 返回 { ok, error, workouts, bodyweight, customPlans }
+// 返回 { ok, error, workouts, bodyweight, customPlans, intake, waterIntake, workoutTemplates, profile, tabataSettings }
 function previewImport(obj) {
   if (!obj || typeof obj !== 'object') return { ok: false, error: '数据格式不正确' };
   if (obj.app !== 'gym-tracker') return { ok: false, error: '不是本应用的数据文件' };
@@ -228,7 +306,23 @@ function previewImport(obj) {
     return b && b.ts !== undefined && b.ts !== null && safeNum(b.weight) > 0;
   });
   var validPlans = Array.isArray(obj.customPlans) ? obj.customPlans.filter(isValidPlan) : [];
-  return { ok: true, workouts: valid.length, bodyweight: validBw.length, customPlans: validPlans.length };
+  var validIntake = Array.isArray(obj.intake) ? obj.intake.filter(function (r) {
+    return r && r.id && r.name;
+  }) : [];
+  var validTemplates = Array.isArray(obj.workoutTemplates) ? obj.workoutTemplates.filter(function (t) {
+    return t && t.id && t.name;
+  }) : [];
+  return {
+    ok: true,
+    workouts: valid.length,
+    bodyweight: validBw.length,
+    customPlans: validPlans.length,
+    intake: validIntake.length,
+    waterIntake: obj.waterIntake ? 1 : 0,
+    workoutTemplates: validTemplates.length,
+    profile: obj.profile ? 1 : 0,
+    tabataSettings: obj.tabataSettings ? 1 : 0
+  };
 }
 
 // 安全数字转换（importData/previewImport 共用，防对象型 weight 抛 TypeError）
@@ -275,15 +369,37 @@ function importData(obj) {
     return b && b.ts !== undefined && b.ts !== null && safeNum(b.weight) > 0;
   });
   var validPlans = Array.isArray(obj.customPlans) ? obj.customPlans.filter(isValidPlan) : [];
+  var validIntake = Array.isArray(obj.intake) ? obj.intake.filter(function (r) {
+    return r && r.id && r.name;
+  }) : [];
+  var validTemplates = Array.isArray(obj.workoutTemplates) ? obj.workoutTemplates.filter(function (t) {
+    return t && t.id && t.name;
+  }) : [];
   try {
     wx.setStorageSync(KEY_WORKOUTS, valid);
     wx.setStorageSync(KEY_BODYWEIGHT, validBw);
     wx.setStorageSync(KEY_CUSTOM_PLANS, validPlans);
     wx.setStorageSync(KEY_SCHEMA, obj.schemaVersion || SCHEMA_VERSION);
+    // v2.20.0 新增导入
+    if (validIntake.length > 0) wx.setStorageSync(KEY_INTAKE, validIntake);
+    if (obj.waterIntake && typeof obj.waterIntake === 'object') wx.setStorageSync(KEY_WATER, obj.waterIntake);
+    if (validTemplates.length > 0) wx.setStorageSync(KEY_WORKOUT_TEMPLATES, validTemplates);
+    if (obj.profile && typeof obj.profile === 'object') wx.setStorageSync(KEY_PROFILE, obj.profile);
+    if (obj.tabataSettings && typeof obj.tabataSettings === 'object') wx.setStorageSync(KEY_TABATA, obj.tabataSettings);
   } catch (e) {
     return { ok: false, error: '数据过大，写入失败（超出存储上限）' };
   }
-  return { ok: true, workouts: valid.length, bodyweight: validBw.length, customPlans: validPlans.length };
+  return {
+    ok: true,
+    workouts: valid.length,
+    bodyweight: validBw.length,
+    customPlans: validPlans.length,
+    intake: validIntake.length,
+    waterIntake: obj.waterIntake ? 1 : 0,
+    workoutTemplates: validTemplates.length,
+    profile: obj.profile ? 1 : 0,
+    tabataSettings: obj.tabataSettings ? 1 : 0
+  };
 }
 
 // 清空所有数据（含确认逻辑在页面层）
@@ -301,14 +417,244 @@ function dataSizeBytes() {
   var workouts = wx.getStorageSync(KEY_WORKOUTS) || [];
   var bw = wx.getStorageSync(KEY_BODYWEIGHT) || [];
   var cp = wx.getStorageSync(KEY_CUSTOM_PLANS) || [];
-  var s = JSON.stringify({ w: workouts, b: bw, p: cp });
+  var intake = wx.getStorageSync(KEY_INTAKE) || [];
+  var water = wx.getStorageSync(KEY_WATER) || {};
+  var templates = wx.getStorageSync(KEY_WORKOUT_TEMPLATES) || [];
+  var profile = wx.getStorageSync(KEY_PROFILE) || {};
+  var wxUser = wx.getStorageSync(KEY_WX_USER) || {};
+  var tabata = wx.getStorageSync(KEY_TABATA) || {};
+  var s = JSON.stringify({
+    w: workouts, b: bw, p: cp, i: intake,
+    wt: water, t: templates, pr: profile, u: wxUser, tb: tabata
+  });
   return s ? s.length : 0;
 }
 
 function formatSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+  // 边界：bytes 必须是非负有限数
+  var n = Number(bytes);
+  if (!isFinite(n) || n < 0) return '0 B';
+  if (n < 1024) return Math.round(n) + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1024 / 1024).toFixed(2) + ' MB';
+}
+
+// ---------- 微信用户信息 ----------
+// 存储结构：{ nickName, avatarUrl, loginTime }
+// 注意：wx.getUserProfile 已废弃（2021年4月），现使用 open-type="chooseAvatar" + type="nickname" 获取
+var KEY_WX_USER = 'gym_wx_user';
+
+// 获取用户信息（未登录返回 null）
+function getWxUser() {
+  var user = wx.getStorageSync(KEY_WX_USER);
+  // 防御：确保返回的对象结构正确
+  if (user && user.nickName && user.loginTime) {
+    return user;
+  }
+  return null;
+}
+
+// 保存用户信息
+function setWxUser(userInfo) {
+  if (!userInfo || !userInfo.nickName) {
+    return false;
+  }
+  // 只保存必要字段，不存储 code（code 应发送到后端）
+  var safeUser = {
+    nickName: String(userInfo.nickName).slice(0, 20), // 限制昵称长度
+    avatarUrl: userInfo.avatarUrl || '',
+    loginTime: userInfo.loginTime || Date.now()
+  };
+  wx.setStorageSync(KEY_WX_USER, safeUser);
+  return true;
+}
+
+// 清除用户信息（退出登录）
+function clearWxUser() {
+  wx.removeStorageSync(KEY_WX_USER);
+}
+
+// 检查是否已登录
+function isLoggedIn() {
+  return !!getWxUser();
+}
+
+// 检查登录是否有效（30天内有效，超过需要重新登录）
+function isLoginValid() {
+  var wxUser = getWxUser();
+  if (!wxUser || !wxUser.loginTime) return false;
+  var now = Date.now();
+  var loginTime = wxUser.loginTime;
+  var daysDiff = (now - loginTime) / (1000 * 60 * 60 * 24);
+  return daysDiff < 30; // 30天内有效
+}
+
+// 获取登录状态摘要
+function getLoginStatus() {
+  var wxUser = getWxUser();
+  return {
+    isLoggedIn: !!wxUser,
+    isValid: isLoginValid(),
+    user: wxUser
+  };
+}
+
+// ---------- 自定义食物 ----------
+var KEY_CUSTOM_FOODS = 'gym_custom_foods';
+
+// 获取自定义食物列表
+function getCustomFoods() {
+  var list = wx.getStorageSync(KEY_CUSTOM_FOODS);
+  return Array.isArray(list) ? list : [];
+}
+
+// 保存自定义食物
+function saveCustomFood(food) {
+  if (!food || !food.name || !food.kcal) return false;
+  var safeFood = {
+    id: food.id || 'cf_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+    name: String(food.name).slice(0, 30),
+    cat: food.cat || 'custom',
+    kcal: Math.max(0, util.toNum(food.kcal)),
+    size: Math.max(1, util.toNum(food.size) || 100),
+    sizeLabel: food.sizeLabel || '1 份',
+    custom: true
+  };
+  var list = getCustomFoods();
+  var found = false;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].id === safeFood.id) {
+      list[i] = safeFood;
+      found = true;
+      break;
+    }
+  }
+  if (!found) list.push(safeFood);
+  try {
+    wx.setStorageSync(KEY_CUSTOM_FOODS, list);
+    return safeFood;
+  } catch (e) {
+    return false;
+  }
+}
+
+// 删除自定义食物
+function removeCustomFood(id) {
+  var list = getCustomFoods();
+  wx.setStorageSync(KEY_CUSTOM_FOODS, list.filter(function (f) { return f.id !== id; }));
+}
+
+// ---------- 水摄入记录 ----------
+var KEY_WATER = 'gym_water_intake';
+
+// 获取今日水摄入量（ml）
+function getWaterIntake(date) {
+  var d = date || '';
+  var record = wx.getStorageSync(KEY_WATER);
+  if (!record || record.date !== d) {
+    return { date: d, amount: 0, goal: 2000 };
+  }
+  return record;
+}
+
+// 添加水摄入
+function addWaterIntake(amount, date) {
+  var d = date || '';
+  var record = getWaterIntake(d);
+  record.date = d;
+  record.amount = Math.max(0, (record.amount || 0) + Math.max(0, util.toNum(amount)));
+  try {
+    wx.setStorageSync(KEY_WATER, record);
+    return record;
+  } catch (e) {
+    return null;
+  }
+}
+
+// 设置水摄入目标
+function setWaterGoal(goal) {
+  var record = wx.getStorageSync(KEY_WATER) || {};
+  record.goal = Math.max(500, Math.min(5000, util.toNum(goal) || 2000));
+  wx.setStorageSync(KEY_WATER, record);
+}
+
+// 重置今日水摄入
+function resetWaterIntake(date) {
+  var d = date || '';
+  var record = getWaterIntake(d);
+  record.amount = 0;
+  wx.setStorageSync(KEY_WATER, record);
+}
+
+// ---------- 训练模板 ----------
+var KEY_WORKOUT_TEMPLATES = 'gym_workout_templates';
+
+// 获取训练模板列表
+function getWorkoutTemplates() {
+  var list = wx.getStorageSync(KEY_WORKOUT_TEMPLATES);
+  return Array.isArray(list) ? list : [];
+}
+
+// 保存训练模板
+function saveWorkoutTemplate(template) {
+  if (!template || !template.name) return false;
+  var safeTemplate = {
+    id: template.id || 'wt_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+    name: String(template.name).slice(0, 30),
+    items: Array.isArray(template.items) ? template.items : [],
+    note: String(template.note || '').slice(0, 200),
+    createdAt: template.createdAt || Date.now()
+  };
+  var list = getWorkoutTemplates();
+  var found = false;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].id === safeTemplate.id) {
+      list[i] = safeTemplate;
+      found = true;
+      break;
+    }
+  }
+  if (!found) list.push(safeTemplate);
+  try {
+    wx.setStorageSync(KEY_WORKOUT_TEMPLATES, list);
+    return safeTemplate;
+  } catch (e) {
+    return false;
+  }
+}
+
+// 删除训练模板
+function removeWorkoutTemplate(id) {
+  var list = getWorkoutTemplates();
+  wx.setStorageSync(KEY_WORKOUT_TEMPLATES, list.filter(function (t) { return t.id !== id; }));
+}
+
+// ---------- Tabata 计时器 ----------
+var KEY_TABATA = 'gym_tabata_settings';
+
+// 获取 Tabata 设置
+function getTabataSettings() {
+  var settings = wx.getStorageSync(KEY_TABATA);
+  return settings || {
+    workSecs: 20,      // 运动时间
+    restSecs: 10,      // 休息时间
+    rounds: 8,         // 轮数
+    cycles: 1,         // 组数
+    cycleRestSecs: 60  // 组间休息
+  };
+}
+
+// 保存 Tabata 设置
+function saveTabataSettings(settings) {
+  var safeSettings = {
+    workSecs: Math.max(5, Math.min(120, util.toNum(settings.workSecs) || 20)),
+    restSecs: Math.max(5, Math.min(60, util.toNum(settings.restSecs) || 10)),
+    rounds: Math.max(1, Math.min(30, util.toNum(settings.rounds) || 8)),
+    cycles: Math.max(1, Math.min(10, util.toNum(settings.cycles) || 1)),
+    cycleRestSecs: Math.max(10, Math.min(300, util.toNum(settings.cycleRestSecs) || 60))
+  };
+  wx.setStorageSync(KEY_TABATA, safeSettings);
+  return safeSettings;
 }
 
 module.exports = {
@@ -345,60 +691,23 @@ module.exports = {
   getWxUser: getWxUser,
   setWxUser: setWxUser,
   clearWxUser: clearWxUser,
-  wxLogin: wxLogin,
+  isLoggedIn: isLoggedIn,
   isLoginValid: isLoginValid,
-  getLoginStatus: getLoginStatus
+  getLoginStatus: getLoginStatus,
+  // 自定义食物
+  getCustomFoods: getCustomFoods,
+  saveCustomFood: saveCustomFood,
+  removeCustomFood: removeCustomFood,
+  // 水摄入记录
+  getWaterIntake: getWaterIntake,
+  addWaterIntake: addWaterIntake,
+  setWaterGoal: setWaterGoal,
+  resetWaterIntake: resetWaterIntake,
+  // 训练模板
+  getWorkoutTemplates: getWorkoutTemplates,
+  saveWorkoutTemplate: saveWorkoutTemplate,
+  removeWorkoutTemplate: removeWorkoutTemplate,
+  // Tabata 计时器
+  getTabataSettings: getTabataSettings,
+  saveTabataSettings: saveTabataSettings
 };
-
-// ---------- 微信用户信息 ----------
-var KEY_WX_USER = 'gym_wx_user'; // 微信用户信息 { nickName, avatarUrl, code }
-
-function getWxUser() {
-  return wx.getStorageSync(KEY_WX_USER) || null;
-}
-
-function setWxUser(userInfo) {
-  wx.setStorageSync(KEY_WX_USER, userInfo);
-}
-
-function clearWxUser() {
-  wx.removeStorageSync(KEY_WX_USER);
-}
-
-// 微信登录获取 code
-function wxLogin() {
-  return new Promise(function (resolve, reject) {
-    wx.login({
-      success: function (res) {
-        if (res.code) {
-          resolve(res.code);
-        } else {
-          reject(new Error('登录失败'));
-        }
-      },
-      fail: function (err) {
-        reject(err);
-      }
-    });
-  });
-}
-
-// 检查登录是否有效（7天内）
-function isLoginValid() {
-  var wxUser = getWxUser();
-  if (!wxUser || !wxUser.loginTime) return false;
-  var now = Date.now();
-  var loginTime = wxUser.loginTime;
-  var daysDiff = (now - loginTime) / (1000 * 60 * 60 * 24);
-  return daysDiff < 7; // 7天内有效
-}
-
-// 获取登录状态
-function getLoginStatus() {
-  var wxUser = getWxUser();
-  return {
-    isLoggedIn: !!wxUser,
-    isValid: isLoginValid(),
-    user: wxUser
-  };
-}

@@ -1,6 +1,7 @@
 // 自建计划编辑器：新建/编辑计划（计划名 + 训练日 + 动作与组次）
 var store = require('../../utils/store');
 var exercisesData = require('../../data/exercises/index');
+var util = require('../../utils/util');
 
 Page({
   data: {
@@ -211,8 +212,8 @@ Page({
           items: d.items.map(function (it) {
             return {
               exerciseId: it.exerciseId,
-              sets: Number(it.sets) || 3,
-              reps: (it.reps === '' || it.reps === undefined || it.reps === null) ? null : (Number(it.reps) || 10)
+              sets: util.toNum(it.sets) || 3,
+              reps: (it.reps === '' || it.reps === undefined || it.reps === null) ? null : (util.toNum(it.reps) || 10)
             };
           })
         };
@@ -240,5 +241,12 @@ Page({
         setTimeout(function () { wx.navigateBack(); }, 600);
       }
     });
+  },
+
+  onShareAppMessage: function () {
+    return {
+      title: '铁馆日志 · 自建训练计划',
+      path: '/pages/plan-edit/plan-edit'
+    };
   }
 });

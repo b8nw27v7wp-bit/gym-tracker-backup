@@ -1,12 +1,14 @@
 // 动作详情页
 var exercisesData = require('../../data/exercises/index');
 var knowledge = require('../../data/knowledge/index');
+var substitute = require('../../utils/substitute');
 
 Page({
   data: {
     ex: null,
     muscle: null,
-    articles: []
+    articles: [],
+    substitutes: [] // 替代动作推荐
   },
 
   onLoad: function (options) {
@@ -40,6 +42,9 @@ Page({
       return a ? { id: a.id, title: a.title, summary: a.summary, catName: knowledge.categoryName(a.category) } : null;
     }).filter(function (x) { return x; });
 
+    // 替代动作推荐
+    var substitutes = substitute.getSubstitutes(id, exercisesData, { limit: 3 });
+
     this.setData({
       ex: {
         id: ex.id,
@@ -56,7 +61,8 @@ Page({
         tip: ex.tip
       },
       muscle: muscle,
-      articles: articles
+      articles: articles,
+      substitutes: substitutes
     });
     wx.setNavigationBarTitle({ title: ex.name });
   },
@@ -73,9 +79,23 @@ Page({
     wx.redirectTo({ url: '/pages/exercise-detail/exercise-detail?id=' + rid });
   },
 
+  // 跳转替代动作详情
+  onSubstituteTap: function (e) {
+    var sid = e.currentTarget.dataset.id;
+    wx.redirectTo({ url: '/pages/exercise-detail/exercise-detail?id=' + sid });
+  },
+
   // 跳转关联文章
   onArticleTap: function (e) {
     var aid = e.currentTarget.dataset.id;
     wx.navigateTo({ url: '/pages/knowledge-detail/knowledge-detail?id=' + aid });
+  },
+
+  onShareAppMessage: function () {
+    var name = this.data.ex ? this.data.ex.name : '健身动作';
+    return {
+      title: '铁馆日志 · ' + name,
+      path: '/pages/exercise-detail/exercise-detail?id=' + (this.data.ex ? this.data.ex.id : '')
+    };
   }
 });

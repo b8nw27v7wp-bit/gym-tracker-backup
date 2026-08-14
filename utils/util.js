@@ -28,9 +28,9 @@ function calcWorkout(workout) {
   var reps = 0;
   var maxWeight = 0;
   var warmupSets = 0;
-  var items = (workout && workout.items) || [];
+  var items = (workout && Array.isArray(workout.items)) ? workout.items : [];
   items.forEach(function (item) {
-    var setList = (item && item.sets) || [];
+    var setList = (item && Array.isArray(item.sets)) ? item.sets : [];
     setList.forEach(function (s) {
       if (isWarmup(s)) {
         warmupSets += 1;
@@ -267,7 +267,7 @@ function exercisePR(exerciseId, workouts) {
     (w.items || []).forEach(function (item) {
       if (item.exerciseId !== exerciseId) return;
       (item.sets || []).forEach(function (s) {
-        var wt = Number(s.weight) || 0;
+        var wt = toNum(s.weight);
         if (wt > maxWeight) maxWeight = wt;
         var v = setVolume(s);
         if (v > bestSetVol) { bestSetVol = v; bestDate = w.ts; }
@@ -489,7 +489,201 @@ function bodyweightTrend(list) {
   };
 }
 
+// ---------- 数据分析增强 ----------
+
+// 力量曲线：按动作展示重量变化趋势（取每组最大重量）
+// 返回 [{ ts, weight, date }] 按时间正序
+function strengthCurve(exerciseId, workouts, limit) {
+  var points = [];
+  (workouts || []).forEach(function (w) {
+    (w.items || []).forEach(function (item) {
+      if (item.exerciseId !== exerciseId) return;
+      var maxWeight = 0;
+      (item.sets || []).forEach(function (s) {
+        if (s.warmup) return; // 跳过热身组
+        var wt = toNum(s.weight);
+        if (wt > maxWeight) maxWeight = wt;
+      });
+      if (maxWeight > 0) {
+        points.push({ ts: w.ts, weight: maxWeight, date: dateStr(w.ts) });
+      }
+    });
+  });
+  // 按时间正序
+  points.sort(function (a, b) { return a.ts - b.ts; });
+  // 每天只保留最大值
+  var daily = {};
+  points.forEach(function (p) {
+    var d = p.date;
+    if (!daily[d] || p.weight > daily[d].weight) daily[d] = p;
+  });
+  var result = Object.keys(daily).map(function (k) { return daily[k]; });
+  // 限制返回数量
+  if (limit && result.length > limit) {
+    result = result.slice(result.length - limit);
+  }
+  return result;
+}
+
+// 训练密度：容量/时长（kg/min），衡量训练效率
+function trainingDensity(workout) {
+  if (!workout) return 0;
+  var calc = calcWorkout(workout);
+  var duration = toNum(workout.duration) || 45; // 默认45分钟
+  if (duration <= 0) return 0;
+  return Math.round(calc.volume / duration);
+}
+
+// 训练密度趋势：最近N次训练的密度变化
+function densityTrend(workouts, limit) {
+  var n = limit || 10;
+  var sorted = (workouts || []).slice().sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+  var recent = sorted.slice(0, n);
+  return recent.map(function (w) {
+    return {
+      ts: w.ts,
+      date: dateStr(w.ts),
+      density: trainingDensity(w),
+      volume: calcWorkout(w).volume,
+      duration: toNum(w.duration) || 45
+    };
+  }).reverse(); // 按时间正序
+}
+
+// 肌群平衡分析：推/拉/腿比例
+// 推：胸、肩、三头
+// 拉：背、二头
+// 腿：腿、臀、核心
+var MUSCLE_PUSH = ['chest', 'shoulders'];
+var MUSCLE_PULL = ['back'];
+var MUSCLE_LEGS = ['legs', 'glutes'];
+var MUSCLE_OTHER = ['core', 'calves', 'swimming', 'cardio', 'arms'];
+
+function muscleBalance(workouts) {
+  var push = 0, pull = 0, legs = 0, other = 0;
+  (workouts || []).forEach(function (w) {
+    (w.items || []).forEach(function (item) {
+      var vol = 0;
+      (item.sets || []).forEach(function (s) {
+        vol += setVolume(s);
+      });
+      var muscle = item.muscle || 'other';
+      if (MUSCLE_PUSH.indexOf(muscle) >= 0) push += vol;
+      else if (MUSCLE_PULL.indexOf(muscle) >= 0) pull += vol;
+      else if (MUSCLE_LEGS.indexOf(muscle) >= 0) legs += vol;
+      else other += vol;
+    });
+  });
+  var total = push + pull + legs + other;
+  if (total === 0) return { push: 0, pull: 0, legs: 0, other: 0, total: 0, ratio: { push: 0, pull: 0, legs: 0 }, advice: '' };
+
+  var pushPct = Math.round(push / total * 100);
+  var pullPct = Math.round(pull / total * 100);
+  var legsPct = Math.round(legs / total * 100);
+
+  // 生成建议
+  var advice = '';
+  if (pushPct > 40) advice = '推类动作占比过高，建议增加背部和腿部训练';
+  else if (pullPct > 40) advice = '拉类动作占比过高，建议均衡训练';
+  else if (legsPct < 20) advice = '腿部训练偏少，建议增加深蹲、硬拉等复合动作';
+  else if (Math.abs(pushPct - pullPct) > 15) advice = '推拉比例不均衡，建议保持接近1:1';
+  else advice = '训练比例均衡，继续保持';
+
+  return {
+    push: Math.round(push),
+    pull: Math.round(pull),
+    legs: Math.round(legs),
+    other: Math.round(other),
+    total: Math.round(total),
+    ratio: { push: pushPct, pull: pullPct, legs: legsPct },
+    advice: advice
+  };
+}
+
+// 月度总结：本月训练次数/总容量/新PR数
+function monthlySummary(workouts) {
+  var now = new Date();
+  var monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  var monthWorkouts = (workouts || []).filter(function (w) { return w.ts >= monthStart; });
+
+  var totalVolume = 0;
+  var totalDuration = 0;
+  var prs = {};
+  var muscles = {};
+
+  monthWorkouts.forEach(function (w) {
+    var calc = calcWorkout(w);
+    totalVolume += calc.volume;
+    totalDuration += toNum(w.duration) || 45;
+
+    (w.items || []).forEach(function (item) {
+      // 统计肌群覆盖
+      var muscle = item.muscle || 'other';
+      muscles[muscle] = (muscles[muscle] || 0) + 1;
+
+      // 统计PR
+      (item.sets || []).forEach(function (s) {
+        if (s.warmup) return;
+        var wt = toNum(s.weight);
+        var key = item.exerciseId;
+        if (!prs[key] || wt > prs[key]) prs[key] = wt;
+      });
+    });
+  });
+
+  var prCount = Object.keys(prs).length;
+  var muscleCount = Object.keys(muscles).length;
+  var avgDensity = totalDuration > 0 ? Math.round(totalVolume / totalDuration) : 0;
+
+  return {
+    count: monthWorkouts.length,
+    totalVolume: Math.round(totalVolume),
+    totalDuration: totalDuration,
+    avgDensity: avgDensity,
+    prCount: prCount,
+    muscleCount: muscleCount,
+    muscles: muscles
+  };
+}
+
+// 周训练频率趋势：最近N周每周训练次数
+function weeklyFrequencyTrend(workouts, weeks) {
+  var n = weeks || 8;
+  var now = Date.now();
+  var start = weekStart(now);
+  var result = [];
+  for (var i = n - 1; i >= 0; i--) {
+    var ws = start - i * 7 * 86400000;
+    var we = ws + 7 * 86400000;
+    var count = 0;
+    (workouts || []).forEach(function (w) {
+      if (w.ts >= ws && w.ts < we) count++;
+    });
+    result.push({
+      weekStart: ws,
+      label: weekLabel(ws),
+      count: count
+    });
+  }
+  return result;
+}
+
+// ---------- 水摄入记录 ----------
+
+// 计算每日水分需求（ml）
+function calcWaterIntake(weightKg, activity) {
+  var w = toNum(weightKg);
+  var a = toNum(activity);
+  if (w <= 0) return 2000; // 默认2000ml
+  // 基础：30-35ml/kg
+  var base = w * 33;
+  // 运动额外：每级活动 +250ml
+  var extra = a >= 1 ? (a - 1) * 250 : 0;
+  return Math.round((base + extra) / 100) * 100; // 四舍五入到 100ml
+}
+
 module.exports = {
+  toNum: toNum,
   setVolume: setVolume,
   isWarmup: isWarmup,
   calcWorkout: calcWorkout,
@@ -521,5 +715,13 @@ module.exports = {
   dailyIntakeSum: dailyIntakeSum,
   scaleSeries: scaleSeries,
   fmtCompact: fmtCompact,
-  bodyweightTrend: bodyweightTrend
+  bodyweightTrend: bodyweightTrend,
+  // 数据分析增强
+  strengthCurve: strengthCurve,
+  trainingDensity: trainingDensity,
+  densityTrend: densityTrend,
+  muscleBalance: muscleBalance,
+  monthlySummary: monthlySummary,
+  weeklyFrequencyTrend: weeklyFrequencyTrend,
+  calcWaterIntake: calcWaterIntake
 };

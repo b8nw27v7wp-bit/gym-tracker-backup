@@ -88,6 +88,19 @@
     </view>
   </view>
 
+  <!-- 替代动作推荐 -->
+  <view class="card" wx:if="{{substitutes.length > 0}}">
+    <view class="card-title">可替代动作</view>
+    <view class="sub-hint">当器械不可用时，可替换为以下动作</view>
+    <view class="sub-row" wx:for="{{substitutes}}" wx:key="id" data-id="{{item.id}}" bindtap="onSubstituteTap">
+      <view class="sub-left">
+        <text class="sub-name">{{item.name}}</text>
+        <text class="sub-reason">{{item.reason}}</text>
+      </view>
+      <text class="rel-arrow">›</text>
+    </view>
+  </view>
+
   <!-- 底部操作 -->
   <view class="footer">
     <view class="save-btn" bindtap="onRecord">去记录这个动作</view>

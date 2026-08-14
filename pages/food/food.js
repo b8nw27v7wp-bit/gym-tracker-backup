@@ -27,7 +27,9 @@ Page({
   },
 
   onSearchInput: function (e) {
-    this.setData({ keyword: e.detail.value });
+    // 边界：防御 undefined/null 输入
+    var keyword = (e.detail.value || '').slice(0, 50); // 限制搜索长度
+    this.setData({ keyword: keyword });
     this.refresh();
   },
 
@@ -37,7 +39,10 @@ Page({
   },
 
   onPickCat: function (e) {
-    this.setData({ currentCat: e.currentTarget.dataset.key });
+    var key = e.currentTarget.dataset.key;
+    // 边界：验证分类 key 有效性
+    if (!key) return;
+    this.setData({ currentCat: key });
     this.refresh();
   },
 
@@ -45,8 +50,9 @@ Page({
     var kw = String(this.data.keyword || '').trim().toLowerCase();
     var cat = this.data.currentCat;
     var list = foods.ITEMS.filter(function (f) {
+      if (!f) return false; // 边界：防御 null/undefined 食物项
       if (cat !== 'all' && f.cat !== cat) return false;
-      if (kw && f.name.toLowerCase().indexOf(kw) < 0) return false;
+      if (kw && (!f.name || f.name.toLowerCase().indexOf(kw) < 0)) return false;
       return true;
     });
     this.setData({ list: list });
@@ -55,18 +61,22 @@ Page({
   // 打开计算面板
   onCalcFood: function (e) {
     var id = e.currentTarget.dataset.id;
+    if (!id) return; // 边界：防御无 id
     var item = null;
-    foods.ITEMS.forEach(function (f) { if (f.id === id) item = f; });
+    foods.ITEMS.forEach(function (f) { if (f && f.id === id) item = f; });
     if (!item) return;
+    // 边界：确保数值有效
+    var kcal = util.toNum(item.kcal) || 0;
+    var size = util.toNum(item.size) || 100;
     this.setData({
       calc: {
         id: item.id,
-        name: item.name,
-        kcal: item.kcal,
-        size: item.size,
-        sizeLabel: item.sizeLabel,
-        grams: item.size,
-        total: Math.round(item.kcal * item.size / 100)
+        name: item.name || '未知食物',
+        kcal: kcal,
+        size: size,
+        sizeLabel: item.sizeLabel || '份',
+        grams: size,
+        total: Math.round(kcal * size / 100)
       }
     });
   },
@@ -79,30 +89,40 @@ Page({
 
   // 克数输入
   onGramsInput: function (e) {
-    var g = parseFloat(e.detail.value);
+    var input = e.detail.value;
+    // 边界：只允许数字和小数点
+    if (input !== '' && !/^\d*\.?\d*$/.test(input)) return;
+    var g = parseFloat(input);
     if (isNaN(g) || g < 0) g = 0;
+    if (g > 10000) g = 10000; // 边界：上限 10kg
+    var calc = this.data.calc;
+    if (!calc) return;
     this.setData({
-      'calc.grams': e.detail.value,
-      'calc.total': Math.round(this.data.calc.kcal * g / 100)
+      'calc.grams': input,
+      'calc.total': Math.round(calc.kcal * g / 100)
     });
   },
 
   // 快捷加减克数（±50g）
   onQuickGrams: function (e) {
-    var d = Number(e.currentTarget.dataset.d) || 0;
-    var cur = parseFloat(this.data.calc.grams) || 0;
-    var g = Math.max(cur + d, 0);
+    var d = util.toNum(e.currentTarget.dataset.d);
+    var calc = this.data.calc;
+    if (!calc) return;
+    var cur = parseFloat(calc.grams) || 0;
+    var g = Math.max(Math.min(cur + d, 10000), 0); // 边界：0-10000g
     this.setData({
       'calc.grams': g,
-      'calc.total': Math.round(this.data.calc.kcal * g / 100)
+      'calc.total': Math.round(calc.kcal * g / 100)
     });
   },
 
   // 恢复默认份量
   onResetGrams: function () {
+    var calc = this.data.calc;
+    if (!calc) return;
     this.setData({
-      'calc.grams': this.data.calc.size,
-      'calc.total': Math.round(this.data.calc.kcal * this.data.calc.size / 100)
+      'calc.grams': calc.size,
+      'calc.total': Math.round(calc.kcal * calc.size / 100)
     });
   },
 
@@ -115,12 +135,16 @@ Page({
       wx.showToast({ title: '请输入克数', icon: 'none' });
       return;
     }
+    if (grams > 10000) {
+      wx.showToast({ title: '克数不能超过 10000g', icon: 'none' });
+      return;
+    }
     var kcal = Math.round(c.kcal * grams / 100);
     if (kcal <= 0) {
       wx.showToast({ title: '热量为 0，无需记录', icon: 'none' });
       return;
     }
-    store.addIntake({
+    var result = store.addIntake({
       id: store.genIntakeId(),
       ts: Date.now(),
       date: util.todayStr(),
@@ -128,14 +152,27 @@ Page({
       grams: grams,
       kcal: kcal
     });
-    this.refreshIntake();
-    this.setData({ calc: null });
-    wx.showToast({ title: '已记录 ' + kcal + ' kcal', icon: 'none' });
+    if (result) {
+      this.refreshIntake();
+      this.setData({ calc: null });
+      wx.showToast({ title: '已记录 ' + kcal + ' kcal', icon: 'none' });
+    } else {
+      wx.showToast({ title: '记录失败，请重试', icon: 'none' });
+    }
   },
 
   // 删除今日某条摄入
   onRemoveIntake: function (e) {
-    store.removeIntake(e.currentTarget.dataset.id);
+    var id = e.currentTarget.dataset.id;
+    if (!id) return; // 边界：防御无 id
+    store.removeIntake(id);
     this.refreshIntake();
+  },
+
+  onShareAppMessage: function () {
+    return {
+      title: '铁馆日志 · 食物热量查询',
+      path: '/pages/food/food'
+    };
   }
 });

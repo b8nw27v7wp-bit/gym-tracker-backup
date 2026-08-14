@@ -1,8 +1,33 @@
 <view class="page">
-  <!-- 个人中心入口 -->
-  <view class="profile-entry" bindtap="onOpenProfile">
-    <text class="profile-icon">👤</text>
+  <!-- 个人中心入口 + 预览小窗 -->
+  <view class="profile-card" bindtap="onOpenProfile">
+    <view class="profile-left">
+      <view class="profile-avatar-wrap">
+        <image wx:if="{{wxUser.avatarUrl}}" class="profile-avatar" src="{{wxUser.avatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="profile-avatar-placeholder">{{wxUser.nickName ? wxUser.nickName[0] : '?'}}</view>
+      </view>
+      <view class="profile-info">
+        <text class="profile-name">{{wxUser.nickName || '点击登录'}}</text>
+        <text class="profile-desc" wx:if="{{wxUser}}">已登录</text>
+        <text class="profile-desc" wx:else>设置头像和昵称</text>
+      </view>
+    </view>
+    <view class="profile-right">
+      <view class="profile-stats" wx:if="{{hasData}}">
+        <view class="profile-stat">
+          <text class="profile-stat-num">{{totalCount}}</text>
+          <text class="profile-stat-label">训练</text>
+        </view>
+        <view class="profile-stat-divider"></view>
+        <view class="profile-stat">
+          <text class="profile-stat-num">{{heatDays}}</text>
+          <text class="profile-stat-label">活跃天</text>
+        </view>
+      </view>
+      <text class="profile-arrow">›</text>
+    </view>
   </view>
+
   <!-- 本周简报 -->
   <view class="card" wx:if="{{hasData}}">
     <view class="card-title">本周简报</view>
@@ -239,6 +264,97 @@
     <view class="bw-empty">
       <text>记录体重，追踪增肌/减脂进度</text>
       <view class="btn-ghost bw-add-btn" bindtap="onAddBodyweight">＋ 记录体重</view>
+    </view>
+  </view>
+
+  <!-- 月度总结 -->
+  <view class="card" wx:if="{{hasData && monthly}}">
+    <view class="card-title">本月总结</view>
+    <view class="monthly-grid">
+      <view class="monthly-item">
+        <text class="monthly-num">{{monthly.count}}</text>
+        <text class="monthly-label">训练次数</text>
+      </view>
+      <view class="monthly-item">
+        <text class="monthly-num">{{monthly.totalVolume}}</text>
+        <text class="monthly-label">总容量 kg</text>
+      </view>
+      <view class="monthly-item">
+        <text class="monthly-num">{{monthly.prCount}}</text>
+        <text class="monthly-label">新 PR</text>
+      </view>
+      <view class="monthly-item">
+        <text class="monthly-num">{{monthly.avgDensity}}</text>
+        <text class="monthly-label">平均密度</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 肌群平衡分析 -->
+  <view class="card" wx:if="{{balanceReady}}">
+    <view class="card-title">肌群平衡分析</view>
+    <view class="balance-chart">
+      <view class="balance-bar">
+        <view class="balance-fill push" style="width: {{balance.ratio.push}}%;"></view>
+      </view>
+      <view class="balance-labels">
+        <view class="balance-label">
+          <view class="balance-dot push"></view>
+          <text>推 {{balance.ratio.push}}%</text>
+        </view>
+        <view class="balance-label">
+          <view class="balance-dot pull"></view>
+          <text>拉 {{balance.ratio.pull}}%</text>
+        </view>
+        <view class="balance-label">
+          <view class="balance-dot legs"></view>
+          <text>腿 {{balance.ratio.legs}}%</text>
+        </view>
+      </view>
+    </view>
+    <view class="balance-advice">{{balance.advice}}</view>
+    <view class="balance-detail">
+      <view class="balance-detail-item">
+        <text class="balance-detail-label">推类容量</text>
+        <text class="balance-detail-value">{{balance.push}} kg</text>
+      </view>
+      <view class="balance-detail-item">
+        <text class="balance-detail-label">拉类容量</text>
+        <text class="balance-detail-value">{{balance.pull}} kg</text>
+      </view>
+      <view class="balance-detail-item">
+        <text class="balance-detail-label">腿部容量</text>
+        <text class="balance-detail-value">{{balance.legs}} kg</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 训练密度趋势 -->
+  <view class="card" wx:if="{{hasData && density.length > 0}}">
+    <view class="card-title">训练密度趋势</view>
+    <view class="density-hint">容量/时长（kg/min），衡量训练效率</view>
+    <view class="density-bars">
+      <view wx:for="{{density}}" class="density-col">
+        <view class="density-track">
+          <view class="density-fill" style="height: {{item.density > 0 ? 50 : 0}}%;"></view>
+        </view>
+        <text class="density-label">{{item.date}}</text>
+        <text class="density-value">{{item.density}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 周训练频率 -->
+  <view class="card" wx:if="{{hasData && freqTrend.length > 0}}">
+    <view class="card-title">周训练频率</view>
+    <view class="freq-bars">
+      <view wx:for="{{freqTrend}}" class="freq-col">
+        <view class="freq-track">
+          <view class="freq-fill" style="height: {{item.count * 20}}%;"></view>
+        </view>
+        <text class="freq-label">{{item.label}}</text>
+        <text class="freq-value">{{item.count}}</text>
+      </view>
     </view>
   </view>
 </view>

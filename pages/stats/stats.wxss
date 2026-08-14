@@ -635,21 +635,318 @@
   display: block;
 }
 
-/* 个人中心入口 */
-.profile-entry {
-  position: absolute;
-  top: 20rpx;
-  right: 20rpx;
-  width: 60rpx;
-  height: 60rpx;
+/* 个人中心卡片 */
+.profile-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.profile-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.profile-avatar-wrap {
+  width: 80rpx;
+  height: 80rpx;
+  flex-shrink: 0;
+}
+
+.profile-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: 2rpx solid #e5e7eb;
+}
+
+.profile-avatar-placeholder {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #818cf8, #4f46e5);
+  color: #ffffff;
+  font-size: 36rpx;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
-.profile-icon {
-  font-size: 32rpx;
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.profile-desc {
+  font-size: 22rpx;
+  color: #9ca3af;
+  margin-top: 4rpx;
+}
+
+.profile-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.profile-stats {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.profile-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-stat-num {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.profile-stat-label {
+  font-size: 20rpx;
+  color: #9ca3af;
+}
+
+.profile-stat-divider {
+  width: 1rpx;
+  height: 40rpx;
+  background: #e5e7eb;
+}
+
+.profile-arrow {
+  font-size: 36rpx;
+  color: #d1d5db;
+}
+
+/* 月度总结 */
+.monthly-grid {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20rpx;
+}
+
+.monthly-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.monthly-num {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.monthly-label {
+  font-size: 22rpx;
+  color: #9ca3af;
+  margin-top: 8rpx;
+}
+
+/* 肌群平衡分析 */
+.balance-chart {
+  margin: 20rpx 0;
+}
+
+.balance-bar {
+  height: 24rpx;
+  background: #f3f4f6;
+  border-radius: 12rpx;
+  overflow: hidden;
+  display: flex;
+}
+
+.balance-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.balance-fill.push {
+  background: #3b82f6;
+}
+
+.balance-fill.pull {
+  background: #22c55e;
+}
+
+.balance-fill.legs {
+  background: #f59e0b;
+}
+
+.balance-labels {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 16rpx;
+}
+
+.balance-label {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 24rpx;
+  color: #6b7280;
+}
+
+.balance-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+}
+
+.balance-dot.push {
+  background: #3b82f6;
+}
+
+.balance-dot.pull {
+  background: #22c55e;
+}
+
+.balance-dot.legs {
+  background: #f59e0b;
+}
+
+.balance-advice {
+  font-size: 24rpx;
+  color: #6b7280;
+  background: #f9fafb;
+  padding: 16rpx;
+  border-radius: 12rpx;
+  margin: 16rpx 0;
+}
+
+.balance-detail {
+  display: flex;
+  justify-content: space-between;
+}
+
+.balance-detail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.balance-detail-label {
+  font-size: 22rpx;
+  color: #9ca3af;
+}
+
+.balance-detail-value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-top: 4rpx;
+}
+
+/* 训练密度趋势 */
+.density-hint {
+  font-size: 22rpx;
+  color: #9ca3af;
+  margin-bottom: 16rpx;
+}
+
+.density-bars {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 200rpx;
+}
+
+.density-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.density-track {
+  width: 40rpx;
+  height: 160rpx;
+  background: #f3f4f6;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: flex-end;
+}
+
+.density-fill {
+  width: 100%;
+  background: #818cf8;
+  border-radius: 8rpx;
+  transition: height 0.3s ease;
+}
+
+.density-label {
+  font-size: 18rpx;
+  color: #9ca3af;
+  margin-top: 8rpx;
+}
+
+.density-value {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+/* 周训练频率 */
+.freq-bars {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 200rpx;
+  margin-top: 16rpx;
+}
+
+.freq-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.freq-track {
+  width: 40rpx;
+  height: 160rpx;
+  background: #f3f4f6;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: flex-end;
+}
+
+.freq-fill {
+  width: 100%;
+  background: #22c55e;
+  border-radius: 8rpx;
+  min-height: 4rpx;
+  transition: height 0.3s ease;
+}
+
+.freq-label {
+  font-size: 18rpx;
+  color: #9ca3af;
+  margin-top: 8rpx;
+}
+
+.freq-value {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #1d1d1f;
 }
