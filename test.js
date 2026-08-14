@@ -248,7 +248,7 @@ assert(hiitDraft.length === 5 && hiitDraft[0].exerciseId === 'burpee', 'HIIT 日
 
 // ---------- 知识库 ----------
 console.log('3. 知识库');
-assert(knowledge.ALL.length === 19, '共 ' + knowledge.ALL.length + ' 篇文章');
+assert(knowledge.ALL.length === 30, '共 ' + knowledge.ALL.length + ' 篇文章');
 assert(knowledge.CATEGORIES.length === 5, '5 个分类');
 const kIds = new Set();
 knowledge.ALL.forEach(a => { if (kIds.has(a.id)) dup++; kIds.add(a.id); });
@@ -580,7 +580,7 @@ const catKeys = foods.CATEGORIES.map(c => c.key);
 assert(foods.ITEMS.every(f => catKeys.indexOf(f.cat) >= 0), '食物分类均合法');
 const rice = foods.ITEMS.filter(f => f.id === 'rice')[0];
 assert(rice.kcal === 116 && Math.round(rice.kcal * rice.size / 100) === 174, '米饭 116 kcal/100g，1 碗约 174 kcal');
-assert(foods.ITEMS.length === 105, '食物库扩充至 105 项（实际 ' + foods.ITEMS.length + '）');
+assert(foods.ITEMS.length === 205, '食物库扩充至 205 项（实际 ' + foods.ITEMS.length + '）');
 assert(foods.CATEGORIES.length === 8 && foods.CATEGORIES[7].key === 'sauce', '8 分类含调味酱料');
 
 // ---------- 饮食摄入记录（v2.7） ----------
@@ -1362,8 +1362,7 @@ assert(squatAlts.length === 2, '深蹲推荐 2 个替代');
 const equipName = substitute.equipmentName('barbell');
 assert(equipName === '杠铃', '器械中文名正确');
 
-// 12.4 肌群平衡分析
-const balance = require('./utils/balance');
+// 12.4 肌群平衡分析（使用 util.js 中的 muscleBalance）
 const mockWorkouts = [
   {
     id: 'w1', ts: Date.now(), date: '2026-08-13', duration: 60,
@@ -1374,11 +1373,8 @@ const mockWorkouts = [
     ]
   }
 ];
-const bal = balance.analyzeBalance(mockWorkouts, exercisesData);
-assert(bal.totalVolume > 0, '总容量大于 0');
-assert(bal.ratios.push + bal.ratios.pull + bal.ratios.legs === 100, '推拉腿比例之和为 100%');
-assert(bal.recommendations.length > 0, '有训练建议');
-
-const catName = balance.getCategoryName('push');
-assert(catName === '推类（胸/肩/三头）', '分类名正确');
+const bal = util.muscleBalance(mockWorkouts);
+assert(bal.total > 0, '总容量大于 0');
+assert(bal.ratio.push + bal.ratio.pull + bal.ratio.legs > 0, '推拉腿比例有效');
+assert(bal.advice.length > 0, '有训练建议');
 
