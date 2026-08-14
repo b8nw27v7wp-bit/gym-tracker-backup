@@ -14,7 +14,9 @@
     "pages/food/food",
     "pages/data/data",
     "pages/privacy/privacy",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/export/export",
+    "pages/exercise-edit/exercise-edit"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",

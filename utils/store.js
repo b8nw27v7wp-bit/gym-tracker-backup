@@ -8,8 +8,9 @@ var KEY_CUSTOM_PLANS = 'gym_custom_plans'; // 用户自建计划
 var KEY_WEEKLY_PLAN = 'gym_weekly_plan';   // 本周计划打卡设置 { planId, weekStart }
 var KEY_PROFILE = 'gym_user_profile';      // 用户身体资料 { gender, age, heightCm, weightKg, activity }
 var KEY_INTAKE = 'gym_intake';             // 饮食记录 [{ id, ts, date, name, grams, kcal }]
+var KEY_CUSTOM_EXERCISES = 'gym_custom_exercises'; // 自定义动作 [{ id, name, target, secondary, equipment, difficulty, desc, tips, mistakes?, rest, source: 'custom' }]
 
-var SCHEMA_VERSION = 3;
+var SCHEMA_VERSION = 4;
 
 // 某 ts 所在周的周一 0 点（本地实现，避免依赖 util）
 function weekStartOf(ts) {
@@ -54,6 +55,12 @@ function migrate() {
     var cp = wx.getStorageSync(KEY_CUSTOM_PLANS);
     if (!cp) wx.setStorageSync(KEY_CUSTOM_PLANS, []);
     version = 3;
+  }
+  // v3 → v4：新增自定义动作 key（为空数组，不覆盖现有数据）
+  if (version < 4) {
+    var ce = wx.getStorageSync(KEY_CUSTOM_EXERCISES);
+    if (!ce) wx.setStorageSync(KEY_CUSTOM_EXERCISES, []);
+    version = 4;
   }
   wx.setStorageSync(KEY_SCHEMA, version);
 }
@@ -276,7 +283,7 @@ function genIntakeId() {
 }
 
 // ---------- 备份导出 / 导入 ----------
-// 导出结构：{ app: 'gym-tracker', schemaVersion, exportedAt, workouts, bodyweight, customPlans, intake, waterIntake, workoutTemplates, profile }
+// 导出结构：{ app: 'gym-tracker', schemaVersion, exportedAt, workouts, bodyweight, customPlans, customExercises, intake, waterIntake, workoutTemplates, profile }
 function exportData() {
   return {
     app: 'gym-tracker',
@@ -285,6 +292,8 @@ function exportData() {
     workouts: getWorkouts(),
     bodyweight: getBodyweights(),
     customPlans: getCustomPlans(),
+    // v4 自定义动作
+    customExercises: getCustomExercises(),
     // v2.20.0 新增导出
     intake: getIntake(),
     waterIntake: wx.getStorageSync(KEY_WATER) || null,
@@ -295,7 +304,7 @@ function exportData() {
 }
 
 // 导入预览：只校验统计，不写盘（供页面弹确认框用）
-// 返回 { ok, error, workouts, bodyweight, customPlans, intake, waterIntake, workoutTemplates, profile, tabataSettings }
+// 返回 { ok, error, workouts, bodyweight, customPlans, customExercises, intake, waterIntake, workoutTemplates, profile, tabataSettings }
 function previewImport(obj) {
   if (!obj || typeof obj !== 'object') return { ok: false, error: '数据格式不正确' };
   if (obj.app !== 'gym-tracker') return { ok: false, error: '不是本应用的数据文件' };
@@ -306,6 +315,7 @@ function previewImport(obj) {
     return b && b.ts !== undefined && b.ts !== null && safeNum(b.weight) > 0;
   });
   var validPlans = Array.isArray(obj.customPlans) ? obj.customPlans.filter(isValidPlan) : [];
+  var validCustomEx = Array.isArray(obj.customExercises) ? obj.customExercises.filter(isValidCustomExercise) : [];
   var validIntake = Array.isArray(obj.intake) ? obj.intake.filter(function (r) {
     return r && r.id && r.name;
   }) : [];
@@ -317,6 +327,7 @@ function previewImport(obj) {
     workouts: valid.length,
     bodyweight: validBw.length,
     customPlans: validPlans.length,
+    customExercises: validCustomEx.length,
     intake: validIntake.length,
     waterIntake: obj.waterIntake ? 1 : 0,
     workoutTemplates: validTemplates.length,
@@ -359,6 +370,13 @@ function isValidPlan(p) {
   });
 }
 
+// 自定义动作结构校验：id/name/target 数组（肌群词可空，防御非法词不崩）
+function isValidCustomExercise(e) {
+  if (!e || !e.id || !e.name) return false;
+  if (e.target !== undefined && !Array.isArray(e.target)) return false;
+  return true;
+}
+
 // 导入：返回 { ok, error }；校验结构合法性，过滤非法项后覆盖写入
 // 写入超限（微信单 key 1MB / 总 10MB quota）时返回错误而非崩溃，避免半写入
 function importData(obj) {
@@ -369,6 +387,7 @@ function importData(obj) {
     return b && b.ts !== undefined && b.ts !== null && safeNum(b.weight) > 0;
   });
   var validPlans = Array.isArray(obj.customPlans) ? obj.customPlans.filter(isValidPlan) : [];
+  var validCustomEx = Array.isArray(obj.customExercises) ? obj.customExercises.filter(isValidCustomExercise) : [];
   var validIntake = Array.isArray(obj.intake) ? obj.intake.filter(function (r) {
     return r && r.id && r.name;
   }) : [];
@@ -386,6 +405,8 @@ function importData(obj) {
     if (validTemplates.length > 0) wx.setStorageSync(KEY_WORKOUT_TEMPLATES, validTemplates);
     if (obj.profile && typeof obj.profile === 'object') wx.setStorageSync(KEY_PROFILE, obj.profile);
     if (obj.tabataSettings && typeof obj.tabataSettings === 'object') wx.setStorageSync(KEY_TABATA, obj.tabataSettings);
+    // v4 自定义动作
+    if (validCustomEx.length > 0) wx.setStorageSync(KEY_CUSTOM_EXERCISES, validCustomEx);
   } catch (e) {
     return { ok: false, error: '数据过大，写入失败（超出存储上限）' };
   }
@@ -394,6 +415,7 @@ function importData(obj) {
     workouts: valid.length,
     bodyweight: validBw.length,
     customPlans: validPlans.length,
+    customExercises: validCustomEx.length,
     intake: validIntake.length,
     waterIntake: obj.waterIntake ? 1 : 0,
     workoutTemplates: validTemplates.length,
@@ -407,6 +429,7 @@ function clearAll() {
   wx.setStorageSync(KEY_WORKOUTS, []);
   wx.setStorageSync(KEY_BODYWEIGHT, []);
   wx.setStorageSync(KEY_CUSTOM_PLANS, []);
+  wx.setStorageSync(KEY_CUSTOM_EXERCISES, []);
   wx.setStorageSync(KEY_INTAKE, []);
   clearWeeklyPlan();
   wx.removeStorageSync(KEY_PROFILE);
@@ -417,6 +440,7 @@ function dataSizeBytes() {
   var workouts = wx.getStorageSync(KEY_WORKOUTS) || [];
   var bw = wx.getStorageSync(KEY_BODYWEIGHT) || [];
   var cp = wx.getStorageSync(KEY_CUSTOM_PLANS) || [];
+  var ce = wx.getStorageSync(KEY_CUSTOM_EXERCISES) || [];
   var intake = wx.getStorageSync(KEY_INTAKE) || [];
   var water = wx.getStorageSync(KEY_WATER) || {};
   var templates = wx.getStorageSync(KEY_WORKOUT_TEMPLATES) || [];
@@ -424,7 +448,7 @@ function dataSizeBytes() {
   var wxUser = wx.getStorageSync(KEY_WX_USER) || {};
   var tabata = wx.getStorageSync(KEY_TABATA) || {};
   var s = JSON.stringify({
-    w: workouts, b: bw, p: cp, i: intake,
+    w: workouts, b: bw, p: cp, e: ce, i: intake,
     wt: water, t: templates, pr: profile, u: wxUser, tb: tabata
   });
   return s ? s.length : 0;
@@ -542,6 +566,57 @@ function saveCustomFood(food) {
 function removeCustomFood(id) {
   var list = getCustomFoods();
   wx.setStorageSync(KEY_CUSTOM_FOODS, list.filter(function (f) { return f.id !== id; }));
+}
+
+// ---------- 自定义动作（v4） ----------
+// 动作结构：{ id: 'custom_' + 时间戳, name, target: [肌群词], secondary: [...], equipment, difficulty, desc, tips, mistakes?, rest, source: 'custom' }
+// 肌群词必须是 data/muscle-map.js MUSCLES 的 key（表单用 picker 从已知词选，避免热力图/肌群分析崩）
+function getCustomExercises() {
+  var list = wx.getStorageSync(KEY_CUSTOM_EXERCISES);
+  return Array.isArray(list) ? list : [];
+}
+
+function getCustomExercise(id) {
+  var list = getCustomExercises();
+  for (var i = 0; i < list.length; i++) {
+    if (list[i] && list[i].id === id) return list[i];
+  }
+  return null;
+}
+
+// 保存自定义动作（新建或覆盖同 id）；校验在页面层/纯函数层做，这里做结构兜底
+function saveCustomExercise(ex) {
+  // 边界：必须是有效对象且有 id 和 name
+  if (!ex || typeof ex !== 'object' || !ex.id || !ex.name) {
+    return false;
+  }
+  // 边界：target 必须是数组（肌群词非法时置空，防御页面漏校验）
+  if (!Array.isArray(ex.target)) ex.target = [];
+  var list = getCustomExercises();
+  var found = false;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i] && list[i].id === ex.id) {
+      list[i] = ex;
+      found = true;
+      break;
+    }
+  }
+  if (!found) list.push(ex);
+  try {
+    wx.setStorageSync(KEY_CUSTOM_EXERCISES, list);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function removeCustomExercise(id) {
+  var list = getCustomExercises();
+  wx.setStorageSync(KEY_CUSTOM_EXERCISES, list.filter(function (e) { return e && e.id !== id; }));
+}
+
+function genCustomExerciseId() {
+  return 'custom_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
 }
 
 // ---------- 水摄入记录 ----------
@@ -698,6 +773,12 @@ module.exports = {
   getCustomFoods: getCustomFoods,
   saveCustomFood: saveCustomFood,
   removeCustomFood: removeCustomFood,
+  // 自定义动作（v4）
+  getCustomExercises: getCustomExercises,
+  getCustomExercise: getCustomExercise,
+  saveCustomExercise: saveCustomExercise,
+  removeCustomExercise: removeCustomExercise,
+  genCustomExerciseId: genCustomExerciseId,
   // 水摄入记录
   getWaterIntake: getWaterIntake,
   addWaterIntake: addWaterIntake,

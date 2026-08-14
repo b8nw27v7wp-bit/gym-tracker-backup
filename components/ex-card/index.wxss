@@ -41,6 +41,11 @@
   color: #6b7280;
 }
 
+.ex-custom {
+  background: #d1fae5;
+  color: #047857;
+}
+
 .ex-targets {
   display: flex;
   flex-wrap: wrap;
@@ -67,4 +72,13 @@
 .meta-dot {
   margin: 0 10rpx;
   color: #d1d5db;
+}
+
+.ex-edit {
+  margin-left: auto;
+  color: #4f46e5;
+  font-size: 21rpx;
+  background: #eef2ff;
+  border-radius: 8rpx;
+  padding: 4rpx 14rpx;
 }

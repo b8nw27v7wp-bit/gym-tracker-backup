@@ -1,7 +1,9 @@
-// 动作详情页
+// 动作详情页（支持内置 + 自定义动作）
 var exercisesData = require('../../data/exercises/index');
 var knowledge = require('../../data/knowledge/index');
 var substitute = require('../../utils/substitute');
+var store = require('../../utils/store');
+var customExercises = require('../../utils/custom-exercises');
 
 Page({
   data: {
@@ -14,6 +16,12 @@ Page({
   onLoad: function (options) {
     var id = options.id;
     var ex = exercisesData.getExercise(id);
+    var isCustom = false;
+    if (!ex) {
+      // 内置动作库找不到 → 从自定义动作查找
+      ex = store.getCustomExercise(id);
+      isCustom = !!ex;
+    }
     if (!ex) {
       wx.showToast({ title: '动作不存在', icon: 'none' });
       setTimeout(function () {
@@ -24,7 +32,9 @@ Page({
       }, 800);
       return;
     }
-    var m = exercisesData.muscleInfo(ex.muscle);
+    // 部位：内置直接取 muscle；自定义用 target 推导（查不到则无部位知识）
+    var siteKey = isCustom ? customExercises.deriveMuscleFromTarget(ex.target) : ex.muscle;
+    var m = exercisesData.muscleInfo(siteKey);
     // 部位训练知识（关联知识）
     var muscle = {
       name: m.name,
@@ -42,23 +52,39 @@ Page({
       return a ? { id: a.id, title: a.title, summary: a.summary, catName: knowledge.categoryName(a.category) } : null;
     }).filter(function (x) { return x; });
 
-    // 替代动作推荐
-    var substitutes = substitute.getSubstitutes(id, exercisesData, { limit: 3 });
+    // 自定义动作推导不到部位时：不展示部位知识/关联阅读
+    if (!m.name) {
+      muscle = null;
+      articles = [];
+    }
+
+    // 替代动作推荐（自定义动作无匹配，返回空数组）
+    var substitutes = isCustom ? [] : substitute.getSubstitutes(id, exercisesData, { limit: 3 });
+
+    // 自定义动作字段映射：desc → 要领步骤，mistakes → 常见错误，tips → 训练要点
+    var steps = isCustom
+      ? String(ex.desc || '').split('\n').map(function (s) { return s.trim(); }).filter(function (s) { return s; })
+      : ex.steps;
+    var errors = isCustom
+      ? String(ex.mistakes || '').split('\n').map(function (s) { return s.trim(); }).filter(function (s) { return s; })
+      : ex.errors;
+    var tip = isCustom ? (ex.tips || '') : ex.tip;
 
     this.setData({
       ex: {
         id: ex.id,
         name: ex.name,
-        muscleName: m.name,
-        typeText: exercisesData.typeText(ex.type),
-        diffText: exercisesData.difficultyText(ex.difficulty),
-        equipText: exercisesData.equipmentText(ex.equipment),
-        target: ex.target,
+        muscleName: isCustom ? muscle.name : m.name,
+        typeText: isCustom ? '自定义' : exercisesData.typeText(ex.type),
+        diffText: isCustom ? customExercises.difficultyName(ex.difficulty) : exercisesData.difficultyText(ex.difficulty),
+        equipText: isCustom ? customExercises.equipmentName(ex.equipment) : exercisesData.equipmentText(ex.equipment),
+        target: ex.target || [],
         secondary: ex.secondary || [],
-        rest: ex.rest,
-        steps: ex.steps,
-        errors: ex.errors,
-        tip: ex.tip
+        rest: isCustom ? (ex.rest ? ex.rest + 's' : '') : ex.rest,
+        steps: steps || [],
+        errors: errors || [],
+        tip: tip,
+        isCustom: isCustom
       },
       muscle: muscle,
       articles: articles,

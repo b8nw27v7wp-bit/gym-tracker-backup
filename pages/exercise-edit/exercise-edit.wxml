@@ -1,0 +1,71 @@
+<view class="page">
+  <!-- 名称 -->
+  <view class="card">
+    <view class="card-title">动作名称 <text class="required">*</text></view>
+    <input class="form-input" placeholder="如：绳索面拉（自定义）" value="{{name}}" bindinput="onNameInput" maxlength="30" />
+  </view>
+
+  <!-- 目标肌群 -->
+  <view class="card">
+    <view class="card-title">目标肌群 <text class="required">*</text></view>
+    <picker mode="selector" range="{{targetOptions}}" value="{{targetIndex}}" bindchange="onTargetPick">
+      <view class="picker-row">
+        <text class="picker-label">从列表选择（可多选）</text>
+        <text class="picker-arrow">›</text>
+      </view>
+    </picker>
+    <view wx:if="{{selectedTargets.length === 0}}" class="empty-tip">请至少选择一个目标肌群</view>
+    <view class="target-tags" wx:else>
+      <view wx:for="{{selectedTargets}}" wx:key="*this" class="target-tag">
+        <text>{{item}}</text>
+        <text class="target-tag-del" data-index="{{index}}" catchtap="onRemoveTarget">✕</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 器械 -->
+  <view class="card">
+    <view class="card-title">器械</view>
+    <picker mode="selector" range="{{equipmentOptions}}" range-key="name" value="{{equipmentIndex}}" bindchange="onEquipmentPick">
+      <view class="picker-row">
+        <text class="picker-label">{{equipmentName}}</text>
+        <text class="picker-arrow">›</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 难度 -->
+  <view class="card">
+    <view class="card-title">难度</view>
+    <picker mode="selector" range="{{difficultyOptions}}" range-key="name" value="{{difficultyIndex}}" bindchange="onDifficultyPick">
+      <view class="picker-row">
+        <text class="picker-label">{{difficultyName}}</text>
+        <text class="picker-arrow">›</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 动作要领 -->
+  <view class="card">
+    <view class="card-title">动作要领</view>
+    <textarea class="form-textarea" placeholder="描述动作步骤、发力要点（可选）" value="{{desc}}" bindinput="onDescInput" maxlength="2000" auto-height />
+  </view>
+
+  <!-- 训练要点 -->
+  <view class="card">
+    <view class="card-title">训练要点</view>
+    <textarea class="form-textarea" placeholder="训练注意事项、建议（可选）" value="{{tips}}" bindinput="onTipsInput" maxlength="2000" auto-height />
+  </view>
+
+  <!-- 组间休息 -->
+  <view class="card">
+    <view class="card-title">组间休息（秒）</view>
+    <input class="form-input" type="number" placeholder="如：60" value="{{rest}}" bindinput="onRestInput" maxlength="4" />
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="footer">
+    <view class="save-btn" bindtap="onSave">{{isEdit ? '保存修改' : '添加动作'}}</view>
+    <view class="del-btn" wx:if="{{isEdit}}" bindtap="onDelete">删除此动作</view>
+  </view>
+</view>

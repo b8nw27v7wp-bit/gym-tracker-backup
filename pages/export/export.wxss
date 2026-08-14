@@ -1,0 +1,50 @@
+.page {
+  padding-bottom: 60rpx;
+}
+
+.about-text {
+  font-size: 25rpx;
+  color: #6b7280;
+  line-height: 1.8;
+}
+
+.about-bullet {
+  margin-top: 6rpx;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #f9fafb;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 26rpx;
+  color: #6b7280;
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: #1d1d1f;
+  font-weight: 500;
+}
+
+.act-btn {
+  margin-bottom: 20rpx;
+}
+
+.btn-primary-hover {
+  opacity: 0.85;
+}
+
+.export-tip {
+  margin-top: 8rpx;
+  font-size: 23rpx;
+  color: #9ca3af;
+  text-align: center;
+}

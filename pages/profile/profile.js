@@ -158,6 +158,11 @@ Page({
     wx.navigateTo({ url: '/pages/data/data' });
   },
 
+  // 跳转到数据导出
+  onExport: function () {
+    wx.navigateTo({ url: '/pages/export/export' });
+  },
+
   // 跳转到隐私说明
   onPrivacy: function () {
     wx.navigateTo({ url: '/pages/privacy/privacy' });

@@ -190,6 +190,40 @@
     </view>
   </view>
 
+  <!-- 部位热力图（身体 42 块按近 12 周训练量着色） -->
+  <view class="card">
+    <view class="heat-head">
+      <view class="card-title">部位热力图</view>
+      <text class="heat-days" wx:if="{{heatHasData}}">近 12 周训练 {{heatTotalSets}} 组</text>
+      <text class="heat-days" wx:else>近 12 周肌群训练量</text>
+    </view>
+    <view wx:if="{{heatHasData}}">
+      <view class="heat-body-row">
+        <view class="heat-side">
+          <text class="heat-side-label">正面</text>
+          <canvas type="2d" id="heatFront" class="heat-canvas" data-side="front" bindtap="onHeatTap"></canvas>
+        </view>
+        <view class="heat-side">
+          <text class="heat-side-label">背面</text>
+          <canvas type="2d" id="heatBack" class="heat-canvas" data-side="back" bindtap="onHeatTap"></canvas>
+        </view>
+      </view>
+      <view class="heat-legend">
+        <text class="heat-legend-text">未练</text>
+        <view class="heat-cell heat-l0 legend-cell"></view>
+        <view class="heat-cell heat-l1 legend-cell"></view>
+        <view class="heat-cell heat-l2 legend-cell"></view>
+        <view class="heat-cell heat-l3 legend-cell"></view>
+        <view class="heat-cell heat-l4 legend-cell"></view>
+        <text class="heat-legend-text">多</text>
+      </view>
+      <view class="heat-tip">颜色深浅 = 该部位近 12 周训练组数 · 点击身体部位查看</view>
+    </view>
+    <view wx:else class="heat-empty">
+      <text class="heat-empty-text">开始训练后生成部位热力图</text>
+    </view>
+  </view>
+
   <!-- 部位分布 -->
   <view class="card" wx:if="{{hasData}}">
     <view class="card-title">部位训练分布</view>

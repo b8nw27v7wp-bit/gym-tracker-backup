@@ -3,6 +3,9 @@ var store = require('../../utils/store');
 var util = require('../../utils/util');
 var nutrition = require('../../utils/nutrition');
 var exercisesData = require('../../data/exercises/index');
+var muscleMap = require('../../data/muscle-map');
+var muscleHeatmap = require('../../utils/muscle-heatmap');
+var customExercises = require('../../utils/custom-exercises');
 
 // 展示 PR 的招牌动作
 var PR_EXERCISES = ['bench', 'squat', 'deadlift', 'ohp', 'pullup', 'db-bench', 'leg-press', 'bb-row'];
@@ -29,6 +32,11 @@ Page({
     weekly: [],
     heatWeeks: [],
     heatDays: 0,
+    heatHasData: false, // 部位热力图是否有数据
+    heatLevels: {},     // zone → 档位 0-4
+    heatCounts: {},     // zone → 近 12 周组数
+    heatSessions: {},   // zone → 近 12 周训练次数
+    heatTotalSets: 0,
     muscleDist: [],
     prs: [],
     chartVisible: false,
@@ -78,7 +86,7 @@ Page({
     // 热量板块（不依赖训练记录，无训练也显示）
     this.calcCalories(workouts);
     if (workouts.length === 0) {
-      this.setData({ hasData: false, bwLatest: 0, hasBodyData: false });
+      this.setData({ hasData: false, bwLatest: 0, hasBodyData: false, heatHasData: false, heatTotalSets: 0 });
       return;
     }
 
@@ -226,6 +234,16 @@ Page({
       });
     }
 
+    // 部位热力图：近 12 周按 target 肌群词聚合到人体 zone 块，按训练量分档着色
+    // resolver 先查内置动作库，再查自定义动作（item.target 兜底逻辑在 heatmap 内已有）
+    var heatAgg = muscleHeatmap.aggregateZoneCounts(workouts, 12, function (id) {
+      return customExercises.findExercise(id, exercisesData.ALL, store.getCustomExercises());
+    });
+    var heatLevels = {};
+    Object.keys(heatAgg.counts).forEach(function (z) {
+      heatLevels[z] = muscleHeatmap.colorLevel(heatAgg.counts[z], heatAgg.maxCount);
+    });
+
     this.setData({
       hasData: true,
       weekVolume: Math.round(cmp.thisVol),
@@ -246,6 +264,11 @@ Page({
       weekly: weekly,
       heatWeeks: heatWeeks,
       heatDays: heatDays,
+      heatHasData: heatAgg.hasData,
+      heatLevels: heatLevels,
+      heatCounts: heatAgg.counts,
+      heatSessions: heatAgg.sessions,
+      heatTotalSets: heatAgg.totalSets,
       muscleDist: muscleDist,
       prs: prs
     });
@@ -256,9 +279,15 @@ Page({
     // 等 canvas 挂载后绘制容量图（用 nextTick 替代 setTimeout，避免低端机取不到节点）
     var self = this;
     if (wx.nextTick) {
-      wx.nextTick(function () { self.drawVolumeChart(); });
+      wx.nextTick(function () {
+        self.drawVolumeChart();
+        if (self.data.heatHasData) self.drawMuscleHeat();
+      });
     } else {
-      setTimeout(function () { self.drawVolumeChart(); }, 80);
+      setTimeout(function () {
+        self.drawVolumeChart();
+        if (self.data.heatHasData) self.drawMuscleHeat();
+      }, 80);
     }
   },
 
@@ -438,6 +467,96 @@ Page({
     ctx.arcTo(x, y + h, x, y, r);
     ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
+  },
+
+  // ---------- 部位热力图（canvas 2d）----------
+  // 正面/背面各一个 canvas，复用 muscle-map ZONES 归一化坐标绘制人体块，按训练量分档着色
+  drawMuscleHeat: function () {
+    this.drawHeatSide('heatFront', muscleMap.FRONT_ZONES);
+    this.drawHeatSide('heatBack', muscleMap.BACK_ZONES);
+  },
+
+  drawHeatSide: function (id, zoneList) {
+    var self = this;
+    wx.createSelectorQuery()
+      .select('#' + id)
+      .fields({ node: true, size: true })
+      .exec(function (res) {
+        if (!res || !res[0] || !res[0].node) return;
+        var canvas = res[0].node;
+        var width = res[0].width;
+        var height = res[0].height;
+        if (width <= 0 || height <= 0) return;
+        var dpr = wx.getSystemInfoSync().pixelRatio;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        var ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        self.paintHeatSide(ctx, width, height, zoneList);
+      });
+  },
+
+  paintHeatSide: function (ctx, W, H, zoneList) {
+    var levels = this.data.heatLevels || {};
+    var colors = muscleHeatmap.LEVEL_COLORS;
+    var self = this;
+    // 头（圆形）
+    var head = muscleMap.HEAD;
+    ctx.beginPath();
+    ctx.arc(head.x * W, head.y * H, head.r * W, 0, Math.PI * 2);
+    ctx.fillStyle = self.heatZoneColor(levels, 'neck', colors);
+    ctx.fill();
+    // 各 zone 块
+    zoneList.forEach(function (key) {
+      var z = muscleMap.ZONES[key];
+      if (!z) return;
+      var x = z.x * W;
+      var y = z.y * H;
+      var w = z.w * W;
+      var h = z.h * H;
+      var r = Math.max(Math.min(z.round * Math.min(w, h), w / 2, h / 2), 0);
+      ctx.fillStyle = self.heatZoneColor(levels, key, colors);
+      self.roundRectPath(ctx, x, y, w, h, r);
+      ctx.fill();
+    });
+  },
+
+  // zone 块颜色：未训练灰（level 0），>0 按档位蓝系由浅到深
+  heatZoneColor: function (levels, key, colors) {
+    var level = levels[key] || 0;
+    return colors[level] || colors[0];
+  },
+
+  // 点击某块：toast 展示该部位最近 12 周训练组数/次数
+  onHeatTap: function (e) {
+    var side = e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.side;
+    var zoneList = side === 'back' ? muscleMap.BACK_ZONES : muscleMap.FRONT_ZONES;
+    var pt = null;
+    if (e.detail && e.detail.x !== undefined) pt = { x: e.detail.x, y: e.detail.y };
+    else if (e.touches && e.touches[0]) pt = { x: e.touches[0].x, y: e.touches[0].y };
+    else if (e.changedTouches && e.changedTouches[0]) pt = { x: e.changedTouches[0].x, y: e.changedTouches[0].y };
+    if (!pt) return;
+    // 用 canvas 布局尺寸归一化（与绘制时一致）
+    var self = this;
+    wx.createSelectorQuery()
+      .select('#' + (side === 'back' ? 'heatBack' : 'heatFront'))
+      .fields({ node: true, size: true })
+      .exec(function (res) {
+        if (!res || !res[0] || !res[0].node) return;
+        var width = res[0].width;
+        var height = res[0].height;
+        if (width <= 0 || height <= 0) return;
+        var key = muscleHeatmap.zoneAt(zoneList, pt.x / width, pt.y / height);
+        if (!key) return;
+        var counts = self.data.heatCounts || {};
+        var sessions = self.data.heatSessions || {};
+        var c = counts[key] || 0;
+        if (c <= 0) {
+          wx.showToast({ title: '该部位近 12 周未训练', icon: 'none' });
+          return;
+        }
+        wx.showToast({ title: '近 12 周 ' + c + ' 组 · ' + (sessions[key] || 0) + ' 次训练', icon: 'none' });
+      });
   },
 
   // 1RM 大图：点击 PR 行展开，canvas 绘制历史估算 1RM 曲线

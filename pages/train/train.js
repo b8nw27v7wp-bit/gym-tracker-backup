@@ -5,6 +5,8 @@ var util = require('../../utils/util');
 var planUtil = require('../../utils/plan');
 var plateCalc = require('../../utils/plate-calculator');
 var warmupGen = require('../../utils/warmup');
+var restAdvice = require('../../utils/rest-advice');
+var customExercises = require('../../utils/custom-exercises');
 
 var timer = null; // 计时器句柄
 
@@ -34,6 +36,8 @@ Page({
     restRunning: false, // 休息倒计时进行中
     restCustomSecs: '', // 自定义休息秒数输入
     restAlmostDone: false, // 最后 3 秒高亮
+    restRecommendSecs: 0, // 推荐休息秒数（0 = 无推荐）：热身组 60 / 正式组 90
+    restRecommendLabel: '', // 推荐提示文案（如 "热身组 · 建议休息"）
     note: '',
     searchKeyword: '',
     planInfo: null, // 计划打卡标记 { planId, dayId }
@@ -173,7 +177,7 @@ Page({
       return;
     }
     this.restEndTs = Date.now() + secs * 1000;
-    var set = { restRemaining: secs, restRunning: true, restAlmostDone: false };
+    var set = { restRemaining: secs, restRunning: true, restAlmostDone: false, restRecommendSecs: 0, restRecommendLabel: '' };
     // 休息期间自动暂停训练计时（若正在计时且未手动暂停），休息结束自动恢复
     if (this.data.sessionStarted && !this.data.sessionPaused) {
       set.sessionPaused = true;
@@ -333,13 +337,13 @@ Page({
     });
   },
 
-  // 训练页内搜索（跨部位）
+  // 训练页内搜索（跨部位，内置 + 自定义合并）
   onSearchInput: function (e) {
     var kw = e.detail.value.trim();
     this.setData({ searchKeyword: kw });
     if (kw) {
       this.setData({
-        exerciseList: this.decorateExerciseList(exercisesData.searchExercises(kw))
+        exerciseList: this.decorateExerciseList(customExercises.searchExercises(kw, exercisesData.ALL, store.getCustomExercises()))
       });
     } else {
       this.refreshExerciseList();
@@ -363,14 +367,17 @@ Page({
         return;
       }
     }
-    var ex = exercisesData.getExercise(id);
+    // 内置 + 自定义合并查找
+    var ex = customExercises.findExercise(id, exercisesData.ALL, store.getCustomExercises());
     if (!ex) return;
+    var isCustom = ex.source === 'custom';
     // 上次记录预填：有历史则第一组带入上次重量/次数（prefilled 标记供"已带入"提示，保存时剥离）
     var rec = this.lastRecords && this.lastRecords[id];
     var item = {
       exerciseId: ex.id,
       exerciseName: ex.name,
-      muscle: ex.muscle,
+      muscle: isCustom ? customExercises.deriveMuscleFromTarget(ex.target) : ex.muscle,
+      target: ex.target || [],
       sets: [{ weight: rec ? String(rec.weight) : '', reps: rec ? String(rec.reps) : '', rpe: '', warmup: false }]
     };
     if (rec) item.prefilled = true;
@@ -496,6 +503,19 @@ Page({
     });
     if (cleaned.length === 0) cleaned = [{ weight: '', reps: '', rpe: '', warmup: false }];
     editing.sets = cleaned;
+    // 组间休息推荐：取最后一个填写了重量/次数的组，按组类型推荐秒数（热身 60 / 正式 90）
+    var lastFilled = null;
+    cleaned.forEach(function (s) {
+      var hasW = s.weight !== '' && s.weight !== undefined && s.weight !== null;
+      var hasR = s.reps !== '' && s.reps !== undefined && s.reps !== null;
+      if (hasW || hasR) lastFilled = s;
+    });
+    if (lastFilled) {
+      var rec = restAdvice.restAdvice(!!lastFilled.warmup);
+      this.setData({ restRecommendSecs: rec.secs, restRecommendLabel: rec.label + ' · 建议休息 ' + rec.secs + 's' });
+    } else {
+      this.setData({ restRecommendSecs: 0, restRecommendLabel: '' });
+    }
     // 剥离显示字段（lastPrefillText / prefilled 仅编辑态提示用，不进 draft/存储）
     delete editing.lastPrefillText;
     delete editing.prefilled;
@@ -578,6 +598,7 @@ Page({
             exerciseId: item.exerciseId,
             exerciseName: item.exerciseName,
             muscle: item.muscle,
+            target: item.target || [],
             sets: item.sets
               .filter(function (s) {
                 // 跳过全空组
@@ -616,7 +637,7 @@ Page({
       }
       store.saveWorkout(workout);
       self.stopRestTimer(); // 训练结束，停止休息倒计时（内部处理自动恢复/清除）
-      self.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '', planInfo: null, restCustomSecs: '' });
+      self.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '', planInfo: null, restCustomSecs: '', restRecommendSecs: 0, restRecommendLabel: '' });
       self.refreshDraftMeta();
       self.sessionStartTs = Date.now();
       self.setData({ sessionMinutes: 0, sessionPaused: false, pauseAccumMs: 0, pauseStartTs: 0, pausedMinutes: 0 });
@@ -824,11 +845,12 @@ Page({
     }
   },
 
-  // 应用模板
+  // 应用模板（内置 + 自定义合并查找）
   applyTemplate: function (template) {
     var draft = (template.items || []).map(function (item) {
-      var ex = exercisesData.getExercise(item.exerciseId);
+      var ex = customExercises.findExercise(item.exerciseId, exercisesData.ALL, store.getCustomExercises());
       if (!ex) return null;
+      var isCustom = ex.source === 'custom';
       var sets = [];
       var numSets = item.sets || 3;
       for (var i = 0; i < numSets; i++) {
@@ -837,7 +859,8 @@ Page({
       return {
         exerciseId: ex.id,
         exerciseName: ex.name,
-        muscle: ex.muscle,
+        muscle: isCustom ? customExercises.deriveMuscleFromTarget(ex.target) : ex.muscle,
+        target: ex.target || [],
         sets: sets
       };
     }).filter(Boolean);

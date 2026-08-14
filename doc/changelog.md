@@ -2,6 +2,17 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.22.0（2026-08-14）— 竞品对标：部位热力图 + 智能休息推荐 + 数据导出 + 自定义动作
+
+对标市面健身记录软件（Hevy/Strong/训记）筛选出适配纯本地架构的 4 个亮点落地：
+
+- **feat(stats)**: 身体部位训练热力图——复用 muscle-map 42 块人体发力图，按最近 12 周各部位训练组数聚合着色（灰=未练，蓝系 4 档由浅到深），正面/背面双 canvas 绘制，点击任意块 toast 显示训练组数与次数，图例标注档位；聚合/分档/命中测试抽为纯函数 `utils/muscle-heatmap.js`（未知 target 词忽略并计数 + 部位兜底 + 原型链注入防御）
+- **feat(train)**: 热身组/正式组独立休息推荐——记录完一组后休息快捷区自动高亮推荐秒数（热身组 60s / 正式组 90s）并带"推荐"角标，不强制自动启动；逻辑抽为纯函数 `utils/rest-advice.js`
+- **feat(profile)**: 训练数据导出——个人中心新增导出入口，CSV（训练明细，UTF-8 BOM 防 Excel 乱码、RFC 4180 转义、数字安全格式化）+ JSON（全量备份：训练/体重/计划/自定义动作/摄入/模板等）；写入文件后可分享/复制剪贴板；序列化抽为纯函数 `utils/export.js`
+- **feat(exercises)**: 自定义动作（v4 迁移）——支持自建动作进动作库与内置 173 动作统一使用：新表单页 `pages/exercise-edit`（肌群 picker 限定 muscle-map 已知词防污染统计）、动作库页"我的动作"合并展示带自建角标、详情页/训练页搜索/统计热力图全链路打通、编辑/删除（确认弹窗）内置动作无编辑入口；存储 key `gym_custom_exercises` + migrate v4（老用户升级不覆盖数据），纯函数 `utils/custom-exercises.js`
+- **test**: 主套件 400→450（新增 50 项），专项脚本 verify-security-round2 迁移断言同步 v4（70→75）
+- 全量回归：主套件 450 + 专项 528 项全绿（978 项 + 导航/页面审计）
+
 ## v2.21.1（2026-08-13）— 数字转换统一为 util.toNum
 
 - **refactor**: 全项目统一安全数字转换——移除全部 `Number(x) || 0` / `Number(x) || 默认值` 残留（store.js 摄入/食物/资料/Tabata/水摄入、plan.js 组数、plan-edit 组次、food.js 快捷克数、calculator.js 围度），改用 `util.toNum()`（try/catch + isFinite，对象型/NaN/Infinity 归 0）

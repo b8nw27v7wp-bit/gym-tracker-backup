@@ -73,6 +73,55 @@
   color: #ffffff;
 }
 
+.chip-mine {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1rpx solid #a7f3d0;
+}
+
+.chip-mine.chip-active {
+  background: #047857;
+  color: #ffffff;
+  border-color: #047857;
+}
+
+.create-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20rpx 32rpx 4rpx;
+  background: linear-gradient(90deg, #ecfdf5 0%, #ffffff 100%);
+  border: 1rpx solid #a7f3d0;
+  border-radius: 20rpx;
+  padding: 22rpx 28rpx;
+}
+
+.create-entry-hover {
+  background: #d1fae5;
+}
+
+.guide-entry-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.guide-entry-title {
+  font-size: 27rpx;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.guide-entry-sub {
+  font-size: 21rpx;
+  color: #6b7280;
+  margin-top: 4rpx;
+}
+
+.guide-entry-arrow {
+  color: #047857;
+  font-size: 32rpx;
+}
+
 /* 类型/难度筛选 */
 .filter-row {
   display: flex;

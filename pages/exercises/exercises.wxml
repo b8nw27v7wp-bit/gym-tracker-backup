@@ -25,6 +25,11 @@
       bindtap="onPickMuscle"
     >全部 {{allCount}}</view>
     <view
+      class="chip chip-mine {{currentMuscle === 'mine' ? 'chip-active' : ''}}"
+      data-key="mine"
+      bindtap="onPickMuscle"
+    >我的动作 {{customCount}}</view>
+    <view
       wx:for="{{muscles}}"
       wx:key="key"
       class="chip {{currentMuscle === item.key ? 'chip-active' : ''}}"
@@ -32,6 +37,15 @@
       bindtap="onPickMuscle"
     >{{item.icon}} {{item.name}} {{item.count}}</view>
   </scroll-view>
+
+  <!-- 我的动作：新建入口 -->
+  <view class="create-entry" wx:if="{{currentMuscle === 'mine'}}" hover-class="guide-entry-hover" bindtap="onCreateCustom">
+    <view class="guide-entry-left">
+      <view class="guide-entry-title">＋ 新建自定义动作</view>
+      <view class="guide-entry-sub">自建动作可进动作库 / 训练 / 统计</view>
+    </view>
+    <text class="guide-entry-arrow">›</text>
+  </view>
 
   <!-- 部位训练指南入口 -->
   <view class="guide-entry" hover-class="guide-entry-hover" bindtap="onOpenMuscleGuide">
@@ -74,7 +88,9 @@
     equip-text="{{item.equipText}}"
     rest="{{item.rest}}"
     muscle-name="{{item.muscleName}}"
+    is-custom="{{item.isCustom}}"
     data-id="{{item.id}}"
     bind:tap="onOpenDetail"
+    bind:edit="onEditExercise"
   />
 </view>

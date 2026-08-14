@@ -1,0 +1,48 @@
+<view class="page">
+  <!-- 说明文案 -->
+  <view class="card">
+    <view class="card-title">数据主权 · 随时带走</view>
+    <view class="about-text">
+      你的所有训练数据仅保存在本机（纯本地存储，无云端）。数据属于你本人，可随时导出带走：
+      <view class="about-bullet">· CSV：训练明细表，可直接用 Excel/WPS 打开</view>
+      <view class="about-bullet">· JSON：完整备份，用于换设备迁移或自行存档</view>
+    </view>
+  </view>
+
+  <!-- 数据概况 -->
+  <view class="card">
+    <view class="card-title">当前数据</view>
+    <view class="info-row">
+      <text class="info-label">训练记录</text>
+      <text class="info-value">{{workoutCount}} 条</text>
+    </view>
+    <view class="info-row" wx:if="{{setCount > 0}}">
+      <text class="info-label">CSV 明细行数</text>
+      <text class="info-value">{{setCount}} 组</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">体重记录</text>
+      <text class="info-value">{{bodyweightCount}} 条</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">自建计划</text>
+      <text class="info-value">{{planCount}} 个</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">自定义动作</text>
+      <text class="info-value">{{customExerciseCount}} 个</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">饮食记录</text>
+      <text class="info-value">{{intakeCount}} 条</text>
+    </view>
+  </view>
+
+  <!-- 操作 -->
+  <view class="card">
+    <view class="card-title">导出</view>
+    <view class="act-btn btn-primary" hover-class="btn-primary-hover" bindtap="onExportCSV">导出 CSV（训练明细）</view>
+    <view class="act-btn btn-ghost" hover-class="btn-primary-hover" bindtap="onExportJSON">导出 JSON（完整备份）</view>
+    <view class="export-tip">导出后可通过分享保存到文件，或复制到剪贴板</view>
+  </view>
+</view>

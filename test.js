@@ -633,10 +633,11 @@ console.log('9. 数据迁移与备份');
 // 全新安装
 global.wx._store = {};
 store.ensureInit();
-assert(wx.getStorageSync('gym_schema_version') === 3, '全新安装 schema v3');
+assert(wx.getStorageSync('gym_schema_version') === 4, '全新安装 schema v4');
 assert(Array.isArray(wx.getStorageSync('gym_workouts')), 'workouts 初始化');
 assert(Array.isArray(wx.getStorageSync('gym_bodyweight')), 'bodyweight 初始化');
 assert(Array.isArray(wx.getStorageSync('gym_custom_plans')), 'custom_plans 初始化');
+assert(Array.isArray(wx.getStorageSync('gym_custom_exercises')), 'custom_exercises 初始化（v4）');
 
 // 老版本迁移：只有 v1 inited 标记 + 训练数据，无 bodyweight key、无 schema
 global.wx._store = {};
@@ -644,7 +645,7 @@ wx.setStorageSync('gym_inited_v1', true);
 wx.setStorageSync('gym_workouts', [{ id: 'old1', ts: Date.now(), items: [] }]);
 store.ensureInit();
 assert(Array.isArray(wx.getStorageSync('gym_bodyweight')), 'v1 迁移补 bodyweight key');
-assert(wx.getStorageSync('gym_schema_version') === 3, 'v1 迁移到 v3');
+assert(wx.getStorageSync('gym_schema_version') === 4, 'v1 迁移到 v4');
 assert(store.getWorkouts().length === 1, '迁移保留原训练数据');
 
 // v2 老数据迁移：有 workouts/bodyweight，无 custom_plans → 补空数组
@@ -654,28 +655,44 @@ wx.setStorageSync('gym_workouts', [{ id: 'v2w', ts: Date.now(), items: [] }]);
 wx.setStorageSync('gym_bodyweight', [{ ts: Date.now(), weight: 70 }]);
 store.ensureInit();
 assert(Array.isArray(wx.getStorageSync('gym_custom_plans')), 'v2 迁移补 custom_plans key');
-assert(wx.getStorageSync('gym_schema_version') === 3, 'v2 迁移到 v3');
+assert(wx.getStorageSync('gym_schema_version') === 4, 'v2 迁移到 v4');
 assert(store.getWorkouts().length === 1, 'v2 迁移保留训练数据');
+
+// v3 老数据迁移：有 workouts，无 custom_exercises → 补空数组，不覆盖现有数据
+global.wx._store = {};
+wx.setStorageSync('gym_schema_version', 3);
+wx.setStorageSync('gym_workouts', [{ id: 'v3w', ts: Date.now(), items: [] }]);
+wx.setStorageSync('gym_custom_plans', [{ id: 'cp_keep', name: '保留计划', days: [] }]);
+store.ensureInit();
+assert(Array.isArray(wx.getStorageSync('gym_custom_exercises')) && wx.getStorageSync('gym_custom_exercises').length === 0, 'v3 迁移补 custom_exercises 为空数组');
+assert(store.getCustomPlans().length === 1 && store.getCustomPlans()[0].id === 'cp_keep', 'v3 迁移不覆盖现有数据');
+assert(wx.getStorageSync('gym_schema_version') === 4, 'v3 迁移到 v4');
 
 // 导出
 const exp = store.exportData();
-assert(exp.app === 'gym-tracker' && exp.schemaVersion === 3 && exp.workouts.length === 1, '导出结构完整（app/版本/数据）');
+assert(exp.app === 'gym-tracker' && exp.schemaVersion === 4 && exp.workouts.length === 1, '导出结构完整（app/版本/数据）');
 assert(Array.isArray(exp.customPlans), '导出含 customPlans 字段');
+assert(Array.isArray(exp.customExercises), '导出含 customExercises 字段');
 
 // 导入合法数据（含非法项过滤）
 const importObj = {
   app: 'gym-tracker', schemaVersion: 3, exportedAt: Date.now(),
   workouts: [{ id: 'ok1', ts: Date.now(), items: [] }, { bad: true }],
   bodyweight: [{ ts: Date.now(), weight: 70 }, { nope: 1 }],
-  customPlans: [{ id: 'cp1', name: '我的计划', days: [{ id: 'd1', name: '推日', items: [] }] }, { bad: 1 }]
+  customPlans: [{ id: 'cp1', name: '我的计划', days: [{ id: 'd1', name: '推日', items: [] }] }, { bad: 1 }],
+  customExercises: [{ id: 'custom_import_1', name: '导入的自定义动作', target: ['胸大肌'] }, { bad: true }]
 };
 const imp = store.importData(importObj);
 assert(imp.ok && imp.workouts === 1 && imp.bodyweight === 1, '导入过滤非法项（' + imp.workouts + '/' + imp.bodyweight + '）');
 assert(store.getWorkouts()[0].id === 'ok1', '导入数据生效');
 assert(store.getCustomPlans().length === 1, '导入过滤非法计划');
-// 老备份（v2 无 customPlans 字段）导入兼容
+assert(store.getCustomExercises().length === 1 && store.getCustomExercises()[0].id === 'custom_import_1', '导入自定义动作');
+const prevWithCustom = store.previewImport(importObj);
+assert(prevWithCustom.ok && prevWithCustom.customExercises === 1, 'previewImport 统计自定义动作');
+// 老备份（v2 无 customPlans/customExercises 字段）导入兼容
 const impOld = store.importData({ app: 'gym-tracker', schemaVersion: 2, workouts: [], bodyweight: [] });
 assert(impOld.ok && Array.isArray(store.getCustomPlans()) && store.getCustomPlans().length === 0, 'v2 老备份导入兼容');
+assert(store.getCustomExercises().length === 1, 'v2 老备份导入不覆盖已有自定义动作');
 
 // 自建计划 CRUD
 const cp1 = { id: 'cp_test', name: '测试计划', level: '自定义', daysPerWeek: 1, desc: '', custom: true, days: [{ id: 'd1', name: '推日', items: [{ exerciseId: 'bench', sets: 3, reps: 10 }] }] };
@@ -1377,4 +1394,133 @@ const bal = util.muscleBalance(mockWorkouts);
 assert(bal.total > 0, '总容量大于 0');
 assert(bal.ratio.push + bal.ratio.pull + bal.ratio.legs > 0, '推拉腿比例有效');
 assert(bal.advice.length > 0, '有训练建议');
+
+// ---------- 部位热力图 & 组间休息推荐（Batch1 v3.1） ----------
+console.log('13. 部位热力图 & 组间休息推荐（Batch1）');
+const mh = require('./utils/muscle-heatmap');
+const ra = require('./utils/rest-advice');
+
+// 13.1 纯函数：推荐秒数
+assert(ra.recommendedRestSecs(true) === 60 && ra.recommendedRestSecs(false) === 90, '推荐秒数：热身 60 / 正式 90');
+assert(ra.recommendedRestSecs(undefined) === 90 && ra.recommendedRestSecs(1) === 60, '缺省按正式组 / truthy 按热身组');
+assert(ra.restAdvice(true).secs === 60 && ra.restAdvice(true).label === '热身组' && ra.restAdvice(false).secs === 90, 'restAdvice 返回推荐信息（秒数/标签）');
+
+// 13.2 纯函数：target 词 → zone 映射
+const tzGood = mh.targetToZones(['胸大肌中部', '三角肌前束']);
+assert(tzGood.zones['chest-mid-l'] && tzGood.zones['chest-mid-r'] && tzGood.zones['shoulder-f-l'], 'targetToZones 词到 zone 正确');
+assert(!tzGood.zones['tricep-l'] && tzGood.unmapped === 0, 'targetToZones 无多命中/无漏计');
+const tzBad = mh.targetToZones(['__proto__', '不存在的肌群', 42, null]);
+assert(tzBad.unmapped === 4 && Object.keys(tzBad.zones).length === 0, '未知 target 词零命中并计数不崩（unmapped=' + tzBad.unmapped + '）');
+assert(mh.targetToZones(null).unmapped === 0 && mh.targetToZones('胸大肌').zones !== null, '非数组 target 输入安全');
+
+// 13.3 聚合：近 12 周按 target 词聚合 zone 组数/训练次数
+const mhWeek = mh.weekStartOf(Date.now());
+const mhDay = 86400000;
+const mhW1 = {
+  id: 'mh1', ts: mhWeek + 3600000,
+  items: [
+    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 60, reps: 10 }, { weight: 70, reps: 8 }, { weight: 80, reps: 5 }] },
+    { exerciseId: 'squat', exerciseName: '杠铃深蹲', muscle: 'legs', sets: [{ weight: 100, reps: 5 }, { weight: 100, reps: 5 }] }
+  ]
+};
+const mhW2 = {
+  id: 'mh2', ts: mhWeek - 13 * 7 * mhDay, // 超过 12 周（84 天）→ 应被排除
+  items: [
+    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 60, reps: 10 }, { weight: 70, reps: 8 }] }
+  ]
+};
+const mhAgg = mh.aggregateZoneCounts([mhW1, mhW2], 12, id => exercisesData.getExercise(id));
+assert(mhAgg.hasData === true, '热力图聚合有数据');
+assert(mhAgg.counts['chest-mid-l'] === 3 && mhAgg.counts['chest-mid-r'] === 3, '卧推 target → 胸中部 zone 3 组（实际 ' + mhAgg.counts['chest-mid-l'] + '）');
+assert(mhAgg.counts['quad-l'] === 2 && mhAgg.counts['quad-r'] === 2, '深蹲 target → 股四头 zone 2 组（实际 ' + mhAgg.counts['quad-l'] + '）');
+assert(mhAgg.counts['chest-upper-l'] === 0, '>12 周卧推被排除（上胸 0）');
+assert(mhAgg.totalSets === 5, '参与统计总组数 5（实际 ' + mhAgg.totalSets + '）');
+assert(mhAgg.sessions['chest-mid-l'] === 1, '胸中部命中 1 次训练（实际 ' + mhAgg.sessions['chest-mid-l'] + '）');
+assert(mhAgg.maxCount === 3, '最大 zone 组数 3（实际 ' + mhAgg.maxCount + '）');
+
+// 同一次训练多个动作命中同一 zone → 训练次数只计 1
+const mhSame = mh.aggregateZoneCounts([{
+  id: 'mhs', ts: mhWeek,
+  items: [
+    { exerciseId: 'bench', muscle: 'chest', sets: [{ weight: 60, reps: 8 }] },
+    { exerciseId: 'db-bench', muscle: 'chest', sets: [{ weight: 20, reps: 10 }] }
+  ]
+}], 12, id => exercisesData.getExercise(id));
+assert(mhSame.counts['chest-mid-l'] === 2 && mhSame.sessions['chest-mid-l'] === 1, '同次训练重复命中 zone 组数累加、训练次数去重');
+
+// 下架动作 / 未知 target：部位兜底或忽略计数，绝不崩溃
+const mhFallback = mh.aggregateZoneCounts([{ id: 'mh3', ts: mhWeek, items: [{ exerciseId: 'removed-ex', muscle: 'back', sets: [{ weight: 50, reps: 8 }] }] }], 12, null);
+assert(mhFallback.hasData === true && mhFallback.counts['lat-l'] === 1, '下架动作按部位兜底映射（背 → 背阔 zone）');
+const mhUnknown = mh.aggregateZoneCounts([{ id: 'mh4', ts: mhWeek, items: [{ exerciseId: 'x', target: ['不存在的肌群'], sets: [{ weight: 1, reps: 1 }] }] }], 12, null);
+assert(mhUnknown.hasData === false && mhUnknown.unmappedCount === 1, '全未知 target 且无部位 → 无数据不崩（忽略并计数）');
+assert(mh.aggregateZoneCounts(null, 12).hasData === false && mh.aggregateZoneCounts([{ evil: true }], 12).hasData === false, '空/脏数据聚合安全');
+assert(mh.aggregateZoneCounts([mhW2], 12, null).hasData === false, '仅 >12 周训练 → 无数据');
+
+// 13.4 分档与颜色
+assert(mh.colorLevel(0, 5) === 0, '0 训练量 → 0 档（灰）');
+assert(mh.colorLevel(1, 5) === 1 && mh.colorLevel(2, 5) === 2 && mh.colorLevel(3, 5) === 3 && mh.colorLevel(4, 5) === 4, '训练量分档 1-4（越大越深）');
+assert(mh.colorLevel(5, 5) === 4 && mh.colorLevel(4, 3) === 4, '≥75% 最大量 → 4 档');
+assert(mh.colorLevel('3', 5) === 3, '字符串数字兼容');
+assert(mh.LEVEL_COLORS.length === 5 && mh.LEVEL_COLORS[0] === '#e5e7eb' && mh.LEVEL_COLORS[1] === '#dbeafe' && mh.LEVEL_COLORS[4] === '#1d4ed8', '档位颜色 5 个（灰 + 蓝 4 档）');
+
+// 13.5 画布命中测试
+const neckZ = muscleMap.ZONES['neck'];
+assert(mh.zoneAt(['neck'], neckZ.x + neckZ.w / 2, neckZ.y + neckZ.h / 2) === 'neck', 'zoneAt 命中块中心');
+assert(mh.zoneAt(['neck'], 0.9, 0.9) === null, 'zoneAt 未命中返回 null');
+assert(mh.zoneAt(null, 0.5, 0.5) === null && mh.zoneAt(['neck'], 'a', 0.5) === null, 'zoneAt 非法输入安全');
+assert(mh.zoneAt(muscleMap.BACK_ZONES, 0.5, 0.5) === null, '背面中心空隙不误命中');
+
+// 13.6 统计页部位热力图联动
+store.clearAll();
+store.ensureInit();
+wx._store.gym_workouts = [mhW1, mhW2];
+wx.createSelectorQuery = () => ({ select: () => ({ fields: () => ({ exec: cb => cb([]) }) }) });
+wx.getSystemInfoSync = () => ({ pixelRatio: 2 });
+freshRequire('./pages/stats/stats.js');
+const stHeat = instantiate(pageCfg);
+stHeat.loadStats();
+assert(stHeat.data.heatHasData === true, '统计页热力图有数据');
+assert(stHeat.data.heatLevels['chest-mid-l'] === 4, '最大训练量块 → 4 档（实际 ' + stHeat.data.heatLevels['chest-mid-l'] + '）');
+assert(stHeat.data.heatLevels['quad-l'] === 3, '2/3 量 → 3 档（实际 ' + stHeat.data.heatLevels['quad-l'] + '）');
+assert(stHeat.data.heatLevels['chest-upper-l'] === 0, '>12 周动作块 0 档（灰）');
+assert(stHeat.data.heatCounts['chest-mid-l'] === 3 && stHeat.data.heatTotalSets === 5, '热力图 counts/总组数落值');
+
+// 无数据空态
+wx._store.gym_workouts = [];
+const stHeatEmpty = instantiate(pageCfg);
+stHeatEmpty.loadStats();
+assert(stHeatEmpty.data.heatHasData === false, '无数据 → 热力图空态');
+// 未知 target 词不崩溃 → 空态
+wx._store.gym_workouts = [{ id: 'z', ts: mhWeek, items: [{ exerciseId: 'old', target: ['未知词'], sets: [{ weight: 1, reps: 1 }] }] }];
+const stHeatBad = instantiate(pageCfg);
+stHeatBad.loadStats();
+assert(stHeatBad.data.heatHasData === false, '未知 target 词统计页不崩溃 → 空态');
+
+// 13.7 训练页组间休息推荐联动
+freshRequire('./pages/train/train.js');
+const trAdvice = instantiate(pageCfg);
+// 最后一组为热身组 → 推荐 60s
+trAdvice.data.editingIndex = 0;
+trAdvice.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [] }];
+trAdvice.data.editing = { exerciseId: 'bench', sets: [{ weight: '70', reps: '8', warmup: false }, { weight: '20', reps: '10', warmup: true }] };
+trAdvice.onDoneEdit();
+assert(trAdvice.data.restRecommendSecs === 60, '记录热身组后推荐 60s 并高亮（实际 ' + trAdvice.data.restRecommendSecs + '）');
+assert(trAdvice.data.restRecommendLabel.indexOf('热身组') >= 0, '推荐文案含热身组');
+// 最后一组为正式组 → 推荐 90s
+trAdvice.data.editing = { exerciseId: 'bench', sets: [{ weight: '20', reps: '10', warmup: true }, { weight: '70', reps: '8', warmup: false }] };
+trAdvice.onDoneEdit();
+assert(trAdvice.data.restRecommendSecs === 90, '记录正式组后推荐 90s 并高亮（实际 ' + trAdvice.data.restRecommendSecs + '）');
+assert(trAdvice.data.restRecommendLabel.indexOf('正式组') >= 0, '推荐文案含正式组');
+// 全空组 → 无推荐
+trAdvice.data.editing = { exerciseId: 'bench', sets: [{ weight: '', reps: '', warmup: false }] };
+trAdvice.onDoneEdit();
+assert(trAdvice.data.restRecommendSecs === 0, '未填写组不产生推荐');
+// 手动点其他秒数仍正常工作；开始休息后推荐清除
+trAdvice.data.restRecommendSecs = 90;
+trAdvice.data.restRecommendLabel = '正式组 · 建议休息 90s';
+trAdvice.startRest(45);
+assert(trAdvice.data.restRunning === true && trAdvice.data.restRemaining === 45, '手动点其他秒数仍正常工作（45s）');
+assert(trAdvice.data.restRecommendSecs === 0, '开始休息后推荐清除');
+trAdvice.stopRestTimer();
+
 

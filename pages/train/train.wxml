@@ -55,19 +55,36 @@
 
   <!-- 休息计时快捷入口（未计时时显示，含自定义秒数） -->
   <view class="rest-quick" wx:if="{{!restRunning && restRemaining === 0}}">
-    <text class="rest-quick-label">组间休息</text>
-    <view class="rest-chip rest-chip-dark" data-secs="30" bindtap="onRestStart">30s</view>
-    <view class="rest-chip rest-chip-dark" data-secs="60" bindtap="onRestStart">60s</view>
-    <view class="rest-chip rest-chip-dark" data-secs="90" bindtap="onRestStart">90s</view>
-    <view class="rest-chip rest-chip-dark" data-secs="120" bindtap="onRestStart">120s</view>
-    <input
-      class="rest-custom-input"
-      type="number"
-      value="{{restCustomSecs}}"
-      bindinput="onRestCustomInput"
-      placeholder="秒"
-    />
-    <view class="rest-custom-go" bindtap="onRestCustomStart">开始</view>
+    <view class="rest-quick-head">
+      <text class="rest-quick-label">组间休息</text>
+      <text class="rest-quick-recommend" wx:if="{{restRecommendSecs > 0}}">{{restRecommendLabel}}</text>
+    </view>
+    <view class="rest-quick-chips">
+      <view class="rest-chip-wrap">
+        <view class="rest-chip rest-chip-dark {{restRecommendSecs === 30 ? 'rest-chip-recommend' : ''}}" data-secs="30" bindtap="onRestStart">30s</view>
+        <text wx:if="{{restRecommendSecs === 30}}" class="rest-recommend-badge">推荐</text>
+      </view>
+      <view class="rest-chip-wrap">
+        <view class="rest-chip rest-chip-dark {{restRecommendSecs === 60 ? 'rest-chip-recommend' : ''}}" data-secs="60" bindtap="onRestStart">60s</view>
+        <text wx:if="{{restRecommendSecs === 60}}" class="rest-recommend-badge">推荐</text>
+      </view>
+      <view class="rest-chip-wrap">
+        <view class="rest-chip rest-chip-dark {{restRecommendSecs === 90 ? 'rest-chip-recommend' : ''}}" data-secs="90" bindtap="onRestStart">90s</view>
+        <text wx:if="{{restRecommendSecs === 90}}" class="rest-recommend-badge">推荐</text>
+      </view>
+      <view class="rest-chip-wrap">
+        <view class="rest-chip rest-chip-dark {{restRecommendSecs === 120 ? 'rest-chip-recommend' : ''}}" data-secs="120" bindtap="onRestStart">120s</view>
+        <text wx:if="{{restRecommendSecs === 120}}" class="rest-recommend-badge">推荐</text>
+      </view>
+      <input
+        class="rest-custom-input"
+        type="number"
+        value="{{restCustomSecs}}"
+        bindinput="onRestCustomInput"
+        placeholder="秒"
+      />
+      <view class="rest-custom-go" bindtap="onRestCustomStart">开始</view>
+    </view>
   </view>
 
   <!-- Tabata 计时器面板 -->
