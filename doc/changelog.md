@@ -2,6 +2,97 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.21.1（2026-08-13）— 数字转换统一为 util.toNum
+
+- **refactor**: 全项目统一安全数字转换——移除全部 `Number(x) || 0` / `Number(x) || 默认值` 残留（store.js 摄入/食物/资料/Tabata/水摄入、plan.js 组数、plan-edit 组次、food.js 快捷克数、calculator.js 围度），改用 `util.toNum()`（try/catch + isFinite，对象型/NaN/Infinity 归 0）
+- **perf(stats)**: 合并 est1RMHistory 重复计算——est1rm 与 1RM 趋势共用一次历史，减少 8 次全量排序
+- **fix(canvas)**: 统计页/历史页 canvas 绘制 setTimeout(60-80ms) → setData 回调 / wx.nextTick，低端机取节点更可靠
+- **refactor(app)**: 移除 silentLogin 死代码——无后端消费 code，setWxUser 剥离 code 导致写入无效
+- **fix(leak)**: Tabata 计时器 onUnload 清理
+- **test**: 主套件 + 全部专项回归全绿（907 项）
+
+## v2.21.0（2026-08-13）— P0/P1 问题修复 + 文档全面同步
+
+- **fix(security)**: default-avatar 缺失——移除图片引用，改用 CSS 渐变占位符（显示用户名首字母），stats/profile 两页
+- **fix(data)**: 备份导出补全——exportData/importData 纳入 intake、waterIntake、workoutTemplates、profile、tabataSettings，data 页显示全部数据类型的导入导出统计
+- **fix(config)**: libVersion 统一 3.4.0 → 3.17.0
+- **fix(feature)**: 接入 4 个闲置工具模块——substitute 接入动作详情页（替代动作推荐）、plate-calculator/warmup 接入训练页（杠铃片组合 + 一键热身组）、删除与 util.muscleBalance 重叠的 balance.js
+- **fix(leak)**: Tabata 计时器 onUnload 未清理 setInterval → 添加 stopTabata()
+- **fix(data)**: dataSizeBytes() 补全所有存储 key（intake/water/templates/profile/wxUser/tabata），存储用量显示准确
+- **fix(share)**: 8 个子页面补 onShareAppMessage（plan-edit/muscle-detail/knowledge-detail/exercise-detail/calculator/food/privacy/profile）
+- **refactor(app)**: 移除 silentLogin 死代码——无后端消费 code，setWxUser 剥离 code 导致写入无效；checkAutoLogin 保留过期清理逻辑
+- **perf(stats)**: 合并 est1RMHistory 重复计算（est1rm 与趋势共用一次历史）、canvas 绘制 setTimeout → setData 回调/wx.nextTick（低端机更可靠）
+- **docs**: 全面同步文档——requirements（125→173 动作、14→30 篇）、review-kit（13→15 页面、补 food/profile 截图）、release-checklist（11→15 页面、14→30 篇）、testing（文章数/测试计数 401/907、专项脚本清单补 3 个）、dev-guide（Number(x)||0 → util.toNum()、知识库 4 模块、15 页面）、design（canvas 图表、15 页面、4 主题模块）、content-guidelines（各部位动作数、swimming、知识库 4 文件）
+- **test**: 主套件 + 全部专项回归全绿（401 + 45 + 64 + 61 + 73 + 147 + 68 + 43 + 1 + 4 = 907 项）
+
+## v2.20.0（2026-08-13）— 用户场景测试 + calcWorkout 安全修复
+
+- **fix(security)**: calcWorkout 数组类型检查——items 为字符串时 forEach 崩溃，添加 `Array.isArray()` 检查
+- **test**: 新增 scripts/verify-user-scenarios.js（68 项用户场景测试）
+  - 新手用户错误操作：空训练保存/全空组/字母重量/负数次数/超大数值/小数重量/非法输入
+  - 快速连续点击：快速添加动作/快速保存/快速切换休息/快速暂停继续
+  - 页面切换中断：训练中切换/编辑中切换/Tabata运行中切换
+  - 数据损坏恢复：存储损坏/版本损坏/导入损坏数据
+  - 边界值输入：体重边界/营养计算器边界/计划编辑边界
+  - 计算精度：浮点精度/1RM精度/BMI精度
+  - 状态一致性：保存后状态重置/计划填充状态
+  - 并发操作：并发写入/快速导入导出
+  - 内存安全：大对象处理/超长输入
+  - 搜索安全：各种注入搜索
+- **test**: 全部测试套件回归全绿（401 + 147 + 68 = 616 项）
+- **docs**: 更新 changelog/testing 文档
+
+## v2.19.0（2026-08-13）— 功能扩展：数据分析 + 营养 + 训练
+
+### 数据分析增强
+- **feat**: 力量曲线图表——按动作展示重量变化趋势（strengthCurve 函数）
+- **feat**: 训练密度计算——容量/时长比，衡量训练效率（trainingDensity/densityTrend 函数）
+- **feat**: 肌群平衡分析——推/拉/腿比例可视化 + 训练建议（muscleBalance 函数）
+- **feat**: 月度总结——本月训练次数/总容量/新PR数/平均密度（monthlySummary 函数）
+- **feat**: 周训练频率趋势——最近 8 周每周训练次数（weeklyFrequencyTrend 函数）
+- **feat**: 统计页新增 4 个数据卡片（月度总结/肌群平衡/训练密度/周频率）
+
+### 营养功能扩展
+- **feat**: 营养计算器增强——新增 BMI 体质指数、体脂率估算（Navy Method）、理想体重、宏量营养素分配（维持/增肌/减脂）、每日水分需求
+- **feat**: 食物热量库扩充 105 → 205 种——新增主食12种/肉蛋海鲜13种/蔬菜15种/水果11种/奶豆坚果13种/饮品13种/快餐零食11种/调味酱料12种
+- **feat**: 健身知识库扩充 19 → 30 篇——新增念动一致/热身指南/伤病预防/居家训练/运动补剂/引体向上/深蹲详解/硬拉详解/卧推详解/营养误区/训练记录
+- **feat**: 自定义食物功能——用户可添加自己的食物到数据库（store.js CRUD）
+- **feat**: 水摄入记录——每日饮水量追踪，可自定义目标（store.js CRUD）
+
+### 训练功能扩展
+- **feat**: 超级组支持——将两个动作标记为超级组，组间不休息连续完成
+- **feat**: 递减组支持——组编辑器一键添加递减组，自动减重 25%
+- **feat**: 训练模板——保存当前训练为模板，下次直接加载；支持删除模板
+- **feat**: Tabata 计时器——可自定义运动/休息时间、轮数、组数；自动循环计时，到点震动提醒；设置面板 + 运行计时器 UI
+
+### 统计页优化
+- **feat**: 个人中心入口重设计——卡片式布局，显示头像/昵称/训练总数/活跃天数
+
+- **test**: 主测试套件回归全绿（401 项）
+- **docs**: 更新 README/changelog/testing/roadmap 文档
+
+## v2.18.0（2026-08-13）— 全面健壮性增强
+
+- **fix(defensive)**: store.js 存储层增强——weekStartOf 防御无效时间戳、saveWorkout 验证输入并返回状态、addBodyweight 验证范围(0-500kg)并保留一位小数、saveCustomPlan 验证必要字段、setProfile 验证并规范化字段、addIntake 验证输入并限制名称长度、formatSize 防御非负数
+- **fix(defensive)**: util.js 导出 toNum 安全数字转换函数
+- **fix(defensive)**: plan.js 健壮性增强——allPlans 过滤无效计划、getPlan/getPlanDay 验证参数、buildDraftFromPlan 防御无效动作项并限制 sets 数量、planSummaries 防御空 days
+- **fix(defensive)**: nutrition.js 健壮性增强——calcNutrition 验证 input 对象、使用 isFinite 验证数值、确保结果为有效数字
+- **fix(defensive)**: train.js 使用 util.toNum 替代 Number 进行安全数字转换、RPE 限制 0-10 范围
+- **fix(defensive)**: stats.js 使用 util.toNum 安全转换体重、addBodyweight 增加输入验证和保存结果检查
+- **fix(defensive)**: calculator.js 增强——输入验证(年龄/身高/体重格式)、onCalc 数值验证、onLoad 安全回显
+- **fix(defensive)**: food.js 增强——搜索长度限制、防御 null 食物项、克数范围限制(0-10000g)、保存结果检查
+- **test**: 主测试套件回归全绿（401 项）
+- **docs**: 更新版本号至 v2.18.0
+
+## v2.17.0（2026-08-13）— 微信用户授权重写
+
+- **refactor**: 重写微信用户授权流程——移除已废弃的 `wx.getUserProfile` / `wx.getUserInfo` API，改用 `open-type="chooseAvatar"` + `type="nickname"` 最新方案
+- **refactor**: store.js 用户函数优化——移除 wxLogin（code 不应本地存储）、增加 isLoggedIn、setWxUser 增加输入验证和长度限制、登录有效期从 7 天延长至 30 天
+- **refactor**: profile 页面重写——支持头像选择、昵称输入、快速登录、编辑状态管理；未登录时显示默认头像和引导
+- **fix(security)**: setWxUser 增加安全防御——昵称长度限制 20 字、只保存必要字段（不存储 code）、空昵称拒绝保存
+- **test**: 主测试套件回归全绿（401 项）
+- **docs**: 更新版本号至 v2.17.0
+
 ## v2.16.0（2026-08-13）— 微信登录 + 知识库扩充 + 工具函数
 
 - **feat**: 微信登录功能——个人中心页、用户授权、登录状态管理、7天过期机制

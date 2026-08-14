@@ -1,6 +1,6 @@
 # 内容数据规范（Content Guidelines）
 
-版本：v2.16 | 更新：2026-08-13
+版本：v2.21.0 | 更新：2026-08-13
 
 > 本文件定义动作库与知识库的内容结构与写作标准，保证数据质量与可扩展性。扩充内容前必读。
 
@@ -10,15 +10,16 @@
 
 ```
 data/exercises/
-├── chest.js      胸（15 动作）
-├── back.js       背（17 动作）
-├── legs.js       腿（17 动作）
-├── glutes.js     臀（10 动作）
-├── shoulders.js  肩（13 动作）
-├── arms.js       手臂（17 动作）
-├── core.js       核心（13 动作）
-├── calves.js     小腿（6 动作）
-├── cardio.js     有氧（9 动作）
+├── chest.js      胸（22 动作）
+├── back.js       背（23 动作）
+├── legs.js       腿（22 动作）
+├── glutes.js     臀（15 动作）
+├── shoulders.js  肩（19 动作）
+├── arms.js       手臂（22 动作）
+├── core.js       核心（18 动作）
+├── calves.js     小腿（12 动作）
+├── cardio.js     有氧（13 动作）
+├── swimming.js   游泳（7 动作）
 └── index.js      合并 + 部位知识 + 查询/搜索
 ```
 
@@ -42,7 +43,7 @@ data/exercises/
 
 ### 1.3 部位枚举（10 个）
 
-`chest` 胸 / `back` 背 / `legs` 腿 / `glutes` 臀 / `shoulder` 肩 / `arms` 手臂 / `core` 核心 / `calves` 小腿 / `cardio` 有氧
+`chest` 胸 / `back` 背 / `legs` 腿 / `glutes` 臀 / `shoulder` 肩 / `arms` 手臂 / `core` 核心 / `calves` 小腿 / `cardio` 有氧 / `swimming` 游泳
 
 > 注意：肩部位 key 是单数 `shoulder`（历史遗留），新增部位不要仿照，用复数形式。
 
@@ -63,9 +64,10 @@ data/exercises/
 
 ```
 data/knowledge/
-├── principles.js   训练原理（5 篇）
+├── principles.js   训练原理（6 篇）
 ├── plans.js        分化计划（4 篇）
-├── lifestyle.js    营养/恢复/术语（5 篇）
+├── lifestyle.js    营养/恢复/术语（9 篇）
+├── advanced.js     进阶训练/补剂/动作详解（11 篇）
 └── index.js        合并 + 分类定义
 ```
 
@@ -110,5 +112,5 @@ data/knowledge/
 |-----|-----|---------|
 | 动作数 | 173 | ≤ 500（单动作 ~700B，500 动作 < 400KB） |
 | 计划数 | 5 套（17 训练日） | ≤ 20 套 |
-| 文章数 | 14 | ≤ 50 |
+| 文章数 | 30 | ≤ 50 |
 | 包体积 | < 120KB | 主包 2MB 上限内无压力 |

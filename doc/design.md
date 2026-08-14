@@ -1,6 +1,6 @@
 # 设计文档（Design）
 
-版本：v2.16 | 更新：2026-08-13
+版本：v2.21.0 | 更新：2026-08-13
 
 ## 1. 技术选型
 
@@ -8,26 +8,30 @@
 |---|------|------|
 | 框架 | 微信原生小程序（JS） | 零构建依赖，开发者工具直接运行，审核流程最顺 |
 | 存储 | wx.setStorageSync | 本地数据，无需域名/服务器/HTTPS |
-| 图表 | view + CSS 宽度比 | 柱状图/分布条纯 CSS 实现，规避 canvas 兼容问题 |
+| 图表 | canvas 2d | 统计页容量柱状图/1RM 折线图、历史页分享卡片均用 canvas 绘制 |
 | 测试 | node + mock wx | 数据层纯函数可脱离小程序环境单测 |
 
 ## 2. 总体架构
 
 ```
 ┌─────────────────────────────────────────┐
-│ 页面层 pages/（11 页）                    │
+│ 页面层 pages/（15 页）                    │
 │  train  exercises  knowledge  stats     │
 │  history  exercise-detail  knowledge-detail │
-│  plans  calculator  data  privacy       │
+│  plans  plan-edit  calculator  data  privacy │
+│  muscle-detail  food  profile            │
 ├─────────────────────────────────────────┤
 │ 数据层 data/                            │
 │  exercises/（10 部位模块 + index）       │
-│  knowledge/（3 主题模块 + index）        │
+│  knowledge/（4 主题模块 + index）        │
 │  plans.js（5 套训练计划模板）            │
+│  foods.js（205 种食物 × 8 分类）         │
 ├─────────────────────────────────────────┤
 │ 业务层 utils/                           │
-│  store.js（CRUD+迁移+备份） util.js（计算）│
-│  plan.js（计划草稿） nutrition.js（营养） │
+│  store.js（CRUD+迁移+备份+模板+水摄入）  │
+│  util.js（计算+数据分析）               │
+│  plan.js（计划草稿） nutrition.js（营养）│
+│  plate-calculator.js substitute.js warmup.js │
 ├─────────────────────────────────────────┤
 │ 存储层 wx.setStorageSync                │
 └─────────────────────────────────────────┘

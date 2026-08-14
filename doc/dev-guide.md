@@ -1,6 +1,6 @@
 # 开发指南（Developer Guide）
 
-版本：v2.16 | 更新：2026-08-13
+版本：v2.21.0 | 更新：2026-08-13
 
 ## 1. 环境准备
 
@@ -21,19 +21,24 @@ gym-tracker/
 ├── sitemap.json                    搜索收录配置（当前全 disallow）
 ├── data/
 │   ├── exercises/                  动作库（按部位拆 10 文件 + index.js）
-│   ├── knowledge/                  知识库（按主题拆 3 文件 + index.js）
+│   ├── knowledge/                  知识库（按主题拆 4 文件 + index.js）
 │   └── plans.js                    训练计划模板（5 套 17 日）
+│   └── foods.js                    食物热量库（205 种 × 8 分类）
 ├── utils/
-│   ├── store.js                    本地存储 CRUD + schema 迁移 + 备份导入导出
-│   ├── util.js                     纯函数计算层（容量/周统计/PR/1RM/热力图/体重/计划完成度）
+│   ├── store.js                    本地存储 CRUD + schema 迁移 + 备份导入导出 + 模板 + 水摄入
+│   ├── util.js                     纯函数计算层（容量/周统计/PR/1RM/热力图/体重/计划完成度/数据分析）
 │   ├── plan.js                     计划查询 + 训练草稿生成（支持自建计划合并）
-│   └── nutrition.js                营养计算器（纯函数）
-├── pages/                          12 个页面（4 tab + 8 子页）
+│   ├── nutrition.js                营养计算器（BMR/BMI/体脂率/宏量营养素）
+│   ├── plate-calculator.js         杠铃片计算器
+│   ├── substitute.js               动作替代推荐
+│   └── warmup.js                   热身组生成器
+├── pages/                          15 个页面（4 tab + 11 子页）
 │   ├── train  exercises  knowledge  stats          # tab 页
 │   ├── history  exercise-detail  knowledge-detail  # v2.0 子页
-│   └── plans  plan-edit  calculator  data  privacy  # v2.1/v2.3 子页
+│   ├── plans  plan-edit  calculator  data  privacy  # v2.1/v2.3 子页
+│   └── muscle-detail  food  profile                 # 新增子页
 ├── doc/                            项目文档
-└── test.js                         数据层单测（157 项断言）
+└── test.js                         数据层单测（401 项断言）
 ```
 
 ## 3. 开发规范
@@ -63,7 +68,7 @@ gym-tracker/
 ### 3.4 数据一致性
 
 - 保存 workout 时冗余存储 exerciseName/muscle，历史数据与动作库解耦
-- 计算一律用 `Number(x) || 0` 防御脏数据
+- 计算一律用 `util.toNum(x)` 防御脏数据（try/catch + isFinite，对象型/NaN/Infinity 归 0）；`Number(x) || 0` 会因对象型 x 抛 TypeError，勿用
 - 排序/统计统一以 `ts`（毫秒时间戳）为准，`date` 仅展示用
 
 ## 4. 如何新增动作

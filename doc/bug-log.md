@@ -9,13 +9,45 @@
 
 ## 已关闭
 
-### BUG-007 | 2026-08-13 | S2 | 已关闭
-- 模块：存储层 getWorkouts()（第三轮安全测试发现）
-- 描述：当 workouts 数组包含 null 元素时（脏数据/迁移遗留），getWorkouts() 排序时读取 null.ts 抛 TypeError 崩溃
-- 复现步骤：手动设置 gym_workouts = [{id:'good', ts:1, items:[]}, null, {id:'bad', ts:2, items:null}] → 调用 getWorkouts() → 崩溃
-- 根因：getWorkouts() 的 sort 回调直接访问 b.ts，未过滤 null/undefined 元素
-- 修复：sort 前增加 filter 过滤 null/非对象/无 id 元素；sort 内使用 `(b.ts || 0)` 兜底
-- 验证：`node scripts/verify-security-round2.js` 脏数据迁移测试通过 + `node test.js` 357 项全绿
+### BUG-008 | 2026-08-13 | S3 | 已关闭
+- 模块：store.js 代码组织（代码审查发现）
+- 描述：微信用户相关函数（getWxUser/setWxUser/clearWxUser/wxLogin/isLoginValid/getLoginStatus）定义在 module.exports 之后，虽然函数声明会被提升，但代码组织不清晰，容易造成维护困惑
+- 复现步骤：查看 store.js 第345-404行
+- 根因：代码重构时新增函数未调整位置
+- 修复：将微信用户相关函数移到 module.exports 之前
+- 验证：`node test.js` 401 项全绿
+
+### BUG-009 | 2026-08-13 | S4 | 已关闭
+- 模块：store.js removeWorkout（代码审查发现）
+- 描述：removeWorkout 直接从存储读取数组后访问 w.id，若数组含 null 元素会崩溃（getWorkouts 已过滤 null，但 removeWorkout 未过滤）
+- 复现步骤：手动设置 gym_workouts = [null, {id:'x'}] → 调用 removeWorkout('x') → 崩溃
+- 根因：filter 回调未防御 null 元素
+- 修复：filter 内增加 `w && ` 防御
+- 验证：`node test.js` 401 项全绿
+
+### BUG-010 | 2026-08-13 | S4 | 已关闭
+- 模块：util.js exercisePR（代码审查发现）
+- 描述：exercisePR 使用 `Number(s.weight) || 0` 而非 `toNum(s.weight)`，对象型 weight 会抛 TypeError（与其他函数不一致）
+- 复现步骤：传入含对象型 weight 的训练数据 → exercisePR 崩溃
+- 根因：重构时遗漏，未统一使用安全转换函数
+- 修复：改为 `toNum(s.weight)`
+- 验证：`node test.js` 401 项全绿
+
+### BUG-011 | 2026-08-13 | S4 | 已关闭
+- 模块：train.js refreshDraftMeta（代码审查发现）
+- 描述：refreshDraftMeta 使用 `Number(s.weight) || 0` 而非 `util.setVolume(s)`，对象型 weight 会抛 TypeError
+- 复现步骤：编辑含对象型 weight 的组 → 刷新草稿元数据 → 崩溃
+- 根因：重构时遗漏，未使用 util 模块的安全函数
+- 修复：改为 `util.setVolume(s)`
+- 验证：`node test.js` 401 项全绿
+
+### BUG-012 | 2026-08-13 | S4 | 已关闭
+- 模块：stats.js loadStats（代码审查发现）
+- 描述：直接访问 `workouts[workouts.length - 1].ts` 未做边界检查，若数组为空会崩溃（虽然前面有 length === 0 的检查，但防御性不足）
+- 复现步骤：理论上不会触发（前面有检查），但缺乏防御性编程
+- 根因：代码健壮性不足
+- 修复：增加三元表达式边界检查
+- 验证：`node test.js` 401 项全绿
 
 ### BUG-001 | 2026-08-11 | S4 | 已关闭
 - 模块：训练页保存（方向一计划填充引入）
