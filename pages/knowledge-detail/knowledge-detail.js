@@ -20,6 +20,7 @@ Page({
     }
     this.setData({
       article: {
+        id: article.id,
         title: article.title,
         summary: article.summary,
         catName: knowledge.categoryName(article.category),
@@ -27,5 +28,13 @@ Page({
       }
     });
     wx.setNavigationBarTitle({ title: article.title });
+  },
+
+  onShareAppMessage: function () {
+    var title = this.data.article ? this.data.article.title : '健身知识';
+    return {
+      title: '铁馆日志 · ' + title,
+      path: '/pages/knowledge-detail/knowledge-detail?id=' + (this.data.article ? this.data.article.id : '')
+    };
   }
 });

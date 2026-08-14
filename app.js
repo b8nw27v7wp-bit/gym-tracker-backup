@@ -4,37 +4,19 @@ App({
     var store = require('./utils/store');
     store.ensureInit();
 
-    // 自动登录检查
+    // 自动登录检查（本地用户信息 30 天过期后清除）
     this.checkAutoLogin(store);
   },
 
-  // 检查自动登录
+  // 检查自动登录状态
+  // 本项目为纯本地工具，无后端消费 code，无需 wx.login
   checkAutoLogin: function (store) {
     var loginStatus = store.getLoginStatus();
 
-    if (loginStatus.isLoggedIn && loginStatus.isValid) {
-      // 已登录且有效，静默刷新 code
-      this.silentLogin(store);
-    } else if (loginStatus.isLoggedIn && !loginStatus.isValid) {
-      // 登录已过期，清除用户信息
+    if (loginStatus.isLoggedIn && !loginStatus.isValid) {
+      // 登录已过期（超 30 天），清除用户信息
       store.clearWxUser();
     }
-    // 未登录不做任何操作，等用户主动登录
-  },
-
-  // 静默登录（不弹窗，只刷新 code）
-  silentLogin: function (store) {
-    wx.login({
-      success: function (res) {
-        if (res.code) {
-          // 更新存储中的 code
-          var wxUser = store.getWxUser();
-          if (wxUser) {
-            wxUser.code = res.code;
-            store.setWxUser(wxUser);
-          }
-        }
-      }
-    });
+    // 未登录或登录有效：不做操作，等用户主动设置
   }
 });

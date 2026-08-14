@@ -1,32 +1,48 @@
 <view class="page">
-  <!-- 授权引导弹窗 -->
-  <view class="auth-guide" wx:if="{{showAuthGuide}}">
-    <view class="auth-guide-mask" bindtap="closeAuthGuide"></view>
-    <view class="auth-guide-content">
-      <view class="auth-guide-title">需要授权</view>
-      <view class="auth-guide-desc">请在设置中开启"用户信息"权限，以便展示您的头像和昵称</view>
-      <view class="auth-guide-btns">
-        <button class="auth-guide-btn cancel" bindtap="closeAuthGuide">取消</button>
-        <button class="auth-guide-btn confirm" bindtap="openSetting">去设置</button>
-      </view>
-    </view>
-  </view>
-
   <!-- 用户信息卡片 -->
   <view class="card user-card">
-    <view class="user-info" wx:if="{{isLoggedIn}}">
-      <image class="avatar" src="{{wxUser.avatarUrl}}" mode="aspectFill"></image>
+    <!-- 已登录状态 -->
+    <view class="user-info" wx:if="{{isLoggedIn && !isEditing}}">
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <image wx:if="{{wxUser.avatarUrl}}" class="avatar" src="{{wxUser.avatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="avatar-placeholder">{{wxUser.nickName ? wxUser.nickName[0] : '?'}}</view>
+      </button>
       <view class="user-detail">
-        <text class="nickname">{{wxUser.nickName}}</text>
-        <text class="user-id">已登录</text>
+        <input class="nickname-input" type="nickname" value="{{wxUser.nickName}}" placeholder="点击修改昵称" bindblur="onNicknameBlur" />
+        <text class="login-time">已登录</text>
       </view>
       <view class="logout-btn" bindtap="onLogout">退出</view>
     </view>
+
+    <!-- 编辑状态（未登录时选择头像后） -->
+    <view class="edit-form" wx:elif="{{isEditing}}">
+      <view class="edit-header">
+        <text class="edit-title">设置用户信息</text>
+      </view>
+      <button class="avatar-btn large" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <image wx:if="{{editAvatarUrl}}" class="avatar large" src="{{editAvatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="avatar-placeholder large">?</view>
+        <text class="avatar-hint">点击选择头像</text>
+      </button>
+      <view class="input-group">
+        <text class="input-label">昵称</text>
+        <input class="nickname-input" type="nickname" placeholder="请输入昵称" value="{{editNickName}}" bindinput="onNicknameInput" />
+      </view>
+      <view class="edit-btns">
+        <button class="btn cancel" bindtap="onCancelEdit">取消</button>
+        <button class="btn confirm" bindtap="onSaveUser">保存</button>
+      </view>
+    </view>
+
+    <!-- 未登录状态 -->
     <view class="login-prompt" wx:else>
-      <view class="login-icon">👤</view>
-      <text class="login-text">登录后可同步数据</text>
-      <button class="login-btn" bindtap="onLogin">微信登录</button>
-      <text class="auth-hint" wx:if="{{authDenied}}">之前拒绝了授权？点击登录重新授权</text>
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <view class="avatar-placeholder">?</view>
+      </button>
+      <text class="login-hint">选择头像并设置昵称</text>
+      <view class="quick-login">
+        <button class="login-btn" bindtap="onQuickLogin">快速设置</button>
+      </view>
     </view>
   </view>
 
@@ -72,7 +88,7 @@
   <!-- 应用信息 -->
   <view class="card app-info">
     <text class="app-name">铁馆日志</text>
-    <text class="app-version">v2.15.0</text>
+    <text class="app-version">v1.0.0</text>
     <text class="app-desc">专业健身训练记录工具</text>
   </view>
 </view>

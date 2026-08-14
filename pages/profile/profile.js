@@ -1,19 +1,19 @@
-// 个人中心页：微信登录 + 用户信息展示 + 授权处理
+// 个人中心页：用户信息展示 + 头像昵称设置 + 身体资料 + 功能入口
+// 注意：wx.getUserProfile 已废弃（2021年4月），现使用 open-type="chooseAvatar" + type="nickname"
 var store = require('../../utils/store');
 
 Page({
   data: {
-    wxUser: null,        // 微信用户信息 { nickName, avatarUrl }
-    profile: null,       // 身体资料 { gender, age, heightCm, weightKg, activity }
+    wxUser: null,           // 用户信息 { nickName, avatarUrl, loginTime }
+    profile: null,          // 身体资料 { gender, age, heightCm, weightKg, activity }
     isLoggedIn: false,
-    loginCode: '',       // wx.login 获取的 code
-    authDenied: false,   // 用户是否拒绝过授权
-    showAuthGuide: false // 是否显示授权引导
+    isEditing: false,       // 是否正在编辑用户信息
+    editNickName: '',       // 编辑中的昵称
+    editAvatarUrl: ''       // 编辑中的头像
   },
 
   onLoad: function () {
     this.loadUserData();
-    this.checkAuthStatus();
   },
 
   onShow: function () {
@@ -31,135 +31,115 @@ Page({
     });
   },
 
-  // 检查授权状态
-  checkAuthStatus: function () {
-    var self = this;
-    // 检查是否已经拒绝过授权
-    var authDenied = wx.getStorageSync('gym_auth_denied') || false;
-    self.setData({ authDenied: authDenied });
+  // ---------- 头像选择 ----------
+  // 使用 open-type="chooseAvatar" 触发，返回临时头像路径
+  onChooseAvatar: function (e) {
+    var avatarUrl = e.detail.avatarUrl;
+    if (!avatarUrl) return;
 
-    // 如果已登录，尝试静默刷新登录状态
-    if (self.data.isLoggedIn) {
-      self.silentLogin();
+    // 如果已登录，直接更新头像
+    if (this.data.isLoggedIn) {
+      var wxUser = store.getWxUser();
+      wxUser.avatarUrl = avatarUrl;
+      store.setWxUser(wxUser);
+      this.setData({
+        'wxUser.avatarUrl': avatarUrl
+      });
+      wx.showToast({ title: '头像已更新', icon: 'success' });
+    } else {
+      // 未登录，暂存头像，等待昵称输入后一起保存
+      this.setData({
+        editAvatarUrl: avatarUrl,
+        isEditing: true
+      });
     }
   },
 
-  // 静默登录（不弹窗，只刷新 code）
-  silentLogin: function () {
-    var self = this;
-    wx.login({
-      success: function (res) {
-        if (res.code) {
-          self.setData({ loginCode: res.code });
-          // 更新存储中的 code
-          var wxUser = store.getWxUser();
-          if (wxUser) {
-            wxUser.code = res.code;
-            store.setWxUser(wxUser);
-          }
-        }
-      }
-    });
+  // ---------- 昵称输入 ----------
+  // 使用 type="nickname" 触发，微信会提供昵称建议
+  onNicknameInput: function (e) {
+    this.setData({ editNickName: e.detail.value });
   },
 
-  // 微信登录
-  onLogin: function () {
-    var self = this;
+  // 昵称输入完成（失去焦点）
+  onNicknameBlur: function (e) {
+    var nickName = e.detail.value;
+    if (!nickName || nickName.trim().length === 0) return;
 
-    // 如果之前拒绝过授权，显示引导
-    if (self.data.authDenied) {
-      self.setData({ showAuthGuide: true });
+    // 如果已登录，直接更新昵称
+    if (this.data.isLoggedIn) {
+      var wxUser = store.getWxUser();
+      wxUser.nickName = nickName.trim();
+      store.setWxUser(wxUser);
+      this.setData({
+        'wxUser.nickName': nickName.trim()
+      });
+      wx.showToast({ title: '昵称已更新', icon: 'success' });
+    }
+  },
+
+  // ---------- 登录/注册 ----------
+  // 点击"保存"按钮，完成登录
+  onSaveUser: function () {
+    var nickName = this.data.editNickName || '';
+    var avatarUrl = this.data.editAvatarUrl || this.data.defaultAvatar;
+
+    // 验证昵称
+    nickName = nickName.trim();
+    if (!nickName) {
+      wx.showToast({ title: '请输入昵称', icon: 'none' });
+      return;
+    }
+    if (nickName.length > 20) {
+      wx.showToast({ title: '昵称不能超过20个字', icon: 'none' });
       return;
     }
 
-    wx.login({
-      success: function (res) {
-        if (res.code) {
-          self.setData({ loginCode: res.code });
-          self.getUserProfile();
-        } else {
-          wx.showToast({ title: '登录失败，请重试', icon: 'none' });
-        }
-      },
-      fail: function () {
-        wx.showToast({ title: '网络异常，请检查网络', icon: 'none' });
-      }
+    // 保存用户信息
+    var success = store.setWxUser({
+      nickName: nickName,
+      avatarUrl: avatarUrl,
+      loginTime: Date.now()
+    });
+
+    if (success) {
+      this.setData({
+        wxUser: store.getWxUser(),
+        isLoggedIn: true,
+        isEditing: false,
+        editNickName: '',
+        editAvatarUrl: ''
+      });
+      wx.showToast({ title: '保存成功', icon: 'success' });
+    } else {
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' });
+    }
+  },
+
+  // 取消编辑
+  onCancelEdit: function () {
+    this.setData({
+      isEditing: false,
+      editNickName: '',
+      editAvatarUrl: ''
     });
   },
 
-  // 获取用户信息
-  getUserProfile: function () {
-    var self = this;
-    wx.getUserProfile({
-      desc: '用于展示用户头像和昵称',
-      success: function (res) {
-        var userInfo = res.userInfo;
-        // 保存用户信息到本地
-        store.setWxUser({
-          nickName: userInfo.nickName,
-          avatarUrl: userInfo.avatarUrl,
-          code: self.data.loginCode,
-          loginTime: Date.now()
-        });
-
-        // 清除拒绝标记
-        wx.removeStorageSync('gym_auth_denied');
-
-        self.setData({
-          wxUser: {
-            nickName: userInfo.nickName,
-            avatarUrl: userInfo.avatarUrl
-          },
-          isLoggedIn: true,
-          authDenied: false,
-          showAuthGuide: false
-        });
-        wx.showToast({ title: '登录成功', icon: 'success' });
-      },
-      fail: function (err) {
-        // 用户拒绝授权
-        if (err.errMsg && err.errMsg.indexOf('deny') >= 0 || err.errMsg.indexOf('cancel') >= 0) {
-          wx.setStorageSync('gym_auth_denied', true);
-          self.setData({ authDenied: true });
-          wx.showToast({ title: '需要授权才能登录', icon: 'none' });
-        } else {
-          wx.showToast({ title: '获取用户信息失败', icon: 'none' });
-        }
-      }
-    });
-  },
-
-  // 打开小程序设置页（引导用户手动开启授权）
-  openSetting: function () {
-    var self = this;
-    wx.openSetting({
-      success: function (res) {
-        if (res.authSetting['scope.userInfo']) {
-          // 用户在设置页开启了授权
-          self.getUserProfile();
-        }
-      }
-    });
-    self.setData({ showAuthGuide: false });
-  },
-
-  // 关闭授权引导
-  closeAuthGuide: function () {
-    this.setData({ showAuthGuide: false });
-  },
-
-  // 退出登录
+  // ---------- 退出登录 ----------
   onLogout: function () {
     var self = this;
     wx.showModal({
       title: '确认退出',
       content: '退出后用户信息将被清除',
+      confirmText: '退出',
+      confirmColor: '#ef4444',
       success: function (res) {
         if (res.confirm) {
           store.clearWxUser();
           self.setData({
             wxUser: null,
-            isLoggedIn: false
+            isLoggedIn: false,
+            isEditing: false
           });
           wx.showToast({ title: '已退出', icon: 'success' });
         }
@@ -167,6 +147,7 @@ Page({
     });
   },
 
+  // ---------- 页面跳转 ----------
   // 跳转到身体资料编辑
   onEditProfile: function () {
     wx.navigateTo({ url: '/pages/calculator/calculator' });
@@ -180,5 +161,12 @@ Page({
   // 跳转到隐私说明
   onPrivacy: function () {
     wx.navigateTo({ url: '/pages/privacy/privacy' });
+  },
+
+  onShareAppMessage: function () {
+    return {
+      title: '铁馆日志 · 我的健身档案',
+      path: '/pages/profile/profile'
+    };
   }
 });

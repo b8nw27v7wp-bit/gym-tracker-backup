@@ -3,7 +3,7 @@
   "projectname": "gym-tracker",
   "appid": "wx83a08a69cc9d9fd5",
   "compileType": "miniprogram",
-  "libVersion": "3.4.0",
+  "libVersion": "3.17.0",
   "setting": {
     "es6": true,
     "enhance": true,

@@ -4,80 +4,6 @@
   min-height: 100vh;
 }
 
-/* 授权引导弹窗 */
-.auth-guide {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.auth-guide-mask {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-}
-
-.auth-guide-content {
-  position: relative;
-  background: #ffffff;
-  border-radius: 24rpx;
-  padding: 60rpx 40rpx;
-  margin: 0 60rpx;
-  z-index: 1001;
-}
-
-.auth-guide-title {
-  font-size: 36rpx;
-  font-weight: 600;
-  color: #1d1d1f;
-  text-align: center;
-  margin-bottom: 20rpx;
-}
-
-.auth-guide-desc {
-  font-size: 28rpx;
-  color: #6b7280;
-  text-align: center;
-  line-height: 1.6;
-  margin-bottom: 40rpx;
-}
-
-.auth-guide-btns {
-  display: flex;
-  gap: 20rpx;
-}
-
-.auth-guide-btn {
-  flex: 1;
-  font-size: 28rpx;
-  padding: 20rpx 0;
-  border-radius: 12rpx;
-  border: none;
-}
-
-.auth-guide-btn::after {
-  border: none;
-}
-
-.auth-guide-btn.cancel {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.auth-guide-btn.confirm {
-  background: #07c160;
-  color: #ffffff;
-}
-
 /* 用户信息卡片 */
 .user-card {
   padding: 40rpx;
@@ -89,26 +15,87 @@
   align-items: center;
 }
 
+/* 头像按钮 */
+.avatar-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: normal;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar-btn.large {
+  margin-bottom: 30rpx;
+}
+
 .avatar {
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
   margin-right: 30rpx;
   border: 4rpx solid #f0f0f0;
+  background: #f3f4f6;
+}
+
+.avatar.large {
+  width: 160rpx;
+  height: 160rpx;
+  margin-right: 0;
+  margin-bottom: 16rpx;
+}
+
+.avatar-placeholder {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  margin-right: 30rpx;
+  background: linear-gradient(135deg, #818cf8, #4f46e5);
+  color: #ffffff;
+  font-size: 52rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-placeholder.large {
+  width: 160rpx;
+  height: 160rpx;
+  margin-right: 0;
+  margin-bottom: 16rpx;
+  font-size: 64rpx;
+}
+
+.avatar-hint {
+  font-size: 24rpx;
+  color: #9ca3af;
 }
 
 .user-detail {
   flex: 1;
 }
 
-.nickname {
+/* 昵称输入 */
+.nickname-input {
   font-size: 36rpx;
   font-weight: 600;
   color: #1d1d1f;
-  display: block;
+  padding: 8rpx 0;
+  background: transparent;
 }
 
-.user-id {
+.nickname-input::placeholder {
+  color: #d1d5db;
+}
+
+.login-time {
   font-size: 24rpx;
   color: #9ca3af;
   margin-top: 8rpx;
@@ -123,22 +110,89 @@
   color: #6b7280;
 }
 
+/* 编辑表单 */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.edit-header {
+  margin-bottom: 30rpx;
+}
+
+.edit-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.input-group {
+  width: 100%;
+  margin-bottom: 40rpx;
+}
+
+.input-label {
+  font-size: 28rpx;
+  color: #6b7280;
+  margin-bottom: 12rpx;
+  display: block;
+}
+
+.input-group .nickname-input {
+  width: 100%;
+  padding: 20rpx;
+  background: #f9fafb;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  font-weight: normal;
+  box-sizing: border-box;
+}
+
+.edit-btns {
+  display: flex;
+  gap: 20rpx;
+  width: 100%;
+}
+
+.btn {
+  flex: 1;
+  font-size: 28rpx;
+  padding: 20rpx 0;
+  border-radius: 12rpx;
+  border: none;
+}
+
+.btn::after {
+  border: none;
+}
+
+.btn.cancel {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.btn.confirm {
+  background: #07c160;
+  color: #ffffff;
+}
+
+/* 未登录状态 */
 .login-prompt {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40rpx 0;
+  padding: 20rpx 0;
 }
 
-.login-icon {
-  font-size: 80rpx;
-  margin-bottom: 20rpx;
-}
-
-.login-text {
+.login-hint {
   font-size: 28rpx;
   color: #9ca3af;
-  margin-bottom: 30rpx;
+  margin: 20rpx 0 30rpx;
+}
+
+.quick-login {
+  width: 100%;
 }
 
 .login-btn {
@@ -148,16 +202,12 @@
   padding: 20rpx 60rpx;
   border-radius: 8rpx;
   border: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .login-btn::after {
   border: none;
-}
-
-.auth-hint {
-  font-size: 22rpx;
-  color: #9ca3af;
-  margin-top: 20rpx;
 }
 
 /* 身体资料 */
@@ -198,6 +248,13 @@
 }
 
 /* 功能菜单 */
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 16rpx;
+}
+
 .menu-item {
   display: flex;
   justify-content: space-between;
@@ -218,6 +275,14 @@
 .menu-arrow {
   font-size: 32rpx;
   color: #d1d5db;
+}
+
+/* 卡片通用样式 */
+.card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
 }
 
 /* 应用信息 */
