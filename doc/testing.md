@@ -181,7 +181,7 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 
 > 训练页编辑/保存全流程冒烟（不可变更新、空数据过滤，BUG-003/004 回归）为文档方法（上文 mock 片段），当前以 doc/ 第 5 节手工清单 + 开发者工具实测为准。
 
-数据层 + 页面层（动作详情 / 部位训练页 / 计算器 / 统计热量 / 食物页 / 训练保护 / 训练页 v2.8 新功能 / 自建计划 / E2E 全链路 / secondary 词汇守门 / lastRecord 纯函数 / 边界守门 / 安全守门 / 发力图守门 / 工具函数）= 401 项全绿为提交门槛。专项验证脚本见第 8 章。
+数据层 + 页面层（动作详情 / 部位训练页 / 计算器 / 统计热量 / 食物页 / 训练保护 / 训练页 v2.8 新功能 / 自建计划 / E2E 全链路 / secondary 词汇守门 / lastRecord 纯函数 / 边界守门 / 安全守门 / 发力图守门 / 工具函数）= 450 项全绿为提交门槛。专项验证脚本见第 8 章。
 
 ## 5. 手工测试清单（开发者工具）
 
@@ -201,7 +201,7 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 
 ## 6. 回归流程
 
-1. `node test.js` 全绿（401 项）
+1. `node test.js` 全绿（450 项）
 2. 页面冒烟测试全绿（动作详情 10 项 + 自建计划 22 项）
 3. `node scripts/verify-page-match.js` + `node scripts/verify-nav.js` 全绿
 4. `node scripts/verify-boundaries.js` 全绿（边界矩阵 45 项）
