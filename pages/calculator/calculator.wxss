@@ -53,7 +53,27 @@
   margin-top: 28rpx;
 }
 
-/* 结果 */
+/* 高级选项 */
+.form-section {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f3f4f6;
+}
+
+.form-section-title {
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-bottom: 16rpx;
+}
+
+.toggle-advanced {
+  text-align: center;
+  font-size: 24rpx;
+  color: #6b7280;
+  padding: 16rpx 0;
+}
+
+/* 结果通用 */
 .res-row {
   display: flex;
   justify-content: space-between;
@@ -78,4 +98,177 @@
   font-size: 22rpx;
   color: #9ca3af;
   line-height: 1.7;
+}
+
+/* BMI 显示 */
+.bmi-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 16rpx;
+  margin: 20rpx 0;
+}
+
+.bmi-value {
+  font-size: 72rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bmi-category {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.bmi-bar {
+  position: relative;
+  height: 12rpx;
+  background: linear-gradient(to right, #3b82f6, #22c55e, #f59e0b, #ef4444);
+  border-radius: 6rpx;
+  margin: 20rpx 0 10rpx;
+}
+
+.bmi-marker {
+  position: absolute;
+  top: -6rpx;
+  width: 24rpx;
+  height: 24rpx;
+  background: #ffffff;
+  border: 4rpx solid #1d1d1f;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.bmi-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 20rpx;
+  color: #9ca3af;
+}
+
+/* 体脂率显示 */
+.bf-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 16rpx;
+  margin: 20rpx 0;
+}
+
+.bf-value {
+  font-size: 64rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bf-category {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.bf-method {
+  text-align: center;
+  font-size: 22rpx;
+  color: #9ca3af;
+}
+
+/* 理想体重 */
+.ideal-display {
+  text-align: center;
+  padding: 20rpx 0;
+}
+
+.ideal-value {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.ideal-label {
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-top: 8rpx;
+}
+
+/* 宏量营养素 */
+.macros-tabs {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 12rpx;
+  padding: 4rpx;
+  margin-bottom: 20rpx;
+}
+
+.macros-tab {
+  flex: 1;
+  text-align: center;
+  font-size: 26rpx;
+  color: #6b7280;
+  padding: 12rpx 0;
+  border-radius: 10rpx;
+}
+
+.macros-tab.active {
+  background: #ffffff;
+  color: #1d1d1f;
+  font-weight: 600;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
+}
+
+.macros-content {
+  text-align: center;
+}
+
+.macros-cal {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 20rpx;
+}
+
+.macros-grid {
+  display: flex;
+  justify-content: space-around;
+}
+
+.macros-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.macros-icon {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.macros-icon.protein {
+  background: #3b82f6;
+}
+
+.macros-icon.carbs {
+  background: #f59e0b;
+}
+
+.macros-icon.fat {
+  background: #ef4444;
+}
+
+.macros-num {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.macros-pct {
+  font-size: 22rpx;
+  color: #9ca3af;
 }

@@ -41,12 +41,73 @@
       </picker>
     </view>
 
+    <!-- 可选：围度数据（用于体脂率估算） -->
+    <view class="form-section" wx:if="{{showAdvanced}}">
+      <view class="form-section-title">围度数据（可选，提高体脂率精度）</view>
+      <view class="form-row">
+        <text class="form-label">腰围</text>
+        <input class="form-input" type="digit" value="{{waistCm}}" bindinput="onWaistInput" placeholder="cm" />
+      </view>
+      <view class="form-row">
+        <text class="form-label">颈围</text>
+        <input class="form-input" type="digit" value="{{neckCm}}" bindinput="onNeckInput" placeholder="cm" />
+      </view>
+      <view class="form-row" wx:if="{{gender === 'female'}}">
+        <text class="form-label">臀围</text>
+        <input class="form-input" type="digit" value="{{hipCm}}" bindinput="onHipInput" placeholder="cm" />
+      </view>
+    </view>
+
+    <view class="toggle-advanced" bindtap="onToggleAdvanced">
+      {{showAdvanced ? '收起' : '展开'}}高级选项
+    </view>
+
     <view class="btn-primary calc-btn" bindtap="onCalc">计算</view>
   </view>
 
-  <!-- 结果 -->
+  <!-- 结果：BMI -->
+  <view class="card" wx:if="{{result && result.bmi}}">
+    <view class="card-title">BMI 体质指数</view>
+    <view class="bmi-display">
+      <view class="bmi-value" style="color: {{result.bmi.color}}">{{result.bmi.value}}</view>
+      <view class="bmi-category" style="color: {{result.bmi.color}}">{{result.bmi.category}}</view>
+    </view>
+    <view class="bmi-bar">
+      <view class="bmi-bar-inner" style="width: {{bmiPercent}}%; left: 0"></view>
+      <view class="bmi-marker" style="left: {{bmiPercent}}%"></view>
+    </view>
+    <view class="bmi-labels">
+      <text>偏瘦</text>
+      <text>正常</text>
+      <text>偏胖</text>
+      <text>肥胖</text>
+    </view>
+    <view class="res-tip">{{result.bmi.advice}}</view>
+  </view>
+
+  <!-- 结果：体脂率 -->
+  <view class="card" wx:if="{{result && result.bodyFat}}">
+    <view class="card-title">体脂率估算</view>
+    <view class="bf-display">
+      <view class="bf-value" style="color: {{result.bodyFat.color}}">{{result.bodyFat.value}}%</view>
+      <view class="bf-category" style="color: {{result.bodyFat.color}}">{{result.bodyFat.category}}</view>
+    </view>
+    <view class="bf-method">估算方法：{{result.bodyFat.method}}</view>
+    <view class="res-tip" wx:if="{{result.bodyFat.method === 'BMI估算'}}">如需更精确数据，建议展开高级选项输入腰围/颈围</view>
+  </view>
+
+  <!-- 结果：理想体重 -->
+  <view class="card" wx:if="{{result && result.idealWeight}}">
+    <view class="card-title">理想体重范围</view>
+    <view class="ideal-display">
+      <view class="ideal-value">{{result.idealWeight.min}} - {{result.idealWeight.max}} kg</view>
+      <view class="ideal-label">（BMI 18.5-24 健康范围）</view>
+    </view>
+  </view>
+
+  <!-- 结果：基础代谢 -->
   <view class="card" wx:if="{{result}}">
-    <view class="card-title">计算结果</view>
+    <view class="card-title">能量代谢</view>
     <view class="res-row">
       <text class="res-label">基础代谢 BMR</text>
       <text class="res-value">{{result.bmr}} 大卡/天</text>
@@ -59,6 +120,45 @@
       <text class="res-label">蛋白质需求</text>
       <text class="res-value">{{result.proteinMin}}-{{result.proteinMax}} g/天</text>
     </view>
+    <view class="res-row">
+      <text class="res-label">每日水分</text>
+      <text class="res-value">{{result.waterIntake}} ml</text>
+    </view>
+  </view>
+
+  <!-- 结果：宏量营养素 -->
+  <view class="card" wx:if="{{result && result.macrosMaintain}}">
+    <view class="card-title">宏量营养素分配</view>
+    <view class="macros-tabs">
+      <view class="macros-tab {{macroTab === 'maintain' ? 'active' : ''}}" bindtap="onMacroTab" data-tab="maintain">维持</view>
+      <view class="macros-tab {{macroTab === 'bulk' ? 'active' : ''}}" bindtap="onMacroTab" data-tab="bulk">增肌</view>
+      <view class="macros-tab {{macroTab === 'cut' ? 'active' : ''}}" bindtap="onMacroTab" data-tab="cut">减脂</view>
+    </view>
+    <view class="macros-content">
+      <view class="macros-cal">{{currentMacro.calories}} 大卡/天</view>
+      <view class="macros-grid">
+        <view class="macros-item">
+          <view class="macros-icon protein">P</view>
+          <view class="macros-num">{{currentMacro.protein}}g</view>
+          <view class="macros-pct">{{currentMacro.ratio.protein}}%</view>
+        </view>
+        <view class="macros-item">
+          <view class="macros-icon carbs">C</view>
+          <view class="macros-num">{{currentMacro.carbs}}g</view>
+          <view class="macros-pct">{{currentMacro.ratio.carbs}}%</view>
+        </view>
+        <view class="macros-item">
+          <view class="macros-icon fat">F</view>
+          <view class="macros-num">{{currentMacro.fat}}g</view>
+          <view class="macros-pct">{{currentMacro.ratio.fat}}%</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 结果：目标热量 -->
+  <view class="card" wx:if="{{result}}">
+    <view class="card-title">目标热量</view>
     <view class="res-row">
       <text class="res-label">增肌热量（+10%）</text>
       <text class="res-value">{{result.bulkCal}} 大卡</text>

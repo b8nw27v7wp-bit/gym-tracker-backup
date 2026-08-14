@@ -2,8 +2,9 @@
 var principles = require('./principles');
 var plans = require('./plans');
 var lifestyle = require('./lifestyle');
+var advanced = require('./advanced');
 
-var ALL = principles.concat(plans, lifestyle);
+var ALL = principles.concat(plans, lifestyle, advanced);
 
 var CATEGORIES = [
   { key: 'principles', name: '训练原理', icon: '🧠', desc: '渐进超负荷、容量强度、RM/RIR' },
