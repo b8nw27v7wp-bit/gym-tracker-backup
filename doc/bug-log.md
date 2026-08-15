@@ -9,6 +9,22 @@
 
 ## 已关闭
 
+### BUG-012 | 2026-08-15 | S3 | 已关闭
+- 模块：stats.wxss 部位热力图（用户反馈）
+- 描述：部位训练热力图（GitHub 风格肌群矩阵）添加训练后格子依然灰色，颜色无变化（数据聚合正常，level 已算到 1-4）
+- 复现步骤：记录一条带目标肌群的训练 → 统计页看部位热力图 → 格子不变蓝
+- 根因：`.heat-l0~l4` 颜色类定义在 `.gh-cell` 之前，两者特异性相同（0,0,1,0），同特异性下后声明的 `.gh-cell { background: #f3f4f6 }` 胜出，把颜色类全部盖成灰色（日历热力图 `.heat-cell` 定义在颜色类之前故正常）
+- 修复：颜色类改为组合选择器 `.gh-cell.heat-l1 { background: #dbeafe }` 等（特异性 0,0,2,0），并删除 `.gh-cell` 自身 background；核对 `.heat-cell`/`.heat-selected-dot`/`.legend-cell` 无同类问题
+- 验证：mock 聚合 level=4 → 颜色映射 #1d4ed8；`node test.js` 660 项全绿
+
+### BUG-013 | 2026-08-15 | S4 | 已关闭
+- 模块：profile.wxss 昵称输入框（用户反馈）
+- 描述：登录时填用户名的输入框只显示上半段，像被压缩（iOS 上 `type="nickname"` 的 input 有默认原生高度，仅设 padding 撑不开，文字被裁剪）
+- 复现步骤：个人中心未登录 → 快速设置/选择头像进入编辑表单 → 昵称框文字显示不全
+- 根因：`.input-group .nickname-input` 未显式设置 height，依赖 padding 撑高
+- 修复：编辑表单昵称框显式 `height: 88rpx` + `line-height: 88rpx`（padding 只留水平）；已登录态昵称框基类补 `min-height: 60rpx` 防同类压缩
+- 验证：微信开发者工具预览；`node test.js` 660 项全绿
+
 ### BUG-008 | 2026-08-13 | S3 | 已关闭
 - 模块：store.js 代码组织（代码审查发现）
 - 描述：微信用户相关函数（getWxUser/setWxUser/clearWxUser/wxLogin/isLoginValid/getLoginStatus）定义在 module.exports 之后，虽然函数声明会被提升，但代码组织不清晰，容易造成维护困惑

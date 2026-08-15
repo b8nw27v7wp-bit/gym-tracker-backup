@@ -89,6 +89,7 @@
   color: #1d1d1f;
   padding: 8rpx 0;
   background: transparent;
+  min-height: 60rpx; /* 防 iOS nickname 输入被压缩（只显示上半段） */
 }
 
 .nickname-input::placeholder {
@@ -141,7 +142,9 @@
 
 .input-group .nickname-input {
   width: 100%;
-  padding: 20rpx;
+  height: 88rpx;      /* 明确高度：iOS nickname 输入无 height 时文字被裁剪 */
+  line-height: 88rpx; /* 文字垂直居中 */
+  padding: 0 20rpx;   /* 高度由 height 决定，padding 只保留水平 */
   background: #f9fafb;
   border-radius: 12rpx;
   font-size: 30rpx;

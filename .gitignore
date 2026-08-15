@@ -15,3 +15,6 @@ Thumbs.db
 
 # 批量脚本残留
 *.tmp
+
+# 微信开发者工具上传产物
+sourcemap.zip

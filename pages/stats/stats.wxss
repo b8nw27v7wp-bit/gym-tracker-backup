@@ -487,10 +487,17 @@
   height: 30rpx;
   border-radius: 7rpx;
   margin-right: 7rpx;
-  background: #f3f4f6;
   flex-shrink: 0;
   transition: opacity 0.15s;
 }
+
+/* 颜色：组合选择器（.gh-cell.heat-lX）特异性高于 .gh-cell 自身，
+   否则同特异性下后声明的 .gh-cell background 会盖掉颜色类 → 格子永远灰色 */
+.gh-cell.heat-l0 { background: #f3f4f6; }
+.gh-cell.heat-l1 { background: #dbeafe; }
+.gh-cell.heat-l2 { background: #93c5fd; }
+.gh-cell.heat-l3 { background: #3b82f6; }
+.gh-cell.heat-l4 { background: #1d4ed8; }
 
 .gh-cell:last-child {
   margin-right: 0;
@@ -1668,6 +1675,7 @@
 }
 
 .goal-ring-body {
+  position: relative;
   display: flex;
   align-items: center;
 }
@@ -1679,24 +1687,29 @@
 }
 
 .goal-ring-info {
+  position: absolute;
+  left: 90rpx; /* 圆环中心（canvas 宽 180 的一半） */
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-left: -130rpx;
-  width: 130rpx;
+  width: 150rpx;
 }
 
 .goal-ring-num {
   font-size: 34rpx;
   font-weight: 700;
   color: #1d1d1f;
+  line-height: 1.2;
 }
 
 .goal-ring-sub {
   font-size: 19rpx;
   color: #9ca3af;
-  margin-top: 4rpx;
+  margin-top: 6rpx;
   text-align: center;
+  line-height: 1.4;
 }
 
 .goal-ring-side {
@@ -1704,6 +1717,7 @@
   flex-direction: column;
   align-items: flex-end;
   margin-left: auto;
+  padding-left: 32rpx;
 }
 
 .goal-ring-val {

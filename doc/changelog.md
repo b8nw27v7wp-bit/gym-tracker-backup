@@ -2,6 +2,13 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.26.5（2026-08-15）— 热力图着色 + 昵称框修复
+
+- **fix(css)**: 部位训练热力图格子永远灰色——`.heat-l0~l4` 颜色类定义早于 `.gh-cell`，同特异性后声明胜出被覆盖；改组合选择器 `.gh-cell.heat-lX` 提特异性（BUG-012，详见 bug-log.md）
+- **fix(css)**: 登录昵称输入框被压缩只显示上半段——iOS `type="nickname"` input 未设 height 导致文字裁剪；显式 `height` + `line-height` + 基类 `min-height`（BUG-013，详见 bug-log.md）
+- **docs**: bug-log.md 新增 BUG-012/BUG-013 关闭记录
+- 回归：`node test.js` 660 项全绿（纯样式修复，逻辑无改动）
+
 ## v2.26.4（2026-08-15）— 用户逻辑/非常规逻辑漏洞修复
 
 按用户正常操作与非常规操作（快速点击/中途切换/编辑态交叉）再挖一轮，修复 4 个缺陷：
