@@ -12,20 +12,34 @@
  */
 function calculatePlates(targetWeight, barWeight, options) {
   var opts = options || {};
-  var bar = barWeight || 20;
-  var availablePlates = opts.availablePlates || [25, 20, 15, 10, 5, 2.5, 1.25];
+  // 安全转换：barWeight 字符串/NaN 归 20；targetWeight 非法/负数返回不可组合
+  var tgt = Number(targetWeight);
+  if (!isFinite(tgt) || tgt < 0) {
+    return {
+      targetWeight: tgt, barWeight: barWeight || 20, plates: [], sidePlates: [],
+      totalWeight: barWeight || 20, difference: 0, possible: false, message: '无效目标重量'
+    };
+  }
+  var bar = Number(barWeight) || 20;
+  var rawPlates = Array.isArray(opts.availablePlates) ? opts.availablePlates : [25, 20, 15, 10, 5, 2.5, 1.25];
+  // 只保留有限正数片（0/负数/NaN 会导致无限循环挂死）
+  var availablePlates = rawPlates.filter(function (p) {
+    var n = Number(p);
+    return isFinite(n) && n > 0;
+  });
+  if (availablePlates.length === 0) availablePlates = [25, 20, 15, 10, 5, 2.5, 1.25];
   var roundToNearest = opts.roundToNearest !== false;
 
   // 需要的杠铃片总重（单侧）
-  var plateWeight = targetWeight - bar;
+  var plateWeight = tgt - bar;
   if (plateWeight < 0) {
     return {
-      targetWeight: targetWeight,
+      targetWeight: tgt,
       barWeight: bar,
       plates: [],
       sidePlates: [],
       totalWeight: bar,
-      difference: targetWeight - bar,
+      difference: tgt - bar,
       possible: false,
       message: '目标重量小于杠铃重量'
     };
@@ -40,17 +54,21 @@ function calculatePlates(targetWeight, barWeight, options) {
 
   for (var i = 0; i < sortedPlates.length; i++) {
     var plate = sortedPlates[i];
+    // 防御：plate 非正数时跳过（理论已过滤，双保险防死循环）
+    if (!(plate > 0)) continue;
     while (remaining >= plate - 0.001) { // 浮点误差容差
       sidePlates.push(plate);
       remaining -= plate;
       remaining = Math.round(remaining * 100) / 100; // 避免浮点累积误差
+      if (sidePlates.length > 10000) break; // 防御极端输入无限循环
     }
+    if (sidePlates.length > 10000) break;
   }
 
   // 计算实际总重
   var actualPlateWeight = sidePlates.reduce(function (sum, p) { return sum + p; }, 0) * 2;
   var actualTotal = bar + actualPlateWeight;
-  var difference = Math.round((actualTotal - targetWeight) * 100) / 100;
+  var difference = Math.round((actualTotal - tgt) * 100) / 100;
 
   // 统计每种片的数量
   var plateCount = {};
@@ -60,7 +78,7 @@ function calculatePlates(targetWeight, barWeight, options) {
   }
 
   return {
-    targetWeight: targetWeight,
+    targetWeight: tgt,
     barWeight: bar,
     plates: sidePlates,
     sidePlates: sidePlates,
@@ -78,12 +96,12 @@ function calculatePlates(targetWeight, barWeight, options) {
  * @returns {string} 格式化的字符串
  */
 function formatPlates(result) {
-  if (!result || !result.sidePlates || result.sidePlates.length === 0) {
-    return result.barWeight + 'kg（空杠）';
+  if (!result || !Array.isArray(result.sidePlates) || result.sidePlates.length === 0) {
+    return (result && result.barWeight) + 'kg（空杠）';
   }
 
   var parts = [];
-  var plateCount = result.plateCount;
+  var plateCount = result.plateCount || {};
   var keys = Object.keys(plateCount).sort(function (a, b) { return parseFloat(b) - parseFloat(a); });
 
   for (var i = 0; i < keys.length; i++) {

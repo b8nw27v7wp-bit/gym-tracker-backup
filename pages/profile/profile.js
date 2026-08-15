@@ -133,6 +133,11 @@ Page({
     });
   },
 
+  // 快速设置：未登录时进入编辑表单（输入昵称 + 选择头像后保存登录）
+  onQuickLogin: function () {
+    this.setData({ isEditing: true, editNickName: '', editAvatarUrl: '' });
+  },
+
   // ---------- 退出登录 ----------
   onLogout: function () {
     var self = this;

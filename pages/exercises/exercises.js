@@ -76,7 +76,9 @@ Page({
   },
 
   onSearchInput: function (e) {
-    this.setData({ keyword: e.detail.value });
+    // 长度/类型防御（WXML maxlength 可被绕过）
+    var kw = String(e.detail.value || '').slice(0, 30);
+    this.setData({ keyword: kw });
     this.refresh();
   },
 
@@ -145,14 +147,17 @@ Page({
   },
 
   onOpenDetail: function (e) {
+    var id = e.currentTarget.dataset.id;
+    if (!id) return;
     wx.navigateTo({
-      url: '/pages/exercise-detail/exercise-detail?id=' + e.currentTarget.dataset.id
+      url: '/pages/exercise-detail/exercise-detail?id=' + id
     });
   },
 
   // 编辑自定义动作（仅 source==='custom' 显示编辑按钮；内置动作不可编辑）
   onEditExercise: function (e) {
     var id = e.currentTarget.dataset.id;
+    if (!id) return;
     wx.navigateTo({ url: '/pages/exercise-edit/exercise-edit?id=' + id });
   },
 

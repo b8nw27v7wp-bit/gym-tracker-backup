@@ -433,5 +433,8 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 | `scripts/verify-nav.js` | 导航审计 | 1 |
 | `scripts/verify-page-match.js` | 页面数据匹配 | 4 |
 | `scripts/verify-v6.js` | v6 边界+安全专项（训练日提醒/周容量目标/单位换算/重量趋势/订阅守卫：脏输入、原型注入、周界、非法值） | 60 |
+| `scripts/verify-interaction.js` | 交互审计（分板块分页面：事件 handler 存在性、导航目标/方式、同页栈溢出、dataset 一致、裸 navigateBack 兜底、组件事件） | 19 |
+| `scripts/verify-user-flow.js` | 用户使用逻辑仿真（端到端：初始化/资料/训练/历史编辑复制/计划打卡/目标围度/导出恢复） | 42 |
+| `scripts/verify-security-audit.js` | 安全漏洞回归（原型注入/崩溃/DoS/对象型字段，覆盖 8 个纯函数模块 + muscleGroups） | 49 |
 
-**总计：1289 项测试**
+**总计：1399 项测试**

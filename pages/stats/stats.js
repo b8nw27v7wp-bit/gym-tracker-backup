@@ -111,9 +111,41 @@ Page({
     this.buildWeeklyReportData(workouts);
     // 热量板块（不依赖训练记录，无训练也显示）
     this.calcCalories(workouts);
+    // 体重趋势（与训练记录无关：先记体重、后练第一次的用户也要能看到）
+    var bws = store.getBodyweights();
+    var trend = util.bodyweightTrend(bws);
+    var hasBodyData = trend.points.length > 0;
+    var bodyDeltaText = '';
+    var bodyDeltaClass = '';
+    if (hasBodyData) {
+      var dDelta = Math.round(units.displayWeight(trend.delta) * 10) / 10;
+      if (dDelta > 0) { bodyDeltaText = '+' + dDelta; bodyDeltaClass = 'delta-up'; }
+      else if (dDelta < 0) { bodyDeltaText = '' + dDelta; bodyDeltaClass = 'delta-down'; }
+      else { bodyDeltaText = '±0'; bodyDeltaClass = 'delta-flat'; }
+    }
+    var bwPoints = [];
+    if (hasBodyData) {
+      var recent = trend.points.slice(-8);
+      var range = (trend.max - trend.min) || 1;
+      bwPoints = recent.map(function (p) {
+        var d = new Date(p.ts);
+        return {
+          label: (d.getMonth() + 1) + '/' + d.getDate(),
+          height: Math.max(Math.round(((p.weight - trend.min) / range) * 100), 8)
+        };
+      });
+    }
     if (workouts.length === 0) {
       this._statsCache = null;
-      this.setData({ hasData: false, bwLatest: 0, hasBodyData: false, heatHasData: false, heatTotalSets: 0, heatSelected: null });
+      this.setData({
+        hasData: false,
+        bwLatest: units.displayWeight(trend.latest),
+        hasBodyData: hasBodyData,
+        bwPoints: bwPoints,
+        bodyDeltaText: bodyDeltaText,
+        bodyDeltaClass: bodyDeltaClass,
+        heatHasData: false, heatTotalSets: 0, heatSelected: null
+      });
       return;
     }
 
@@ -265,30 +297,7 @@ Page({
       }
     });
 
-    // 体重趋势（显示单位换算）
-    var bws = store.getBodyweights();
-    var trend = util.bodyweightTrend(bws);
-    var hasBodyData = trend.points.length > 0;
-    var bodyDeltaText = '';
-    var bodyDeltaClass = '';
-    if (hasBodyData) {
-      var dDelta = Math.round(units.displayWeight(trend.delta) * 10) / 10;
-      if (dDelta > 0) { bodyDeltaText = '+' + dDelta; bodyDeltaClass = 'delta-up'; }
-      else if (dDelta < 0) { bodyDeltaText = '' + dDelta; bodyDeltaClass = 'delta-down'; }
-      else { bodyDeltaText = '±0'; bodyDeltaClass = 'delta-flat'; }
-    }
-    var bwPoints = [];
-    if (hasBodyData) {
-      var recent = trend.points.slice(-8);
-      var range = (trend.max - trend.min) || 1;
-      bwPoints = recent.map(function (p) {
-        var d = new Date(p.ts);
-        return {
-          label: (d.getMonth() + 1) + '/' + d.getDate(),
-          height: Math.max(Math.round(((p.weight - trend.min) / range) * 100), 8)
-        };
-      });
-    }
+    // 体重趋势已在上方提前计算（无训练记录也展示）；此处变量已就绪，直接进入部位热力图
 
     // 部位热力图（v3.3 GitHub 风格肌群矩阵）：按周 × 肌群分组聚合，纯 WXML 渲染（无 canvas）
     // resolver 用 id→动作 哈希（内置优先，与 customExercises.findExercise 语义一致），

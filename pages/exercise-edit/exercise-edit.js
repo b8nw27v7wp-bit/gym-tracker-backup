@@ -51,7 +51,9 @@ Page({
         return;
       }
       wx.showToast({ title: '动作不存在', icon: 'none' });
-      setTimeout(function () { wx.navigateBack(); }, 800);
+      setTimeout(function () {
+        wx.navigateBack({ fail: function () { wx.switchTab({ url: '/pages/exercises/exercises' }); } });
+      }, 800);
       return;
     }
     // 新建：默认第一个器械/难度
@@ -123,13 +125,18 @@ Page({
 
   // ---------- 保存 ----------
   onSave: function () {
+    // 防御：器械/难度索引越界（异常数据时避免 undefined.key 崩溃）
+    var eq = this.data.equipmentOptions[this.data.equipmentIndex];
+    var df = this.data.difficultyOptions[this.data.difficultyIndex];
+    if (!eq) eq = this.data.equipmentOptions[0] || { key: 'other' };
+    if (!df) df = this.data.difficultyOptions[0] || { key: '1' };
     var input = {
       id: this.data.id || store.genCustomExerciseId(),
       name: this.data.name,
       target: this.data.selectedTargets,
       secondary: [],
-      equipment: this.data.equipmentOptions[this.data.equipmentIndex].key,
-      difficulty: this.data.difficultyOptions[this.data.difficultyIndex].key,
+      equipment: eq.key,
+      difficulty: df.key,
       desc: this.data.desc,
       tips: this.data.tips,
       rest: this.data.rest
@@ -142,7 +149,9 @@ Page({
     var saved = store.saveCustomExercise(result.data);
     if (saved) {
       wx.showToast({ title: this.data.isEdit ? '已保存修改' : '已添加', icon: 'success' });
-      setTimeout(function () { wx.navigateBack(); }, 600);
+      setTimeout(function () {
+        wx.navigateBack({ fail: function () { wx.switchTab({ url: '/pages/exercises/exercises' }); } });
+      }, 600);
     } else {
       wx.showToast({ title: '保存失败，请重试', icon: 'none' });
     }
@@ -161,7 +170,9 @@ Page({
         if (!res.confirm) return;
         store.removeCustomExercise(self.data.id);
         wx.showToast({ title: '已删除', icon: 'none' });
-        setTimeout(function () { wx.navigateBack(); }, 600);
+        setTimeout(function () {
+          wx.navigateBack({ fail: function () { wx.switchTab({ url: '/pages/exercises/exercises' }); } });
+        }, 600);
       }
     });
   },

@@ -74,17 +74,30 @@ function sanitizeTarget(list) {
   return out;
 }
 
+// 安全字符串转换：对象/其他类型不抛错（String({toString:'x'}) 会抛 TypeError）
+function safeStr(v) {
+  try { return String(v == null ? '' : v); } catch (e) { return ''; }
+}
+
+// 安全数字转换：对象/非有限数归 NaN（validRest 处兜默认值）
+function safeNum(v) {
+  var n;
+  try { n = Number(v); } catch (e) { return NaN; }
+  return n;
+}
+
 function validEquipment(v) {
-  return EQUIPMENT_MAP[v] ? v : 'other';
+  return Object.prototype.hasOwnProperty.call(EQUIPMENT_MAP, v) ? v : 'other';
 }
 
 function validDifficulty(v) {
-  var d = String(v);
-  return DIFFICULTY_MAP[d] ? d : '1';
+  var d = safeStr(v);
+  return Object.prototype.hasOwnProperty.call(DIFFICULTY_MAP, d) ? d : '1';
 }
 
 function validRest(v) {
-  var n = Number(v);
+  if (v === '' || v === null || v === undefined) return 30; // 空值用默认 30s
+  var n = safeNum(v);
   if (!isFinite(n)) return 30;
   return Math.max(0, Math.min(600, Math.round(n)));
 }
@@ -94,14 +107,14 @@ function buildCustomExercise(input) {
   var data = input && typeof input === 'object' ? input : {};
   return {
     id: data.id || 'custom_' + Date.now(),
-    name: String(data.name || '').trim().slice(0, 30),
+    name: safeStr(data.name).trim().slice(0, 30),
     target: sanitizeTarget(data.target),
     secondary: sanitizeTarget(data.secondary),
     equipment: validEquipment(data.equipment),
     difficulty: validDifficulty(data.difficulty),
-    desc: String(data.desc || '').trim().slice(0, 2000),
-    tips: String(data.tips || '').trim().slice(0, 2000),
-    mistakes: String(data.mistakes || '').trim().slice(0, 2000),
+    desc: safeStr(data.desc).trim().slice(0, 2000),
+    tips: safeStr(data.tips).trim().slice(0, 2000),
+    mistakes: safeStr(data.mistakes).trim().slice(0, 2000),
     rest: validRest(data.rest),
     source: 'custom',
     createdAt: data.createdAt || Date.now(),
@@ -114,7 +127,7 @@ function buildCustomExercise(input) {
 function validateCustomExercise(input) {
   var data = input && typeof input === 'object' ? input : {};
   var errors = [];
-  var name = String(data.name || '').trim();
+  var name = safeStr(data.name).trim();
   if (!name) errors.push('请填写动作名称');
   if (name.length > 30) errors.push('动作名称不能超过 30 个字');
   var target = sanitizeTarget(data.target);
@@ -127,9 +140,10 @@ function validateCustomExercise(input) {
 }
 
 // 内置动作 + 自定义动作合并（自定义不覆盖内置；内置 id 优先）
+// 用无原型对象做 id 去重，防 __proto__ 等 key 被静默丢弃/误判
 function mergeExercises(builtin, custom) {
   var list = Array.isArray(builtin) ? builtin.slice() : [];
-  var ids = {};
+  var ids = Object.create(null);
   list.forEach(function (e) { if (e && e.id) ids[e.id] = true; });
   (Array.isArray(custom) ? custom : []).forEach(function (e) {
     if (!e || !e.id || ids[e.id]) return;
@@ -155,7 +169,7 @@ function findExercise(id, builtin, custom) {
 
 // 合并搜索：内置 + 自定义，按关键字匹配名称/目标肌群词
 function searchExercises(keyword, builtin, custom) {
-  var kw = String(keyword || '').trim().toLowerCase();
+  var kw = safeStr(keyword).trim().toLowerCase();
   var list = mergeExercises(builtin, custom);
   if (!kw) return list;
   return list.filter(function (e) {
@@ -198,7 +212,7 @@ function siteIndex() {
 
 // 器械/难度中文文案（详情页等展示）
 function equipmentName(key) {
-  return EQUIPMENT_MAP[key] || String(key || '');
+  return Object.prototype.hasOwnProperty.call(EQUIPMENT_MAP, key) ? EQUIPMENT_MAP[key] : safeStr(key);
 }
 
 function difficultyName(key) {

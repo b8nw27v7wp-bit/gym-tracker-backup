@@ -98,7 +98,8 @@ Page({
     var calc = this.data.calc;
     if (!calc) return;
     this.setData({
-      'calc.grams': input,
+      // 显示与存储统一用夹紧后的数值（原 bug：存原始串导致 10000.5 显示夹紧但记录被拒）
+      'calc.grams': String(g),
       'calc.total': Math.round(calc.kcal * g / 100)
     });
   },

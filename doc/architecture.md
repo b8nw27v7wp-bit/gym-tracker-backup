@@ -13,7 +13,7 @@
 1. **纯函数分层**：计算/聚合逻辑全部抽为 `utils/*` 纯函数模块（无 wx 依赖），node 可直接单测
 2. **数据兜底**：任何非法/脏数据不崩溃（原型链注入防御、未知词忽略计数、类型强校验）
 3. **浅色极简 UI**：白底卡片、主文字 #1d1d1f、强调 indigo #4f46e5、蓝系数据色板
-4. **测试门禁**：主套件 650 项 + 专项 639 项全绿才可提交
+4. **测试门禁**：主套件 650 项 + 专项 749 项全绿才可提交
 5. **页面瘦身**：页面 JS 只做编排（读 store → 调纯函数 → setData），不内联业务计算
 
 **分层架构**
@@ -33,7 +33,7 @@
 ├─────────────────────────────────────────────┤
 │ 存储层 wx.setStorageSync（16 个业务 key + 4 个跨页 key） │
 ├─────────────────────────────────────────────┤
-│ 测试 test.js（650）+ scripts/verify-*.js（专项 639）    │
+│ 测试 test.js（650）+ scripts/verify-*.js（专项 749）    │
 └─────────────────────────────────────────────┘
 ```
 
@@ -239,7 +239,10 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 | `verify-nav.js` | 1 | 导航审计（注册/跳转方式/栈溢出/兜底） |
 | `verify-page-match.js` | 4 | 页面数据匹配 |
 | `verify-v6.js` | 60 | **v6 边界+安全专项**：训练日提醒脏输入/原型注入/周界、周容量目标脏 workouts/热身排除/进度超100%、store 设置与目标脏存储清洗/__proto__、单位换算非法值、重量趋势脏数据/自重/limit、订阅消息守卫 |
-| **合计** | **1289** | 提交门槛：主套件 + 全部专项全绿 |
+| `verify-interaction.js` | 19 | **交互审计**：分板块分页面——WXML 事件绑定→JS handler 存在性、导航目标注册与跳转方式（navigateTo/switchTab/redirectTo）、同页 navigateTo 栈溢出、dataset 一致性、裸 navigateBack 兜底、组件/custom-tab-bar 事件 |
+| `verify-user-flow.js` | 42 | **用户使用逻辑仿真（端到端）**：初始化→身体资料→训练记录→历史编辑/复制→计划打卡→目标/围度→导出清空恢复，逐场景断言 |
+| `verify-security-audit.js` | 49 | **安全漏洞回归**：training-intelligence/weekly-report/plate-calculator/nutrition/substitute/custom-exercises/warmup/muscleGroups 的原型注入·崩溃·DoS·对象型字段修复回归 |
+| **合计** | **1399** | 提交门槛：主套件 + 全部专项全绿 |
 
 ---
 
@@ -255,6 +258,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 | `roadmap.md` | 路线图与完成状态 |
 | `changelog.md` | 版本变更日志 |
 | `bug-log.md` | 缺陷记录 |
+| `ui-audit.md` | UI 交互与导航审计（分板块分页面事件/跳转缺陷 + 修复记录） |
 | `review-kit.md` | 评审清单 |
 | `release-checklist.md` | 发版检查表 |
 | `content-guidelines.md` | 内容规范（动作库/文章文案） |
@@ -284,7 +288,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 4. [ ] architecture §3.3 表格同步
 
 ### 通用
-1. [ ] 提交前跑全量：`node test.js` + 13 个专项脚本（1289 项）
+1. [ ] 提交前跑全量：`node test.js` + 15 个专项脚本（1399 项）
 2. [ ] 模块/页面/存储 key 变更后跑 `scripts/verify-modules.js`（建构管理守门）
 3. [ ] 文档同步（architecture 板块矩阵/模块表 + changelog + 涉及文档）
 4. [ ] 手工清单抽查改动模块（微信开发者工具）

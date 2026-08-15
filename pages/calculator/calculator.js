@@ -80,10 +80,12 @@ Page({
   // 宏量营养素 tab 切换
   onMacroTab: function (e) {
     var tab = e.currentTarget.dataset.tab;
+    var res = this.data.result;
+    if (!res) return; // 防御：结果未生成
     var macro = null;
-    if (tab === 'maintain') macro = this.data.result.macrosMaintain;
-    else if (tab === 'bulk') macro = this.data.result.macrosBulk;
-    else if (tab === 'cut') macro = this.data.result.macrosCut;
+    if (tab === 'maintain') macro = res.macrosMaintain;
+    else if (tab === 'bulk') macro = res.macrosBulk;
+    else if (tab === 'cut') macro = res.macrosCut;
     this.setData({ macroTab: tab, currentMacro: macro });
   },
 

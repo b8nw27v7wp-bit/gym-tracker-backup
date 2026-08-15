@@ -74,7 +74,8 @@ function emptyWeek(ws) {
 // 最近 N 周（含空周）每周训练总结，正序返回（[0] 最老，[N-1] 本周）
 // 纯函数：不依赖 wx，只读 workouts；空数组/脏数据安全返回 8 条空周
 function buildWeeklyReports(workouts, weeks, options) {
-  var n = typeof weeks === 'number' && weeks > 0 ? Math.floor(weeks) : DEFAULT_WEEKS;
+  // weeks 上限 52（防 Infinity/超大值挂死）；非法值回落默认
+  var n = (typeof weeks === 'number' && isFinite(weeks) && weeks > 0) ? Math.min(Math.max(Math.floor(weeks), 1), 52) : DEFAULT_WEEKS;
   var list = Array.isArray(workouts) ? workouts : [];
   var resolver = options && typeof options.resolver === 'function' ? options.resolver : null;
 
@@ -101,13 +102,13 @@ function buildWeeklyReports(workouts, weeks, options) {
     r.workouts += 1;
     r.volume += calc.volume;
     r.sets += calc.sets;
-    r.duration += util.toNum(w.duration) || 45;
+    r.duration += Math.max(util.toNum(w.duration), 0) || 45; // 负时长不累加
     r._days[dayStartOf(ts)] = true;
 
-    (w.items || []).forEach(function (item) {
-      if (!item || typeof item !== 'object') return;
+    (Array.isArray(w.items) ? w.items : []).forEach(function (item) {
+      if (!item || typeof item !== 'object' || typeof item.exerciseId !== 'string') return;
       itemGroupsFor(item, resolver).forEach(function (gk) { r._groups[gk] = true; });
-      var maxW = r._maxWeight[item.exerciseId] || 0;
+      var maxW = Object.prototype.hasOwnProperty.call(r._maxWeight, item.exerciseId) ? r._maxWeight[item.exerciseId] : 0;
       (Array.isArray(item.sets) ? item.sets : []).forEach(function (s) {
         if (s && s.warmup) return;
         var wt = util.toNum(s && s.weight);

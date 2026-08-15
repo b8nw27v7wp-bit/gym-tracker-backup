@@ -73,6 +73,11 @@ Page({
   // 设为本周计划（打卡提醒）
   onSetWeeklyPlan: function (e) {
     var id = e.currentTarget.dataset.id;
+    // 校验 id 有效性（计划库内置 + 自建）
+    if (!id || !planUtil.getPlan(id, store.getCustomPlans())) {
+      wx.showToast({ title: '计划不存在', icon: 'none' });
+      return;
+    }
     store.setWeeklyPlan(id);
     this.refreshWeeklyPlan();
     this.selectPlan(id);

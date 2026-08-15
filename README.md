@@ -194,6 +194,7 @@ gym-tracker/
 | roadmap.md | 路线图（方向一~七） |
 | changelog.md | 变更日志 |
 | bug-log.md | Bug 追踪 |
+| ui-audit.md | UI 交互与导航审计（事件/跳转缺陷 + 修复记录） |
 
 ## 数据模型
 

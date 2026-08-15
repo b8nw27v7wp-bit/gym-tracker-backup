@@ -2,6 +2,43 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.26.3（2026-08-15）— 全量代码审查 + 用户流仿真 + 安全漏洞补全
+
+### 全量代码审查（所有页面 + 全部纯函数模块）
+- **audit**: 分两个子代理审查全部 19 页面 + 16 纯函数模块，共发现高危 6 / 中危 10 / 低危若干
+
+### 高危修复（原型注入 / 崩溃 / DoS）
+- **fix(security)**: `training-intelligence`——`indexSessions`/`overloadAdvice`/`usageCount`/`rotationAdvice` 原型链 key（`__proto__`/`constructor`/`toString`）直接下标访问崩溃；改 `Object.create(null)` 索引 + `hasOwnProperty` 安全读取 + `topSet` null 组防御 + `bumpWeight` 溢出兜底
+- **fix(security)**: `weekly-report`——items 非数组 `forEach` 崩溃（测试被 ts 过滤掩盖）、weeks=Infinity 无限循环 DoS（钳制 52）、`_maxWeight` 原型链 PR 丢失、负时长累加
+- **fix(security)**: `plate-calculator`——availablePlates 含 0/负数无限 push 挂死、targetWeight=Infinity 无限循环、barWeight 字符串拼接错误结果、非数组回落、formatPlates 缺字段
+
+### 中危修复（对象型字段 / 非数组 / 校验缺失）
+- **fix(security)**: `nutrition`——`Number(obj)` 对象字段崩溃、`calcBodyFat(null)` 崩溃、activity 非整数静默错误；全改 `toNum` + 入参守卫
+- **fix(security)**: `substitute`——excludeEquipment 非数组崩溃、exercisesData 伪模块崩溃、`equipmentName` 原型链返回对象
+- **fix(security)**: `custom-exercises`——`String(obj)`/`Number(obj)` 崩溃、validEquipment/validDifficulty 原型链放行、`__proto__` id 在 mergeExercises 被误杀、validRest 空值不一致
+- **fix(security)**: `warmup`——warmupSets 无上限挂死（钳制 10）、NaN 工作重量、formatWarmupSets null
+- **fix(validation)**: `plan-edit`——组数/次数负数/小数/越界未校验会污染训练记录统计；输入即时校验（组 1-99/次 1-999 整数）+ 保存钳制 + 训练日数量上限 + id 碰撞修复
+- **fix(page)**: exercise-edit 索引越界、exercises 搜索长度/空 id、food 克数显示与存储不一致、calculator onMacroTab 空守卫、plans 周计划 id 校验、`data/exercises.muscleGroups` 原型链穿透
+
+### 用户使用逻辑仿真（新增 `scripts/verify-user-flow.js`，42 项）
+- 端到端模拟：首次打开 → 身体资料 → 体重 → 训练记录（热身/RPE/备注）→ 历史编辑 → 复制上次 → 计划打卡 → 目标/围度/恢复 → 统计页 → 导出/清空/恢复
+- **fix(ui)**: 发现并修复"先记体重、后练第一次看不到体重趋势"（loadStats 无训练时提前返回忽略体重）——体重趋势提前计算，独立于训练记录展示
+
+### 安全漏洞回归（新增 `scripts/verify-security-audit.js`，49 项）
+- 覆盖上述全部修复点的回归断言（原型注入零命中、无全局污染、无 DoS、对象型字段不崩、白名单回退）
+
+### 其他
+- 专项 658→749（新增 2 脚本 91 项），合计 1399 项；architecture/testing 同步
+- 全量回归：主套件 650 + 专项 749 项全绿（1399 项）
+
+## v2.26.2（2026-08-15）— UI 交互与导航审计
+
+- **audit**: 新增 `scripts/verify-interaction.js`（19 项）分板块分页面审计——WXML 事件绑定→JS handler 存在性、导航目标注册与跳转方式（tab 须 switchTab/子页不能 switchTab/同页 navigateTo 栈溢出）、dataset 一致性、裸 navigateBack 兜底、组件与 custom-tab-bar 事件
+- **fix(ui)**: profile 页「快速设置」按钮绑定 `onQuickLogin` 但 JS 无该方法（死按钮点击无反应）——新增 `onQuickLogin` 进入编辑表单
+- **fix(nav)**: plan-edit / exercise-edit 共 6 处裸 `wx.navigateBack()` 无 fail 兜底（直达页时静默卡死）——加 fail 兜底切回训练/动作库 tab
+- **docs**: 新增 `doc/ui-audit.md` 审计记录（方法/缺陷清单/修复/守门说明）；architecture/testing 同步（专项 639→658，合计 1308 项）
+- 全量回归：主套件 650 + 专项 658 项全绿（1308 项）
+
 ## v2.26.1（2026-08-15）— v6 边界/安全加固
 
 - **fix(security)**: `util.weeklyPlanProgress` 遇 null/非对象/非法 ts 的 workout 元素崩溃（`w.ts` 读 null）——增加脏数据防御（今日新增的 plan-reminder 纯函数暴露此路径）

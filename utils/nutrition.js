@@ -1,6 +1,13 @@
 // 营养计算器：BMR/TDEE/BMI/体脂率/宏量营养素（纯函数，可单测）
 // Mifflin-St Jeor 公式 + BMI + 体脂率估算（Navy Method）
 
+// 安全数字转换：对象/非有限数归 0（Number({toString:'x'}) 会抛 TypeError，需捕获）
+function toNum(v) {
+  var n;
+  try { n = Number(v); } catch (e) { return 0; }
+  return isFinite(n) ? n : 0;
+}
+
 // activity: 1 久坐 / 2 轻度（1-3次/周） / 3 中度（3-5次/周） / 4 高度（6-7次/周） / 5 极高（体力工作+训练）
 var ACTIVITY_MULTIPLIER = [0, 1.2, 1.375, 1.55, 1.725, 1.9];
 
@@ -41,8 +48,8 @@ var BODY_FAT_FEMALE = [
 
 // 计算 BMI
 function calcBMI(weightKg, heightCm) {
-  var w = Number(weightKg);
-  var h = Number(heightCm);
+  var w = toNum(weightKg);
+  var h = toNum(heightCm);
   if (!isFinite(w) || w <= 0 || !isFinite(h) || h <= 0) return null;
   var heightM = h / 100;
   var bmi = w / (heightM * heightM);
@@ -62,13 +69,14 @@ function calcBMI(weightKg, heightCm) {
 // 需要腰围、颈围、臀围（女性还需要身高）
 // 如果没有围度数据，使用 BMI 估算公式（精度较低）
 function calcBodyFat(input) {
+  input = input && typeof input === 'object' ? input : {}; // null/非对象安全
   var gender = input.gender;
-  var height = Number(input.heightCm);
-  var weight = Number(input.weightKg);
-  var age = Number(input.age);
-  var waist = Number(input.waistCm);     // 腰围
-  var neck = Number(input.neckCm);       // 颈围
-  var hip = Number(input.hipCm);         // 臀围（女性需要）
+  var height = toNum(input.heightCm);
+  var weight = toNum(input.weightKg);
+  var age = toNum(input.age);
+  var waist = toNum(input.waistCm);     // 腰围
+  var neck = toNum(input.neckCm);       // 颈围
+  var hip = toNum(input.hipCm);         // 臀围（女性需要）
 
   if (!isFinite(height) || !isFinite(weight) || !isFinite(age)) return null;
 
@@ -121,8 +129,8 @@ function calcBodyFat(input) {
 
 // 计算腰臀比（WHR）
 function calcWHR(waistCm, hipCm) {
-  var waist = Number(waistCm);
-  var hip = Number(hipCm);
+  var waist = toNum(waistCm);
+  var hip = toNum(hipCm);
   if (!isFinite(waist) || waist <= 0 || !isFinite(hip) || hip <= 0) return null;
   var whr = Math.round((waist / hip) * 100) / 100;
   // 分类（男性 >0.95、女性 >0.85 为高风险）
@@ -135,7 +143,7 @@ function calcWHR(waistCm, hipCm) {
 
 // 计算理想体重范围（BMI 18.5-24）
 function calcIdealWeight(heightCm) {
-  var h = Number(heightCm);
+  var h = toNum(heightCm);
   if (!isFinite(h) || h <= 0) return null;
   var heightM = h / 100;
   var min = Math.round(18.5 * heightM * heightM * 10) / 10;
@@ -147,8 +155,8 @@ function calcIdealWeight(heightCm) {
 // 返回 { protein, carbs, fat }（克/天）
 function calcMacros(tdee, weightKg, goal) {
   // goal: 'maintain' / 'bulk' / 'cut'
-  var t = Number(tdee);
-  var w = Number(weightKg);
+  var t = toNum(tdee);
+  var w = toNum(weightKg);
   if (!isFinite(t) || t <= 0 || !isFinite(w) || w <= 0) return null;
 
   var calories = t;
@@ -182,17 +190,15 @@ function calcMacros(tdee, weightKg, goal) {
 
 // 计算每日水分需求（ml）
 function calcWaterIntake(weightKg, activity) {
-  var w = Number(weightKg);
-  var a = Number(activity);
+  var w = toNum(weightKg);
+  var a = toNum(activity);
   if (!isFinite(w) || w <= 0) return null;
   // 基础：30-35ml/kg
   var base = w * 33;
   // 运动额外：每级活动 +250ml
   var extra = isFinite(a) && a >= 1 ? (a - 1) * 250 : 0;
   return Math.round((base + extra) / 100) * 100; // 四舍五入到 100ml
-}
-
-// 主计算函数
+}// 主计算函数
 function calcNutrition(input) {
   // 边界：input 必须是有效对象
   if (!input || typeof input !== 'object') {
@@ -200,10 +206,10 @@ function calcNutrition(input) {
   }
 
   var gender = input.gender;
-  var age = Number(input.age);
-  var height = Number(input.heightCm);
-  var weight = Number(input.weightKg);
-  var activity = Number(input.activity);
+  var age = toNum(input.age);
+  var height = toNum(input.heightCm);
+  var weight = toNum(input.weightKg);
+  var activity = toNum(input.activity);
 
   // 边界：性别验证
   if (gender !== 'male' && gender !== 'female') {
@@ -221,8 +227,8 @@ function calcNutrition(input) {
   if (!isFinite(weight) || weight < 30 || weight > 300) {
     return { valid: false, error: '体重需在 30-300kg' };
   }
-  // 边界：活动水平验证（1-5）
-  if (!isFinite(activity) || activity < 1 || activity > 5) {
+  // 边界：活动水平验证（1-5 整数）
+  if (!isFinite(activity) || activity < 1 || activity > 5 || Math.floor(activity) !== activity) {
     return { valid: false, error: '请选择活动水平' };
   }
 

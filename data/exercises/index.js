@@ -186,7 +186,8 @@ var MUSCLE_GROUPS = {
 // 返回某部位肌肉发力分区（带动作详情，供 muscle-detail 页渲染）
 // 返回 [{ name, rec, tips: [..], exercises: [{ id, name, difficulty, typeText, equipText }] }]
 function muscleGroups(key) {
-  var groups = MUSCLE_GROUPS[key];
+  // hasOwnProperty 防御：URL 传入 key 可能为 constructor/toString 等原型链 key
+  var groups = Object.prototype.hasOwnProperty.call(MUSCLE_GROUPS, key) ? MUSCLE_GROUPS[key] : null;
   if (!groups) return [];
   return groups.map(function (g, gi) {
     return {

@@ -12,33 +12,38 @@
  * @returns {Array} 热身组方案
  */
 function generateWarmupSets(workingWeight, options) {
+  // 安全转换：非法工作重量返回空数组
+  var work = Number(workingWeight);
+  if (!isFinite(work) || work <= 0) return [];
   // 如果工作重量小于等于杠铃重量，不需要热身组
-  if (workingWeight <= (options && options.barWeight || 20)) {
+  if (work <= (options && options.barWeight || 20)) {
     return [];
   }
   var opts = options || {};
-  var bar = opts.barWeight || 20;
-  var increment = opts.increment || 0.25;
+  var bar = Number(opts.barWeight) || 20;
+  var increment = Number(opts.increment) || 0.25;
   var baseReps = opts.reps || 6;
 
   // 根据工作重量决定热身组数
   var warmupSets;
-  if (workingWeight <= 40) {
+  if (work <= 40) {
     warmupSets = 2;
-  } else if (workingWeight <= 80) {
+  } else if (work <= 80) {
     warmupSets = 3;
-  } else if (workingWeight <= 120) {
+  } else if (work <= 120) {
     warmupSets = 4;
   } else {
     warmupSets = 5;
   }
 
-  if (opts.warmupSets) {
-    warmupSets = opts.warmupSets;
+  // 自定义组数：钳制 1-10（防 Infinity/超大值挂死）
+  if (opts.warmupSets !== undefined) {
+    var n = Math.round(Number(opts.warmupSets));
+    if (isFinite(n) && n > 0) warmupSets = Math.min(Math.max(n, 1), 10);
   }
 
   var sets = [];
-  var weightRange = workingWeight - bar;
+  var weightRange = work - bar;
 
   for (var i = 0; i < warmupSets; i++) {
     // 递增比例：从低到高
@@ -49,8 +54,8 @@ function generateWarmupSets(workingWeight, options) {
     weight = Math.round(weight / 2.5) * 2.5;
 
     // 确保不超过工作重量
-    if (weight >= workingWeight) {
-      weight = workingWeight * 0.9;
+    if (weight >= work) {
+      weight = work * 0.9;
       weight = Math.round(weight / 2.5) * 2.5;
     }
 
@@ -92,7 +97,9 @@ function formatWarmupSets(warmupSets) {
 
   var parts = [];
   for (var i = 0; i < warmupSets.length; i++) {
-    parts.push(warmupSets[i].weight + 'kg×' + warmupSets[i].reps);
+    var s = warmupSets[i];
+    if (!s) continue;
+    parts.push(s.weight + 'kg×' + s.reps);
   }
 
   return parts.join(' → ');

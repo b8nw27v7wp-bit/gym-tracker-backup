@@ -14,15 +14,18 @@
  */
 function getSubstitutes(exerciseId, exercisesData, options) {
   var opts = options || {};
-  var limit = (typeof opts.limit === "number") ? Math.max(0, opts.limit) : 3;
-  var excludeEquipment = opts.excludeEquipment || [];
+  var limit = (typeof opts.limit === 'number' && isFinite(opts.limit)) ? Math.max(0, opts.limit) : 3;
+  var excludeEquipment = Array.isArray(opts.excludeEquipment) ? opts.excludeEquipment : [];
   var sameTypeOnly = opts.sameTypeOnly !== false;
 
-  if (!exercisesData) return [];
+  // 防御：exercisesData 方法缺失 / 候选非数组时不崩
+  if (!exercisesData || typeof exercisesData.getExercise !== 'function' || typeof exercisesData.exercisesByMuscle !== 'function') return [];
   var current = exercisesData.getExercise(exerciseId);
   if (!current) return [];
 
-  var candidates = exercisesData.exercisesByMuscle(current.muscle);
+  var rawCandidates = exercisesData.exercisesByMuscle(current.muscle);
+  if (!Array.isArray(rawCandidates)) return [];
+  var candidates = rawCandidates;
   var scored = [];
 
   for (var i = 0; i < candidates.length; i++) {
@@ -128,7 +131,12 @@ function equipmentName(equipment) {
     plate: '杠铃片',
     other: '其他'
   };
-  return map[equipment] || equipment;
+  return Object.prototype.hasOwnProperty.call(map, equipment) ? map[equipment] : String(equipment || '');
+}
+
+// 白名单判定的安全查询（原型链 key 零命中）
+function inMap(map, key) {
+  return Object.prototype.hasOwnProperty.call(map, key) ? map[key] : null;
 }
 
 module.exports = {

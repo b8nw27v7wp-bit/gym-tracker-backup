@@ -9,9 +9,9 @@ var DAY_MS = 86400000;
 // 按动作索引训练会话（一次构建多处复用，避免每个动作重复全量扫描）
 // 返回 { [exerciseId]: [{ ts, sets: [{ weight, reps }] }] }（按时间倒序，仅含有效组，排除热身组）
 // 自重动作（weight=0）保留——轮换提醒需要计数；渐进建议按 topSet 过滤 w>0
-// 安全：脏 workout / 非法 ts / 非数组字段全部跳过
+// 安全：脏 workout / 非法 ts / 非数组字段全部跳过；原型链 key（__proto__ 等）零命中
 function indexSessions(workouts) {
-  var idx = {};
+  var idx = Object.create(null); // 无原型，天然免疫 __proto__/constructor 注入
   (Array.isArray(workouts) ? workouts : []).forEach(function (w) {
     if (!w || typeof w !== 'object') return;
     var ts = Number(w.ts);
@@ -23,7 +23,7 @@ function indexSessions(workouts) {
         return s && !s.warmup && util.toNum(s.reps) > 0;
       });
       if (sets.length === 0) return;
-      if (!idx[it.exerciseId]) idx[it.exerciseId] = [];
+      if (!Object.prototype.hasOwnProperty.call(idx, it.exerciseId)) idx[it.exerciseId] = [];
       idx[it.exerciseId].push({ ts: ts, sets: sets });
     });
   });
@@ -37,8 +37,8 @@ function indexSessions(workouts) {
 function topSet(sets) {
   var top = null;
   (Array.isArray(sets) ? sets : []).forEach(function (s) {
-    var w = util.toNum(s.weight);
-    var r = util.toNum(s.reps);
+    var w = util.toNum(s && s.weight);
+    var r = util.toNum(s && s.reps);
     if (w <= 0 || r <= 0) return;
     if (!top || w > top.weight || (w === top.weight && r > top.reps)) {
       top = { weight: w, reps: r };
@@ -52,7 +52,14 @@ function bumpWeight(weight) {
   var w = Number(weight);
   if (!isFinite(w) || w <= 0) return 0;
   var step = w < 100 ? 2.5 : (w < 200 ? 5 : 10);
-  return Math.round((w + step) * 2) / 2;
+  var bumped = Math.round((w + step) * 2) / 2;
+  return isFinite(bumped) ? bumped : 0; // 溢出兜底（超大重量）
+}
+
+// 安全读取会话索引：原型链 key / 非对象返回 undefined
+function safeIndexList(sessionsIndex, exerciseId) {
+  if (!sessionsIndex || typeof sessionsIndex !== 'object' || typeof exerciseId !== 'string') return undefined;
+  return Object.prototype.hasOwnProperty.call(sessionsIndex, exerciseId) ? sessionsIndex[exerciseId] : undefined;
 }
 
 // 渐进超负荷建议：基于该动作最近 2 次训练的最高重量组，给出本次建议重量/次数
@@ -60,15 +67,15 @@ function bumpWeight(weight) {
 // 返回 { trend: 'new'|'up'|'flat'|'down', weight, reps, delta, lastTs }
 //   new=首次训练（按上次 +1 档）/ up=重量或次数进步（继续加重）/ flat=持平（加 1 次）/ down=回落（恢复优先）
 function overloadAdvice(sessionsIndex, exerciseId) {
-  var list = sessionsIndex && sessionsIndex[exerciseId];
+  var list = safeIndexList(sessionsIndex, exerciseId);
   if (!list || list.length === 0) return null;
-  var lastTop = topSet(list[0].sets);
+  var lastTop = topSet(list[0] && list[0].sets);
   if (!lastTop) return null;
   if (list.length === 1) {
     var w1 = bumpWeight(lastTop.weight);
     return { trend: 'new', weight: w1, reps: lastTop.reps, delta: Math.round((w1 - lastTop.weight) * 2) / 2, lastTs: list[0].ts };
   }
-  var prevTop = topSet(list[1].sets);
+  var prevTop = topSet(list[1] && list[1].sets);
   if (!prevTop) return { trend: 'new', weight: bumpWeight(lastTop.weight), reps: lastTop.reps, delta: Math.round((bumpWeight(lastTop.weight) - lastTop.weight) * 2) / 2, lastTs: list[0].ts };
   var trend;
   if (lastTop.weight > prevTop.weight) trend = 'up';
@@ -87,7 +94,7 @@ function overloadAdvice(sessionsIndex, exerciseId) {
 
 // 某动作最近 windowMs 内的训练场次（默认近 30 天）
 function usageCount(sessionsIndex, exerciseId, windowMs) {
-  var list = sessionsIndex && sessionsIndex[exerciseId];
+  var list = safeIndexList(sessionsIndex, exerciseId);
   if (!list) return 0;
   var cutoff = Date.now() - (windowMs || 30 * DAY_MS);
   var n = 0;
