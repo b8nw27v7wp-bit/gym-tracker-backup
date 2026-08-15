@@ -1,4 +1,5 @@
-// 部位训练热力图聚合（v3.1）：按最近 N 周每个动作的 target 肌群词，聚合到 muscle-map 的 zone 块
+// 部位训练热力图聚合（v3.3，GitHub 风格肌群矩阵）：按最近 N 周每个动作的 target 肌群词，
+// 聚合到肌群分组（行）× 周（列）的训练组数矩阵
 // 纯函数模块，无 wx 依赖 → node 可单测
 // 训练记录结构参照 utils/store.js：workout = { ts, items: [{ exerciseId, target?, muscle, sets }] }
 // target 词 → zone 的映射复用 data/muscle-map.js 的 MUSCLES（词到发力块）；找不到映射的词忽略并计数，绝不崩溃
@@ -7,6 +8,39 @@ var muscleMap = require('../data/muscle-map');
 
 var DAY_MS = 86400000;
 var DEFAULT_WEEKS = 12;
+
+// 'ALL' 词（全身/爆发力）命中的全部 zone key：模块级预计算一次，避免聚合时每个动作重复 Object.keys
+var ALL_ZONE_KEYS = Object.keys(muscleMap.ZONES);
+
+// 肌群分组（GitHub 风格矩阵的"行"）：14 组覆盖全部 45 个 zone，无重叠、无遗漏
+var MUSCLE_GROUPS = [
+  { key: 'neck',     name: '颈',     zones: ['neck'] },
+  { key: 'trap',     name: '斜方',   zones: ['trap-f-l', 'trap-f-r', 'trap-b-l', 'trap-b-r', 'trap-mid-l', 'trap-mid-r'] },
+  { key: 'shoulder', name: '肩',     zones: ['shoulder-f-l', 'shoulder-f-r', 'shoulder-b-l', 'shoulder-b-r'] },
+  { key: 'chest',    name: '胸',     zones: ['chest-upper-l', 'chest-upper-r', 'chest-mid-l', 'chest-mid-r', 'chest-lower-l', 'chest-lower-r'] },
+  { key: 'bicep',    name: '肱二头', zones: ['bicep-l', 'bicep-r'] },
+  { key: 'tricep',   name: '肱三头', zones: ['tricep-l', 'tricep-r'] },
+  { key: 'forearm',  name: '前臂',   zones: ['forearm-l', 'forearm-r'] },
+  { key: 'abs',      name: '腹',     zones: ['abs-upper', 'abs-lower', 'oblique-l', 'oblique-r'] },
+  { key: 'back',     name: '背',     zones: ['lat-l', 'lat-r', 'erector-l', 'erector-r'] },
+  { key: 'glute',    name: '臀',     zones: ['glute-l', 'glute-r'] },
+  { key: 'quad',     name: '股四头', zones: ['quad-l', 'quad-r'] },
+  { key: 'hamstring', name: '腘绳',  zones: ['hamstring-l', 'hamstring-r'] },
+  { key: 'calf',     name: '小腿',   zones: ['calf-l', 'calf-r', 'tibialis-l', 'tibialis-r'] },
+  { key: 'cardio',   name: '心肺',   zones: ['heart'] }
+];
+
+// zoneKey → 分组 key（模块加载时构建一次）
+var ZONE_GROUP = {};
+MUSCLE_GROUPS.forEach(function (g) {
+  g.zones.forEach(function (z) { ZONE_GROUP[z] = g.key; });
+});
+
+// zone key → 所属分组 key；未定义/非法输入返回 null
+function zoneGroupOf(zoneKey) {
+  if (typeof zoneKey !== 'string') return null;
+  return Object.prototype.hasOwnProperty.call(ZONE_GROUP, zoneKey) ? ZONE_GROUP[zoneKey] : null;
+}
 
 // 某 ts 所在周的周一 0 点（与 util.weekStart 一致的本地实现，避免依赖 util）
 function weekStartOf(ts) {
@@ -33,7 +67,7 @@ function targetToZones(targetWords) {
     if (typeof word !== 'string') { unmapped += 1; return; }
     var m = Object.prototype.hasOwnProperty.call(muscleMap.MUSCLES, word) ? muscleMap.MUSCLES[word] : null;
     if (!m) { unmapped += 1; return; }
-    var keys = m.zones === 'ALL' ? Object.keys(muscleMap.ZONES) : (m.zones || []);
+    var keys = m.zones === 'ALL' ? ALL_ZONE_KEYS : (m.zones || []);
     keys.forEach(function (z) { zones[z] = true; });
   });
   return { zones: zones, unmapped: unmapped };
@@ -49,10 +83,30 @@ function muscleFallbackZones(muscle) {
   primary.forEach(function (word) {
     var m = Object.prototype.hasOwnProperty.call(muscleMap.MUSCLES, word) ? muscleMap.MUSCLES[word] : null;
     if (!m) return;
-    var keys = m.zones === 'ALL' ? Object.keys(muscleMap.ZONES) : (m.zones || []);
+    var keys = m.zones === 'ALL' ? ALL_ZONE_KEYS : (m.zones || []);
     keys.forEach(function (z) { zones[z] = true; });
   });
   return zones;
+}
+
+// 解析单个 item → { zones: [zoneKey], sets: 组数 } 或 null（完全无法映射）
+// unmappedOut: { count } 累计未命中 target 词个数（安全：不抛异常）
+function itemZoneHits(item, resolver, unmappedOut) {
+  var targetWords = Array.isArray(item.target) ? item.target : [];
+  if (targetWords.length === 0 && item.exerciseId && typeof resolver === 'function') {
+    var ex = resolver(item.exerciseId);
+    if (ex && Array.isArray(ex.target)) targetWords = ex.target;
+  }
+  var mapped = targetToZones(targetWords);
+  unmappedOut.count += mapped.unmapped;
+  var hitZones = mapped.zones;
+  // 兜底：target 无任何命中 → 用部位主肌群映射（旧记录动作已下架等场景）
+  if (Object.keys(hitZones).length === 0 && item.muscle) {
+    hitZones = muscleFallbackZones(item.muscle);
+  }
+  var zoneKeys = Object.keys(hitZones);
+  if (zoneKeys.length === 0) return null; // 完全无法映射 → 忽略（已计入 unmapped）
+  return { zones: zoneKeys, sets: Array.isArray(item.sets) ? item.sets.length : 1 };
 }
 
 // 聚合最近 weeks 周的训练数据 → 每个 zone 的训练组数 / 训练次数
@@ -75,7 +129,7 @@ function aggregateZoneCounts(workouts, weeks, resolver) {
     counts[z] = 0;
     sessions[z] = 0;
   });
-  var unmappedCount = 0;
+  var unmappedOut = { count: 0 };
   var totalSets = 0;
   var touchedZones = {};
 
@@ -88,25 +142,11 @@ function aggregateZoneCounts(workouts, weeks, resolver) {
     var items = Array.isArray(w.items) ? w.items : [];
     items.forEach(function (item) {
       if (!item || typeof item !== 'object') return;
-      // 解析 target 词：优先 item.target，其次通过动作库按 exerciseId 解析
-      var targetWords = Array.isArray(item.target) ? item.target : [];
-      if (targetWords.length === 0 && item.exerciseId && typeof resolver === 'function') {
-        var ex = resolver(item.exerciseId);
-        if (ex && Array.isArray(ex.target)) targetWords = ex.target;
-      }
-      var mapped = targetToZones(targetWords);
-      unmappedCount += mapped.unmapped;
-      var hitZones = mapped.zones;
-      // 兜底：target 无任何命中 → 用部位主肌群映射（旧记录动作已下架等场景）
-      if (Object.keys(hitZones).length === 0 && item.muscle) {
-        hitZones = muscleFallbackZones(item.muscle);
-      }
-      var zoneKeys = Object.keys(hitZones);
-      if (zoneKeys.length === 0) return; // 完全无法映射 → 忽略（已计入 unmappedCount）
-      var numSets = Array.isArray(item.sets) ? item.sets.length : 1;
-      totalSets += numSets;
-      zoneKeys.forEach(function (z) {
-        counts[z] += numSets;
+      var hit = itemZoneHits(item, resolver, unmappedOut);
+      if (!hit) return;
+      totalSets += hit.sets;
+      hit.zones.forEach(function (z) {
+        counts[z] += hit.sets;
         if (!sessionMarks[z]) sessionMarks[z] = {};
         if (!sessionMarks[z][wi]) {
           sessionMarks[z][wi] = true;
@@ -124,9 +164,83 @@ function aggregateZoneCounts(workouts, weeks, resolver) {
     counts: counts,
     sessions: sessions,
     maxCount: maxCount,
-    unmappedCount: unmappedCount,
+    unmappedCount: unmappedOut.count,
     totalSets: totalSets,
     hasData: Object.keys(touchedZones).length > 0
+  };
+}
+
+// 按周 × 肌群分组聚合（v3.3，GitHub 风格矩阵）：最近 n 周每周每组的训练组数
+// 返回 {
+//   weeks: [{ weekStart, sets: { groupKey: 组数 } }]（最近 n 周正序，含空周）,
+//   groupTotals: { groupKey: 组数 }, groupSessions: { groupKey: 训练次数 },
+//   maxWeekSets: 单周单组最大组数（至少 1）, totalSets, unmappedCount, hasData
+// }
+function aggregateZoneCountsByWeek(workouts, weeks, resolver) {
+  var n = Number(weeks);
+  if (!isFinite(n) || n <= 0) n = DEFAULT_WEEKS;
+  var nowWeek = weekStartOf(Date.now());
+  var startTs = nowWeek - (n - 1) * 7 * DAY_MS;
+
+  var weekSets = [];
+  var groupTotals = {};
+  var groupSessions = {};
+  var sessionMarks = {}; // groupKey → { 训练索引: true }
+  MUSCLE_GROUPS.forEach(function (g) { groupTotals[g.key] = 0; groupSessions[g.key] = 0; });
+  for (var i = 0; i < n; i++) weekSets.push({});
+  var unmappedOut = { count: 0 };
+  var totalSets = 0;
+  var touchedGroups = {};
+
+  var list = Array.isArray(workouts) ? workouts : [];
+  list.forEach(function (w, wi) {
+    if (!w || typeof w !== 'object') return;
+    var ts = Number(w.ts);
+    if (!isFinite(ts) || ts < 0) return;
+    if (ts < startTs) return;
+    var wStart = weekStartOf(ts);
+    if (wStart > nowWeek) return; // 未来周（时钟偏差）→ 忽略，避免越界
+    var wIdx = Math.round((wStart - startTs) / (7 * DAY_MS));
+    if (wIdx < 0 || wIdx >= n) return;
+    var items = Array.isArray(w.items) ? w.items : [];
+    items.forEach(function (item) {
+      if (!item || typeof item !== 'object') return;
+      var hit = itemZoneHits(item, resolver, unmappedOut);
+      if (!hit) return;
+      totalSets += hit.sets;
+      // 同组去重：一个动作可能命中同组多个 zone（如左右块），组数只计一次
+      var itemGroups = {};
+      hit.zones.forEach(function (z) {
+        var g = ZONE_GROUP[z];
+        if (!g || itemGroups[g]) return;
+        itemGroups[g] = true;
+        weekSets[wIdx][g] = (weekSets[wIdx][g] || 0) + hit.sets;
+        groupTotals[g] += hit.sets;
+        if (!sessionMarks[g]) sessionMarks[g] = {};
+        if (!sessionMarks[g][wi]) {
+          sessionMarks[g][wi] = true;
+          groupSessions[g] += 1;
+        }
+        touchedGroups[g] = true;
+      });
+    });
+  });
+
+  var maxWeekSets = 1;
+  weekSets.forEach(function (ws) {
+    Object.keys(ws).forEach(function (g) { if (ws[g] > maxWeekSets) maxWeekSets = ws[g]; });
+  });
+
+  return {
+    weeks: weekSets.map(function (ws, i) {
+      return { weekStart: startTs + i * 7 * DAY_MS, sets: ws };
+    }),
+    groupTotals: groupTotals,
+    groupSessions: groupSessions,
+    maxWeekSets: maxWeekSets,
+    unmappedCount: unmappedOut.count,
+    totalSets: totalSets,
+    hasData: Object.keys(touchedGroups).length > 0
   };
 }
 
@@ -144,31 +258,7 @@ function colorLevel(count, maxCount) {
 // 训练量档位颜色（level 0 = 灰色未训练，1-4 蓝系由浅到深）
 var LEVEL_COLORS = ['#f3f4f6', '#dbeafe', '#93c5fd', '#3b82f6', '#1d4ed8'];
 
-// zone key → 中文展示名（点击信息条/无障碍用）
-// 规则：先查完整 key，查不到则去掉 -l/-r 侧标再查，再查不到返回 key 本身
-var ZONE_NAMES = {
-  'neck': '颈',
-  'trap-f': '斜方肌上', 'trap-b': '斜方肌上', 'trap-mid': '斜方肌中',
-  'shoulder-f': '三角肌前束', 'shoulder-b': '三角肌后束',
-  'chest-upper': '上胸', 'chest-mid': '中胸', 'chest-lower': '下胸',
-  'bicep': '肱二头肌', 'tricep': '肱三头肌', 'forearm': '前臂',
-  'abs-upper': '上腹', 'abs-lower': '下腹', 'oblique': '腹斜肌',
-  'lat': '背阔肌', 'erector': '竖脊肌',
-  'glute': '臀大肌', 'hamstring': '腘绳肌',
-  'quad': '股四头肌', 'calf': '小腿', 'tibialis': '胫骨前肌',
-  'heart': '心肺'
-};
-
-// zone key → 中文名（含 -l/-r 侧标剥离兜底）
-function zoneName(key) {
-  if (typeof key !== 'string') return '';
-  if (Object.prototype.hasOwnProperty.call(ZONE_NAMES, key)) return ZONE_NAMES[key];
-  var base = key.replace(/-(l|r)$/, '');
-  if (Object.prototype.hasOwnProperty.call(ZONE_NAMES, base)) return ZONE_NAMES[base];
-  return key;
-}
-
-// 某 zone 训练量占全身训练量的百分比（0-100 整数；全身无训练返回 0）
+// 某 key（zone 或分组）训练量占总训练量的百分比（0-100 整数；总数 0 返回 0）
 function zoneShare(counts, key) {
   var total = 0;
   if (counts && typeof counts === 'object') {
@@ -183,32 +273,16 @@ function zoneShare(counts, key) {
   return Math.round(c / total * 100);
 }
 
-// 画布点击命中测试：归一化坐标 (nx, ny) → zoneKey 或 null
-// zoneList 传入 FRONT_ZONES / BACK_ZONES；共用块（neck/前臂）在两侧画布上都可命中
-function zoneAt(zoneList, nx, ny) {
-  if (!Array.isArray(zoneList)) return null;
-  var px = Number(nx);
-  var py = Number(ny);
-  if (!isFinite(px) || !isFinite(py)) return null;
-  for (var i = 0; i < zoneList.length; i++) {
-    var key = zoneList[i];
-    var z = muscleMap.ZONES[key];
-    if (!z) continue;
-    if (px >= z.x && px <= z.x + z.w && py >= z.y && py <= z.y + z.h) return key;
-  }
-  return null;
-}
-
 module.exports = {
   DEFAULT_WEEKS: DEFAULT_WEEKS,
+  MUSCLE_GROUPS: MUSCLE_GROUPS,
+  zoneGroupOf: zoneGroupOf,
   weekStartOf: weekStartOf,
   targetToZones: targetToZones,
   muscleFallbackZones: muscleFallbackZones,
   aggregateZoneCounts: aggregateZoneCounts,
+  aggregateZoneCountsByWeek: aggregateZoneCountsByWeek,
   colorLevel: colorLevel,
   LEVEL_COLORS: LEVEL_COLORS,
-  ZONE_NAMES: ZONE_NAMES,
-  zoneName: zoneName,
-  zoneShare: zoneShare,
-  zoneAt: zoneAt
+  zoneShare: zoneShare
 };

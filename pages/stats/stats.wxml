@@ -190,7 +190,7 @@
     </view>
   </view>
 
-  <!-- 部位热力图（身体 42 块按近 12 周训练量着色） -->
+  <!-- 部位热力图（GitHub 风格肌群矩阵：行=肌群，列=近 12 周，色深=当周组数） -->
   <view class="card">
     <view class="heat-head">
       <view class="card-title">部位热力图</view>
@@ -198,19 +198,32 @@
       <text class="heat-days" wx:else>近 12 周肌群训练量</text>
     </view>
     <view wx:if="{{heatHasData}}">
-      <view class="heat-tabs">
-        <view class="heat-tab {{heatSide === 'front' ? 'heat-tab-active' : ''}}"
-              data-side="front" bindtap="onHeatSwitch">正面</view>
-        <view class="heat-tab {{heatSide === 'back' ? 'heat-tab-active' : ''}}"
-              data-side="back" bindtap="onHeatSwitch">背面</view>
+      <view class="gh-head">
+        <view class="gh-head-name">部位</view>
+        <view class="gh-head-cells">
+          <text wx:for="{{heatWeekLabels}}" wx:key="index" class="gh-head-label">{{item}}</text>
+        </view>
       </view>
-      <canvas type="2d" id="heatCanvas" class="heat-canvas" bindtap="onHeatTap"></canvas>
+      <view wx:for="{{heatRows}}" wx:key="key"
+            class="gh-row {{heatSelected && heatSelected.key === item.key ? 'gh-row-active' : ''}}"
+            data-key="{{item.key}}" bindtap="onGroupTap" hover-class="gh-row-hover">
+        <text class="gh-row-name">{{item.name}}</text>
+        <view class="gh-row-cells">
+          <view wx:for="{{item.cells}}" wx:for-item="c" wx:key="index" class="gh-cell heat-l{{c.level}}"></view>
+        </view>
+        <text class="gh-row-total">{{item.total}}</text>
+      </view>
+      <!-- 常驻信息区：未选中=引导（避免布局跳动），选中=肌群数据 + 档位色块 -->
       <view class="heat-selected" wx:if="{{heatSelected}}">
+        <view class="heat-selected-dot heat-l{{heatSelected.level}}"></view>
         <text class="heat-selected-name">{{heatSelected.name}}</text>
         <text class="heat-selected-val" wx:if="{{heatSelected.sets > 0}}">近 12 周 {{heatSelected.sets}} 组 · {{heatSelected.sessions}} 次训练 · 占全身 {{heatSelected.share}}%</text>
         <text class="heat-selected-val" wx:else>近 12 周未训练</text>
       </view>
-      <view class="heat-legend">
+      <view class="heat-selected" wx:else>
+        <text class="heat-selected-hint">点击部位行，查看近 12 周训练量</text>
+      </view>
+      <view class="heat-legend heat-legend-mid">
         <text class="heat-legend-text">未练</text>
         <view class="heat-cell heat-l0 legend-cell"></view>
         <view class="heat-cell heat-l1 legend-cell"></view>
@@ -219,7 +232,7 @@
         <view class="heat-cell heat-l4 legend-cell"></view>
         <text class="heat-legend-text">多</text>
       </view>
-      <view class="heat-tip">颜色深浅 = 该部位近 12 周训练组数 · 点击身体部位查看详情</view>
+      <view class="heat-tip">每格 = 该部位当周训练组数 · 颜色越深训练越多</view>
     </view>
     <view wx:else class="heat-empty">
       <text class="heat-empty-text">开始训练后生成部位热力图</text>

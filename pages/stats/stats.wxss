@@ -441,54 +441,83 @@
   margin-right: 6rpx;
 }
 
-/* 部位热力图 */
-.heat-tabs {
+/* 部位热力图（GitHub 风格肌群矩阵） */
+.gh-head,
+.gh-row {
   display: flex;
-  justify-content: center;
-  gap: 12rpx;
-  margin: 16rpx 0 20rpx;
+  align-items: center;
 }
 
-.heat-tab {
-  padding: 10rpx 40rpx;
-  border-radius: 999rpx;
-  font-size: 26rpx;
+.gh-head {
+  margin-bottom: 8rpx;
+}
+
+.gh-head-name,
+.gh-row-name {
+  width: 88rpx;
+  flex-shrink: 0;
+  font-size: 22rpx;
   color: #9ca3af;
-  background: #f3f4f6;
-  transition: all 0.2s;
 }
 
-.heat-tab-active {
-  color: #ffffff;
-  background: #1d1d1f;
-  font-weight: 500;
-}
-
-.heat-canvas {
-  width: 100%;
-  height: 520rpx;
-}
-
-.heat-selected {
+.gh-head-cells,
+.gh-row-cells {
   display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 16rpx;
-  margin-top: 16rpx;
-  padding: 16rpx 24rpx;
+  flex-shrink: 0;
+}
+
+.gh-head-label {
+  width: 26rpx;
+  margin-right: 6rpx;
+  font-size: 16rpx;
+  color: #c4c8cf;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.gh-cell {
+  width: 26rpx;
+  height: 26rpx;
+  border-radius: 5rpx;
+  margin-right: 6rpx;
+  background: #f3f4f6;
+  flex-shrink: 0;
+}
+
+.gh-cell:last-child {
+  margin-right: 0;
+}
+
+.gh-row {
+  padding: 7rpx 10rpx;
+  border-radius: 10rpx;
+  margin: 0 -10rpx;
+}
+
+.gh-row-hover {
+  background: #f3f4f6;
+}
+
+.gh-row-active {
   background: #f7f7f8;
-  border-radius: 12rpx;
 }
 
-.heat-selected-name {
-  font-size: 28rpx;
-  font-weight: 600;
+.gh-row-active .gh-row-name {
   color: #1d1d1f;
+  font-weight: 600;
 }
 
-.heat-selected-val {
-  font-size: 24rpx;
-  color: #6b7280;
+.gh-row-name {
+  color: #374151;
+}
+
+.gh-row-total {
+  width: 56rpx;
+  text-align: right;
+  font-size: 20rpx;
+  color: #9ca3af;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
 .heat-tip {
@@ -496,6 +525,50 @@
   color: #c4c8cf;
   margin-top: 12rpx;
   text-align: center;
+}
+
+/* 常驻信息区：固定最小高度，选中/未选中切换不跳动 */
+.heat-selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  min-height: 76rpx;
+  margin-top: 12rpx;
+  padding: 14rpx 24rpx;
+  box-sizing: border-box;
+  background: #f7f7f8;
+  border-radius: 12rpx;
+}
+
+.heat-selected-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 6rpx;
+  flex-shrink: 0;
+}
+
+.heat-selected-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  flex-shrink: 0;
+}
+
+.heat-selected-val {
+  font-size: 24rpx;
+  color: #6b7280;
+}
+
+.heat-selected-hint {
+  font-size: 24rpx;
+  color: #9ca3af;
+}
+
+/* 本卡片元素全部居中，图例与 tab/信息条对齐 */
+.heat-legend-mid {
+  justify-content: center;
 }
 
 .heat-empty {

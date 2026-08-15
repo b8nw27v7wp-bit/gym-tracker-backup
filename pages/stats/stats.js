@@ -5,7 +5,6 @@ var nutrition = require('../../utils/nutrition');
 var exercisesData = require('../../data/exercises/index');
 var muscleMap = require('../../data/muscle-map');
 var muscleHeatmap = require('../../utils/muscle-heatmap');
-var customExercises = require('../../utils/custom-exercises');
 
 // 展示 PR 的招牌动作
 var PR_EXERCISES = ['bench', 'squat', 'deadlift', 'ohp', 'pullup', 'db-bench', 'leg-press', 'bb-row'];
@@ -32,13 +31,11 @@ Page({
     weekly: [],
     heatWeeks: [],
     heatDays: 0,
-    heatHasData: false, // 部位热力图是否有数据
-    heatLevels: {},     // zone → 档位 0-4
-    heatCounts: {},     // zone → 近 12 周组数
-    heatSessions: {},   // zone → 近 12 周训练次数
+    heatHasData: false, // 部位热力图（GitHub 风格肌群矩阵）是否有数据
+    heatRows: [],       // 肌群行：[{ key, name, cells: [{ level }], total, pct }]
+    heatWeekLabels: [], // 周标签（每 4 周一个）
     heatTotalSets: 0,
-    heatSide: 'front',  // 部位热力图当前视角 front/back
-    heatSelected: null, // 点击选中的部位信息 { name, sets, sessions, share }
+    heatSelected: null, // 点击选中的肌群信息 { key, name, sets, sessions, share, level }
     muscleDist: [],
     prs: [],
     chartVisible: false,
@@ -88,7 +85,7 @@ Page({
     // 热量板块（不依赖训练记录，无训练也显示）
     this.calcCalories(workouts);
     if (workouts.length === 0) {
-      this.setData({ hasData: false, bwLatest: 0, hasBodyData: false, heatHasData: false, heatTotalSets: 0 });
+      this.setData({ hasData: false, bwLatest: 0, hasBodyData: false, heatHasData: false, heatTotalSets: 0, heatSelected: null });
       return;
     }
 
@@ -236,15 +233,60 @@ Page({
       });
     }
 
-    // 部位热力图：近 12 周按 target 肌群词聚合到人体 zone 块，按训练量分档着色
-    // resolver 先查内置动作库，再查自定义动作（item.target 兜底逻辑在 heatmap 内已有）
-    var heatAgg = muscleHeatmap.aggregateZoneCounts(workouts, 12, function (id) {
-      return customExercises.findExercise(id, exercisesData.ALL, store.getCustomExercises());
+    // 部位热力图（v3.3 GitHub 风格肌群矩阵）：按周 × 肌群分组聚合，纯 WXML 渲染（无 canvas）
+    // resolver 用 id→动作 哈希（内置优先，与 customExercises.findExercise 语义一致），
+    // 避免数百次训练 × 动作条目对 173 个动作做线性查找
+    var exById = {};
+    var customList = store.getCustomExercises();
+    (Array.isArray(customList) ? customList : []).forEach(function (ex) { if (ex && ex.id) exById[ex.id] = ex; });
+    exercisesData.ALL.forEach(function (ex) { if (ex && ex.id) exById[ex.id] = ex; });
+    var heatAgg = muscleHeatmap.aggregateZoneCountsByWeek(workouts, 12, function (id) {
+      return Object.prototype.hasOwnProperty.call(exById, id) ? exById[id] : null;
     });
-    var heatLevels = {};
-    Object.keys(heatAgg.counts).forEach(function (z) {
-      heatLevels[z] = muscleHeatmap.colorLevel(heatAgg.counts[z], heatAgg.maxCount);
+    this._heatAgg = heatAgg; // 点击选中复用本次聚合，避免重算
+
+    // 矩阵行：每行一个肌群分组，12 列 = 最近 12 周，格子档位 = 当周组数
+    var heatRows = [];
+    if (heatAgg.hasData) {
+      heatRows = muscleHeatmap.MUSCLE_GROUPS.map(function (g) {
+        var total = heatAgg.groupTotals[g.key] || 0;
+        return {
+          key: g.key,
+          name: g.name,
+          cells: heatAgg.weeks.map(function (w) {
+            return { level: muscleHeatmap.colorLevel(w.sets[g.key] || 0, heatAgg.maxWeekSets) };
+          }),
+          total: total,
+          pct: muscleHeatmap.zoneShare(heatAgg.groupTotals, g.key)
+        };
+      });
+    }
+    // 周标签：每 4 周一个（-12周前 … 本周）
+    var heatWeekLabels = [];
+    for (var li = 0; li < 12; li++) heatWeekLabels.push('');
+    [0, 4, 8, 11].forEach(function (i) {
+      heatWeekLabels[i] = i === 11 ? '本周' : ((12 - i) + '周前');
     });
+
+    // 已选中的肌群 → 用最新聚合刷新信息条数字（不留陈旧值；无数据时清除选中）
+    var heatSelected = null;
+    var prevSelected = this.data.heatSelected;
+    if (prevSelected && prevSelected.key && heatAgg.hasData) {
+      var selSets = heatAgg.groupTotals[prevSelected.key] || 0;
+      var selName = prevSelected.key;
+      muscleHeatmap.MUSCLE_GROUPS.forEach(function (g) { if (g.key === prevSelected.key) selName = g.name; });
+      var maxGroupTotal = 1;
+      Object.keys(heatAgg.groupTotals).forEach(function (k) { if (heatAgg.groupTotals[k] > maxGroupTotal) maxGroupTotal = heatAgg.groupTotals[k]; });
+      this._heatMaxGroup = maxGroupTotal;
+      heatSelected = {
+        key: prevSelected.key,
+        name: selName,
+        sets: selSets,
+        sessions: selSets > 0 ? (heatAgg.groupSessions[prevSelected.key] || 0) : 0,
+        share: selSets > 0 ? muscleHeatmap.zoneShare(heatAgg.groupTotals, prevSelected.key) : 0,
+        level: muscleHeatmap.colorLevel(selSets, maxGroupTotal)
+      };
+    }
 
     this.setData({
       hasData: true,
@@ -267,10 +309,10 @@ Page({
       heatWeeks: heatWeeks,
       heatDays: heatDays,
       heatHasData: heatAgg.hasData,
-      heatLevels: heatLevels,
-      heatCounts: heatAgg.counts,
-      heatSessions: heatAgg.sessions,
+      heatRows: heatRows,
+      heatWeekLabels: heatWeekLabels,
       heatTotalSets: heatAgg.totalSets,
+      heatSelected: heatSelected,
       muscleDist: muscleDist,
       prs: prs
     });
@@ -283,12 +325,10 @@ Page({
     if (wx.nextTick) {
       wx.nextTick(function () {
         self.drawVolumeChart();
-        if (self.data.heatHasData) self.drawMuscleHeat();
       });
     } else {
       setTimeout(function () {
         self.drawVolumeChart();
-        if (self.data.heatHasData) self.drawMuscleHeat();
       }, 80);
     }
   },
@@ -470,119 +510,34 @@ Page({
     ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
   },
-
-  // ---------- 部位热力图（canvas 2d）----------
-  // 正面/背面 tab 切换，单画布绘制当前视角人体块，按训练量分档着色
-  drawMuscleHeat: function () {
-    var zoneList = this.data.heatSide === 'back' ? muscleMap.BACK_ZONES : muscleMap.FRONT_ZONES;
-    this.drawHeatSide('heatCanvas', zoneList);
-  },
-
-  // 切换正/背面视角
-  onHeatSwitch: function (e) {
-    var side = e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.side;
-    if (side !== 'front' && side !== 'back') return;
-    if (side === this.data.heatSide) return;
-    var self = this;
-    this.setData({ heatSide: side, heatSelected: null }, function () {
-      self.drawMuscleHeat();
+  // ---------- 部位热力图（v3.3 GitHub 风格肌群矩阵，纯 WXML，无 canvas）----------
+  // 点击某行肌群 → 信息条展示近 12 周组数/次数/占比；再点同一行取消选中
+  onGroupTap: function (e) {
+    var key = e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.key;
+    if (!key) return;
+    var prev = this.data.heatSelected;
+    if (prev && prev.key === key) {
+      this.setData({ heatSelected: null });
+      return;
+    }
+    var agg = this._heatAgg;
+    if (!agg || !agg.hasData) return;
+    var group = null;
+    muscleHeatmap.MUSCLE_GROUPS.forEach(function (g) { if (g.key === key) group = g; });
+    if (!group) return; // 非法 key 不响应
+    var sets = agg.groupTotals[key] || 0;
+    var maxGroupTotal = this._heatMaxGroup || 1;
+    this.setData({
+      heatSelected: {
+        key: key,
+        name: group.name,
+        sets: sets,
+        sessions: sets > 0 ? (agg.groupSessions[key] || 0) : 0,
+        share: sets > 0 ? muscleHeatmap.zoneShare(agg.groupTotals, key) : 0,
+        level: muscleHeatmap.colorLevel(sets, maxGroupTotal)
+      }
     });
   },
-
-  drawHeatSide: function (id, zoneList) {
-    var self = this;
-    wx.createSelectorQuery()
-      .select('#' + id)
-      .fields({ node: true, size: true })
-      .exec(function (res) {
-        if (!res || !res[0] || !res[0].node) return;
-        var canvas = res[0].node;
-        var width = res[0].width;
-        var height = res[0].height;
-        if (width <= 0 || height <= 0) return;
-        var dpr = wx.getSystemInfoSync().pixelRatio;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        var ctx = canvas.getContext('2d');
-        ctx.scale(dpr, dpr);
-        self.paintHeatSide(ctx, width, height, zoneList);
-      });
-  },
-
-  paintHeatSide: function (ctx, W, H, zoneList) {
-    var levels = this.data.heatLevels || {};
-    var colors = muscleHeatmap.LEVEL_COLORS;
-    var self = this;
-    // 头（圆形）：固定中性色（头无训练数据，不参与着色）
-    var head = muscleMap.HEAD;
-    ctx.beginPath();
-    ctx.arc(head.x * W, head.y * H, head.r * W, 0, Math.PI * 2);
-    ctx.fillStyle = colors[0];
-    ctx.fill();
-    // 各 zone 块：按训练量着色 + 白色描边分隔（边界清晰）
-    zoneList.forEach(function (key) {
-      var z = muscleMap.ZONES[key];
-      if (!z) return;
-      var x = z.x * W;
-      var y = z.y * H;
-      var w = z.w * W;
-      var h = z.h * H;
-      var r = Math.max(Math.min(z.round * Math.min(w, h), w / 2, h / 2), 0);
-      ctx.fillStyle = self.heatZoneColor(levels, key, colors);
-      self.roundRectPath(ctx, x, y, w, h, r);
-      ctx.fill();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    });
-  },
-
-  // zone 块颜色：未训练灰（level 0），>0 按档位蓝系由浅到深
-  heatZoneColor: function (levels, key, colors) {
-    var level = levels[key] || 0;
-    return colors[level] || colors[0];
-  },
-
-  // 点击某块：信息条展示该部位近 12 周训练组数/次数/占比
-  onHeatTap: function (e) {
-    var zoneList = this.data.heatSide === 'back' ? muscleMap.BACK_ZONES : muscleMap.FRONT_ZONES;
-    var pt = null;
-    if (e.detail && e.detail.x !== undefined) pt = { x: e.detail.x, y: e.detail.y };
-    else if (e.touches && e.touches[0]) pt = { x: e.touches[0].x, y: e.touches[0].y };
-    else if (e.changedTouches && e.changedTouches[0]) pt = { x: e.changedTouches[0].x, y: e.changedTouches[0].y };
-    if (!pt) return;
-    // 用 canvas 布局尺寸归一化（与绘制时一致）
-    var self = this;
-    wx.createSelectorQuery()
-      .select('#heatCanvas')
-      .fields({ node: true, size: true })
-      .exec(function (res) {
-        if (!res || !res[0] || !res[0].node) return;
-        var width = res[0].width;
-        var height = res[0].height;
-        if (width <= 0 || height <= 0) return;
-        var key = muscleHeatmap.zoneAt(zoneList, pt.x / width, pt.y / height);
-        if (!key) return;
-        var counts = self.data.heatCounts || {};
-        var sessions = self.data.heatSessions || {};
-        var c = counts[key] || 0;
-        if (c <= 0) {
-          self.setData({
-            heatSelected: { name: muscleHeatmap.zoneName(key), sets: 0, sessions: 0, share: 0 }
-          });
-          return;
-        }
-        self.setData({
-          heatSelected: {
-            name: muscleHeatmap.zoneName(key),
-            sets: c,
-            sessions: sessions[key] || 0,
-            share: muscleHeatmap.zoneShare(counts, key)
-          }
-        });
-      });
-  },
-
   // 1RM 大图：点击 PR 行展开，canvas 绘制历史估算 1RM 曲线
   onPrTrend: function (e) {
     var id = e.currentTarget.dataset.id;

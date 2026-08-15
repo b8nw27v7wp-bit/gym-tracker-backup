@@ -1462,15 +1462,50 @@ assert(mh.colorLevel(1, 5) === 1 && mh.colorLevel(2, 5) === 2 && mh.colorLevel(3
 assert(mh.colorLevel(5, 5) === 4 && mh.colorLevel(4, 3) === 4, '≥75% 最大量 → 4 档');
 assert(mh.colorLevel('3', 5) === 3, '字符串数字兼容');
 assert(mh.LEVEL_COLORS.length === 5 && mh.LEVEL_COLORS[0] === '#f3f4f6' && mh.LEVEL_COLORS[1] === '#dbeafe' && mh.LEVEL_COLORS[4] === '#1d4ed8', '档位颜色 5 个（灰 + 蓝 4 档）');
+// 13.5 肌群分组完整性（v3.3 GitHub 风格矩阵）
+assert(mh.MUSCLE_GROUPS.length === 14, '14 个肌群分组（实际 ' + mh.MUSCLE_GROUPS.length + '）');
+const gCovered = {}, gDup = [], gMiss = [];
+mh.MUSCLE_GROUPS.forEach(g => {
+  assert(g.name && g.name.length > 0, '分组名非空: ' + g.key);
+  g.zones.forEach(z => {
+    if (!muscleMap.ZONES[z]) gMiss.push(g.key + ':缺zone ' + z);
+    if (gCovered[z]) gDup.push(z);
+    gCovered[z] = true;
+  });
+});
+assert(gDup.length === 0, 'zone 无重复分组（dup=' + gDup.join(',') + '）');
+Object.keys(muscleMap.ZONES).forEach(z => { if (!gCovered[z]) gMiss.push('无分组 ' + z); });
+assert(gMiss.length === 0, '全部 zone 恰好归属一个分组（miss=' + gMiss.join(',') + '）');
+assert(mh.zoneGroupOf('chest-mid-l') === 'chest' && mh.zoneGroupOf('quad-r') === 'quad' &&
+       mh.zoneGroupOf('heart') === 'cardio' && mh.zoneGroupOf('trap-mid-r') === 'trap', 'zoneGroupOf 分组映射');
+assert(mh.zoneGroupOf('__proto__') === null && mh.zoneGroupOf(42) === null && mh.zoneGroupOf('nope') === null, 'zoneGroupOf 非法输入返回 null');
 
-// 13.5 画布命中测试
-const neckZ = muscleMap.ZONES['neck'];
-assert(mh.zoneAt(['neck'], neckZ.x + neckZ.w / 2, neckZ.y + neckZ.h / 2) === 'neck', 'zoneAt 命中块中心');
-assert(mh.zoneAt(['neck'], 0.9, 0.9) === null, 'zoneAt 未命中返回 null');
-assert(mh.zoneAt(null, 0.5, 0.5) === null && mh.zoneAt(['neck'], 'a', 0.5) === null, 'zoneAt 非法输入安全');
-assert(mh.zoneAt(muscleMap.BACK_ZONES, 0.5, 0.5) === null, '背面中心空隙不误命中');
+// 13.6 分周聚合（GitHub 风格矩阵数据层）
+const byW = mh.aggregateZoneCountsByWeek([mhW1, mhW2], 12, id => exercisesData.getExercise(id));
+assert(byW.hasData === true && byW.weeks.length === 12, '分周聚合 12 周');
+assert(byW.weeks[11].sets['chest'] === 3 && byW.weeks[11].sets['quad'] === 2, '本周：胸 3 组 / 股四头 2 组');
+assert(byW.weeks[0].sets['chest'] === undefined, '>12 周卧推被排除（最老周无数据）');
+assert(byW.groupTotals['chest'] === 3 && byW.groupTotals['quad'] === 2, '分组总计（胸 3 / 股四头 2）');
+assert(byW.groupSessions['chest'] === 1, '分组训练次数去重（胸 1 次）');
+assert(byW.maxWeekSets === 3, '单周单组最大 3 组');
+assert(byW.totalSets === 5 && byW.unmappedCount === 0, '总组数 5 / 无未映射');
+// 同次训练多动作命中同组 → 组数累加、次数去重
+const byW4 = mh.aggregateZoneCountsByWeek([{ id: 's1', ts: mhWeek + 1000, items: [
+  { exerciseId: 'bench', muscle: 'chest', sets: [{ weight: 1, reps: 1 }] },
+  { exerciseId: 'db-bench', muscle: 'chest', sets: [{ weight: 1, reps: 1 }] }
+]}], 12, id => exercisesData.getExercise(id));
+assert(byW4.groupTotals['chest'] === 2 && byW4.groupSessions['chest'] === 1, '同次训练同组：组数累加/次数去重');
+// 周窗口边界：恰好 11 周前周一边缘
+const byWIn = mh.aggregateZoneCountsByWeek([{ id: 'bw1', ts: mhWeek - 77 * mhDay + 1000, items: [{ exerciseId: 'bench', muscle: 'chest', sets: [{ weight: 1, reps: 1 }] }] }], 12, id => exercisesData.getExercise(id));
+assert(byWIn.weeks[0].sets['chest'] === 1, '11 周前周一 +1s 计入窗口最老周');
+const byWOut = mh.aggregateZoneCountsByWeek([{ id: 'bw2', ts: mhWeek - 78 * mhDay, items: [{ exerciseId: 'bench', muscle: 'chest', sets: [{ weight: 1, reps: 1 }] }] }], 12, id => exercisesData.getExercise(id));
+assert(byWOut.totalSets === 0 && byWOut.hasData === false, '窗口外训练被排除');
+// 未来周（时钟偏差）→ 忽略不越界
+const byWFuture = mh.aggregateZoneCountsByWeek([{ id: 'fw', ts: mhWeek + 20 * mhDay, items: [{ exerciseId: 'bench', muscle: 'chest', sets: [{ weight: 1, reps: 1 }] }] }], 12, id => exercisesData.getExercise(id));
+assert(byWFuture.totalSets === 0, '未来周训练被忽略（不越界不崩）');
+assert(mh.aggregateZoneCountsByWeek(null, 12).hasData === false && mh.aggregateZoneCountsByWeek([{ evil: true }], 12).hasData === false, '脏数据分周聚合安全');
 
-// 13.6 统计页部位热力图联动
+// 13.6.1 统计页部位热力图联动（GitHub 风格矩阵）
 store.clearAll();
 store.ensureInit();
 wx._store.gym_workouts = [mhW1, mhW2];
@@ -1480,53 +1515,49 @@ freshRequire('./pages/stats/stats.js');
 const stHeat = instantiate(pageCfg);
 stHeat.loadStats();
 assert(stHeat.data.heatHasData === true, '统计页热力图有数据');
-assert(stHeat.data.heatLevels['chest-mid-l'] === 4, '最大训练量块 → 4 档（实际 ' + stHeat.data.heatLevels['chest-mid-l'] + '）');
-assert(stHeat.data.heatLevels['quad-l'] === 3, '2/3 量 → 3 档（实际 ' + stHeat.data.heatLevels['quad-l'] + '）');
-assert(stHeat.data.heatLevels['chest-upper-l'] === 0, '>12 周动作块 0 档（灰）');
-assert(stHeat.data.heatCounts['chest-mid-l'] === 3 && stHeat.data.heatTotalSets === 5, '热力图 counts/总组数落值');
+assert(stHeat.data.heatRows.length === 14, '矩阵 14 行（肌群分组）');
+assert(stHeat.data.heatRows[0].cells.length === 12, '每行 12 列（周）');
+const chestRow = stHeat.data.heatRows.find(r => r.key === 'chest');
+assert(chestRow.total === 3 && chestRow.cells[11].level === 4, '胸行：3 组 / 本周 4 档');
+const quadRow = stHeat.data.heatRows.find(r => r.key === 'quad');
+assert(quadRow.total === 2 && quadRow.cells[11].level === 3, '股四头行：2 组 / 本周 3 档');
+const neckRow = stHeat.data.heatRows.find(r => r.key === 'neck');
+assert(neckRow.total === 0 && neckRow.cells[11].level === 0, '未训练行：0 组 / 灰档');
+assert(stHeat.data.heatTotalSets === 5, '矩阵总组数 5');
+assert(stHeat.data.heatWeekLabels[0] === '12周前' && stHeat.data.heatWeekLabels[11] === '本周' && stHeat.data.heatWeekLabels[1] === '', '周标签（每 4 周一个）');
 
 // 无数据空态
 wx._store.gym_workouts = [];
 const stHeatEmpty = instantiate(pageCfg);
 stHeatEmpty.loadStats();
-assert(stHeatEmpty.data.heatHasData === false, '无数据 → 热力图空态');
+assert(stHeatEmpty.data.heatHasData === false && stHeatEmpty.data.heatRows.length === 0, '无数据 → 热力图空态');
 // 未知 target 词不崩溃 → 空态
 wx._store.gym_workouts = [{ id: 'z', ts: mhWeek, items: [{ exerciseId: 'old', target: ['未知词'], sets: [{ weight: 1, reps: 1 }] }] }];
 const stHeatBad = instantiate(pageCfg);
 stHeatBad.loadStats();
 assert(stHeatBad.data.heatHasData === false, '未知 target 词统计页不崩溃 → 空态');
 
-// 13.6.1 zone 中文名映射（v2.23 热力图优化）
-assert(mh.zoneName('chest-upper-l') === '上胸' && mh.zoneName('chest-upper-r') === '上胸', 'zoneName 侧标剥离（-l/-r）');
-assert(mh.zoneName('neck') === '颈' && mh.zoneName('heart') === '心肺', 'zoneName 完整 key 命中');
-assert(mh.zoneName('lat-l') === '背阔肌' && mh.zoneName('calf-r') === '小腿', 'zoneName 背/腿部位');
-assert(mh.zoneName('not-a-zone') === 'not-a-zone', 'zoneName 未知 key 原样返回');
-assert(mh.zoneName(undefined) === '' && mh.zoneName(null) === '', 'zoneName 非法输入安全');
-// 42 个 zone 全部有中文名（无遗漏）
-let zoneNameMissing = [];
-muscleMap.FRONT_ZONES.concat(muscleMap.BACK_ZONES).forEach(z => {
-  const n = mh.zoneName(z);
-  if (!n || n === z) zoneNameMissing.push(z);
-});
-assert(zoneNameMissing.length === 0, '42 块 zone 全部有中文名（缺: ' + zoneNameMissing.join(',') + '）');
-
-// 13.6.2 zone 占比计算
-assert(mh.zoneShare({ 'chest-mid-l': 3, 'quad-l': 2 }, 'chest-mid-l') === 60, 'zoneShare 占比 3/5 → 60%');
-assert(mh.zoneShare({ 'chest-mid-l': 3 }, 'chest-mid-l') === 100, 'zoneShare 单部位 → 100%');
-assert(mh.zoneShare({ 'chest-mid-l': 3, 'quad-l': 2 }, 'bicep-l') === 0, 'zoneShare 未训练部位 → 0');
-assert(mh.zoneShare({}, 'chest-mid-l') === 0 && mh.zoneShare(null, 'chest-mid-l') === 0, 'zoneShare 空数据安全');
-
-// 13.6.3 正/背面 tab 切换联动
+// 13.6.2 点击行选中 / toggle
 wx._store.gym_workouts = [mhW1, mhW2];
-const stHeatTab = instantiate(pageCfg);
-stHeatTab.loadStats();
-assert(stHeatTab.data.heatSide === 'front', '热力图默认正面');
-stHeatTab.onHeatSwitch({ currentTarget: { dataset: { side: 'back' } } });
-assert(stHeatTab.data.heatSide === 'back' && stHeatTab.data.heatSelected === null, '切换背面清空选中');
-stHeatTab.onHeatSwitch({ currentTarget: { dataset: { side: 'front' } } });
-assert(stHeatTab.data.heatSide === 'front', '切回正面');
-stHeatTab.onHeatSwitch({ currentTarget: { dataset: { side: 'x' } } });
-assert(stHeatTab.data.heatSide === 'front', '非法 side 不切换');
+const stTap = instantiate(pageCfg);
+stTap.loadStats();
+stTap.onGroupTap({ currentTarget: { dataset: { key: 'chest' } } });
+assert(stTap.data.heatSelected && stTap.data.heatSelected.key === 'chest' && stTap.data.heatSelected.name === '胸', '点击胸行选中');
+assert(stTap.data.heatSelected.sets === 3 && stTap.data.heatSelected.sessions === 1 && stTap.data.heatSelected.share === 43, '选中信息条：3 组/1 次训练/占全身 43%（胸 3 / 全身 7，含深蹲臀）');
+assert(stTap.data.heatSelected.level === 4, '选中档位色块 level 4');
+stTap.onGroupTap({ currentTarget: { dataset: { key: 'chest' } } });
+assert(stTap.data.heatSelected === null, '再点同部位取消选中（toggle）');
+stTap.onGroupTap({ currentTarget: { dataset: { key: 'calf' } } });
+assert(stTap.data.heatSelected && stTap.data.heatSelected.sets === 0 && stTap.data.heatSelected.level === 0, '未训练部位：0 组 + 灰档');
+stTap.onGroupTap({ currentTarget: { dataset: { key: 'nope' } } });
+assert(stTap.data.heatSelected && stTap.data.heatSelected.key === 'calf', '非法 key 不变更选中');
+// 选中状态下数据刷新 → 信息条数字同步刷新且保留选中
+stTap.onGroupTap({ currentTarget: { dataset: { key: 'chest' } } });
+const mhW3 = { id: 'mh3b', ts: mhWeek + 7200000, items: [{ exerciseId: 'bench', muscle: 'chest', sets: [{ weight: 80, reps: 5 }, { weight: 80, reps: 5 }, { weight: 80, reps: 5 }] }] };
+wx._store.gym_workouts = [mhW1, mhW2, mhW3];
+stTap.loadStats();
+assert(stTap.data.heatSelected && stTap.data.heatSelected.key === 'chest' &&
+       stTap.data.heatSelected.sets === 6 && stTap.data.heatSelected.sessions === 2, '数据更新后选中信息条数字刷新（6 组/2 次训练）');
 
 // 13.7 训练页组间休息推荐联动
 freshRequire('./pages/train/train.js');
