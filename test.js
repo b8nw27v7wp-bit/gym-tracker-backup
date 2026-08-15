@@ -1803,5 +1803,288 @@ assert(trainSrc.indexOf('onToggleSuperset') < 0 && trainSrc.indexOf('supersetGro
 const trainWxml = require('fs').readFileSync('./pages/train/train.wxml', 'utf8');
 assert(trainWxml.indexOf('superset') < 0, 'train.wxml 无 superset 引用');
 
+// ---------- v5：单位换算 / 连续打卡成就 / 目标 / 肌肉恢复 / 围度 / 历史编辑 / 重复上次 ----------
+console.log('16. v5 训练体验与追踪（单位/成就/目标/恢复/围度/编辑/重复）');
+const unitsMod = require('./utils/units');
+const achievementsMod = require('./utils/achievements');
+const goalsMod = require('./utils/goals');
+const muscleRecoveryMod = require('./utils/muscle-recovery');
+function middayTs(off) { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - off); return d.getTime(); }
+
+// 16.1 单位换算
+store.saveSettings({ unit: 'kg', autoRest: true });
+assert(unitsMod.unitLabel() === 'kg' && unitsMod.displayWeight(60) === 60 && unitsMod.storedWeight(60) === 60, 'kg 模式直通');
+assert(unitsMod.weightText(60) === '60 kg' && unitsMod.volumeText(1000) === '1000 kg', 'kg 文案');
+store.saveSettings({ unit: 'lb', autoRest: true });
+assert(unitsMod.unitLabel() === 'lb' && unitsMod.isLb() === true, 'lb 模式切换');
+assert(unitsMod.displayWeight(60) === 132.3, '60kg → 132.3lb（实际 ' + unitsMod.displayWeight(60) + '）');
+assert(Math.abs(unitsMod.storedWeight(132.3) - 60) < 0.2, '132.3lb → 60kg（往返一致）');
+assert(unitsMod.weightText(60).indexOf('lb') >= 0, 'lb 文案');
+assert(unitsMod.autoRestEnabled() === true, '自动休息默认开启');
+store.saveSettings({ unit: 'kg', autoRest: false });
+assert(unitsMod.autoRestEnabled() === false, '自动休息可关闭');
+store.saveSettings({ unit: 'kg', autoRest: true });
+
+// 16.2 连续打卡 + 成就
+const stW = [
+  { id: 's1', ts: middayTs(2), items: [] },
+  { id: 's2', ts: middayTs(1), items: [] },
+  { id: 's3', ts: middayTs(0), items: [] }
+];
+const stInfo = achievementsMod.streakInfo(stW);
+assert(stInfo.current === 3 && stInfo.longest === 3 && stInfo.trainedToday === true, '连续打卡 3 天（当前 ' + stInfo.current + ' 最长 ' + stInfo.longest + '）');
+const stInfo2 = achievementsMod.streakInfo(stW.slice(0, 2));
+assert(stInfo2.current === 2 && stInfo2.trainedToday === false, '今天未练当前连续 2（从昨天算）');
+const achRes = achievementsMod.computeAchievements(stW);
+assert(achRes.list.find(a => a.key === 'first_workout').unlocked && achRes.list.find(a => a.key === 'streak_3').unlocked, '首训 + 连续 3 天成就解锁');
+assert(achRes.unlockedCount === 2, '解锁成就数 2（实际 ' + achRes.unlockedCount + '）');
+assert(achievementsMod.streakInfo(null).hasData === false && achievementsMod.computeAchievements(null).unlockedCount === 0, '空数据安全');
+
+// 16.3 目标进度
+const goalData = { bodyweight: { target: 65, start: 70 }, strength: [{ exerciseId: 'bench', name: '杠铃卧推', target: 100 }] };
+const bwGoals = [{ ts: 1, weight: 70 }, { ts: 2, weight: 67.5 }];
+const gw = [{ id: 'g1', ts: middayTs(0), items: [{ exerciseId: 'bench', sets: [{ weight: 90, reps: 5 }] }] }];
+const gp = goalsMod.goalProgress(goalData, gw, bwGoals);
+assert(gp.hasGoals && gp.bodyweight.progress === 50 && gp.bodyweight.current === 67.5, '体重目标进度 50%（当前 67.5）');
+assert(gp.strength.length === 1 && gp.strength[0].progress === 90, '卧推目标 90/100');
+assert(goalsMod.goalProgress(null, [], []).hasGoals === false, '无目标安全');
+assert(goalsMod.goalProgress(goalData, [], []).strength[0].current === 0, '无历史力量目标进度 0');
+
+// 16.4 肌肉恢复
+const recW = [
+  { id: 'r1', ts: middayTs(0), items: [
+    { exerciseId: 'bench', target: ['胸大肌'], sets: [{ weight: 60, reps: 8 }, { weight: 60, reps: 8 }, { weight: 60, reps: 8 }] },
+    { exerciseId: 'pullup', target: ['背阔肌'], sets: [{ weight: 0, reps: 8 }] }
+  ]}
+];
+const rec = muscleRecoveryMod.recoveryAdvice(recW, function () { return null; });
+assert(rec.rows.length === 14, '恢复行 14 肌群');
+assert(rec.rows.find(r => r.key === 'chest').sets === 3 && rec.rows.find(r => r.key === 'back').sets === 1, '本周胸 3 组 / 背 1 组');
+assert(rec.rows.find(r => r.key === 'chest').status === 'low', '胸欠练状态');
+assert(rec.tips.some(t => t.indexOf('背') >= 0), '欠练提示含背部');
+const overW = [{ id: 'o1', ts: middayTs(0), items: [{ exerciseId: 'bench', target: ['胸大肌'], sets: (function () { var s = []; for (var i = 0; i < 20; i++) s.push({ weight: 60, reps: 8 }); return s; })() }] }];
+const recOver = muscleRecoveryMod.recoveryAdvice(overW, function () { return null; });
+assert(recOver.rows.find(r => r.key === 'chest').status === 'high' && recOver.rows.find(r => r.key === 'chest').sets === 20, '超练判定（20 组 > 16）');
+const recWarm = [{ id: 'w1', ts: middayTs(0), items: [{ exerciseId: 'bench', target: ['胸大肌'], sets: [{ weight: 60, reps: 8, warmup: true }, { weight: 60, reps: 8 }] }] }];
+const recWarmR = muscleRecoveryMod.recoveryAdvice(recWarm, function () { return null; });
+assert(recWarmR.rows.find(r => r.key === 'chest').sets === 1, '热身组不计入恢复组数');
+assert(muscleRecoveryMod.recoveryAdvice(null, null).hasData === false, '空训练安全');
+
+// 16.5 store CRUD：设置/围度/目标 + 导出导入
+store.saveSettings({ unit: 'lb', autoRest: false });
+assert(store.getSettings().unit === 'lb' && store.getSettings().autoRest === false, '设置保存/读取');
+store.saveSettings({ unit: 'kg', autoRest: true });
+const msRec = store.addMeasurement({ ts: 1000, chest: 95, waist: 80 });
+assert(msRec && store.getMeasurements().length === 1 && store.getMeasurements()[0].chest === 95, '围度记录');
+store.addMeasurement({ ts: 2000, waist: 78 });
+assert(store.getMeasurements().length === 2, '围度追加记录');
+store.removeMeasurement(1000);
+assert(store.getMeasurements().length === 1, '围度删除');
+assert(store.addMeasurement({ chest: 0 }) === null, '空围度防御');
+store.saveGoals({ bodyweight: { target: 65 }, strength: [{ exerciseId: 'bench', name: '卧推', target: 100 }] });
+assert(store.getGoals().bodyweight.target === 65 && store.getGoals().strength.length === 1, '目标保存');
+store.saveGoals({ bodyweight: null, strength: [] });
+assert(store.getGoals() && store.getGoals().strength.length === 0, '目标清空');
+const exp5 = store.exportData();
+assert(Array.isArray(exp5.measurements) && exp5.settings && exp5.settings.unit === 'kg', '导出含围度/设置');
+const imp5 = store.importData(exp5);
+assert(imp5.ok && store.getMeasurements().length === exp5.measurements.length, '导入含围度');
+assert(store.dataSizeBytes() > 0, '数据量统计含新字段');
+
+// 16.6 围度趋势
+const msTrend = util.measurementTrend([{ ts: 1, chest: 90 }, { ts: 2, chest: 92 }, { ts: 3, waist: 80 }]);
+const chestT = msTrend.fields.find(f => f.key === 'chest');
+assert(chestT.points.length === 2 && chestT.latest === 92 && chestT.delta === 2, '围度趋势（胸 +2）');
+assert(util.measurementTrend([]).count === 0, '空围度安全');
+
+// 16.7 训练页：lb 输入保存 / 历史编辑 / 重复上次
+store.clearAll(); store.ensureInit();
+store.saveSettings({ unit: 'lb', autoRest: true });
+freshRequire('./pages/train/train.js');
+const trV5 = instantiate(pageCfg);
+trV5.sessionStartTs = Date.now();
+trV5.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '132.3', reps: '8' }] }];
+trV5.onSave();
+const savedW = store.getWorkouts()[0];
+assert(savedW && savedW.items[0].sets[0].weight === 60, 'lb 输入 132.3 → 存 60 kg（实际 ' + (savedW && savedW.items[0].sets[0].weight) + '）');
+// 编辑历史：加载 + 保存覆盖（保留原 ts）
+store.saveWorkout({ id: 'w_edit_1', ts: 1700000000000, date: '2026-01-01', duration: 40, note: '原备注', items: [{ exerciseId: 'squat', exerciseName: '深蹲', muscle: 'legs', sets: [{ weight: 100, reps: 5 }] }] });
+trV5.loadWorkoutForEdit('w_edit_1');
+assert(trV5.data.editWorkoutId === 'w_edit_1' && trV5.data.draft.length === 1 && trV5.data.draft[0].sets[0].weight === '220.5', '编辑加载（100kg → 220.5lb 显示）');
+trV5.data.draft[0].sets[0].weight = '200';
+trV5.data.note = '已修改';
+trV5.onSave();
+const editedW = store.getWorkout('w_edit_1');
+assert(editedW.ts === 1700000000000 && editedW.note === '已修改', '编辑保存保留原 ts/备注');
+assert(Math.abs(editedW.items[0].sets[0].weight - 90.7) < 0.1, '编辑重量换算（200lb → 90.7kg）');
+// 重复上次训练
+store.saveWorkout({ id: 'w_last_1', ts: Date.now() + 1000, date: util.todayStr(), duration: 50, note: '', items: [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 60, reps: 8 }, { weight: 60, reps: 8 }] }] });
+trV5.data.draft = [];
+trV5.onRepeatLast();
+assert(trV5.data.draft.length === 1 && trV5.data.draft[0].sets.length === 2 && trV5.data.draft[0].sets[0].weight === '132.3', '重复上次训练（60kg → 132.3lb 预填）');
+assert(trV5.data.editWorkoutId === '', '重复上次不进入编辑模式');
+wx.showModal = o => o.success && o.success({ confirm: true });
+trV5.onCancelEditWorkout();
+assert(trV5.data.draft.length === 0, '放弃编辑清空草稿');
+wx.showModal = o => o.success && o.success({ confirm: true });
+
+// 16.8 历史页编辑按钮写 pending key
+store.saveSettings({ unit: 'kg', autoRest: true });
+freshRequire('./pages/history/history.js');
+const hV5 = instantiate(pageCfg);
+navLog.length = 0;
+hV5.onEditWorkout({ currentTarget: { dataset: { id: 'w_edit_1' } } });
+assert(wx._store['pending_edit_workout'] === 'w_edit_1' && navLog[navLog.length - 1] === 'tab:/pages/train/train', '历史页编辑跳转训练页');
+delete wx._store['pending_edit_workout'];
+hV5.loadList();
+assert(hV5.data.list.length > 0 && hV5.data.list[0].volume !== undefined, '历史列表含展示字段');
+assert(hV5.data.unitLabel === 'kg', '历史页单位标签');
+hV5.onShow();
+assert(hV5.data.unitLabel === 'kg', '历史页 onShow 刷新单位');
+
+// 16.9 统计页 v5 卡片（单位/成就/目标/恢复）
+wx.createSelectorQuery = () => ({ select: () => ({ fields: () => ({ exec: cb => cb([]) }) }) });
+wx.getSystemInfoSync = () => ({ pixelRatio: 2 });
+store.saveSettings({ unit: 'kg', autoRest: true });
+wx._store.gym_measurements = [{ ts: 1, chest: 95 }];
+wx._store.gym_goals = { bodyweight: { target: 65, start: 70 }, strength: [] };
+wx._store.gym_workouts = stW.concat([{ id: 'x', ts: middayTs(0), items: [{ exerciseId: 'bench', target: ['胸大肌'], muscle: 'chest', sets: [{ weight: 60, reps: 8 }] }] }]);
+freshRequire('./pages/stats/stats.js');
+const stV5 = instantiate(pageCfg);
+stV5.loadStats();
+assert(stV5.data.streak && stV5.data.streak.current >= 1, '统计页连续打卡数据');
+assert(stV5.data.achievements.length >= 9 && stV5.data.achievementUnlocked >= 1, '统计页成就列表');
+assert(stV5.data.recovery && stV5.data.recovery.rows.length === 14, '统计页肌肉恢复 14 行');
+assert(stV5.data.goals && stV5.data.goals.hasGoals === true, '统计页目标数据');
+assert(stV5.data.measurementSummary.length >= 1, '统计页围度摘要');
+assert(stV5.data.unitLabel === 'kg', '统计页单位标签');
+
+// ---------- 训练周报（Batch3） ----------
+console.log('17. 训练周报（Batch3）');
+const wrMod = require('./utils/weekly-report');
+const wrDay = 86400000;
+const wrNow = util.weekStart(Date.now());
+const wrMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+
+// 17.1 纯函数聚合正确性（近 8 周，含跨周 PR / 肌群 / 连续天数 / 环比）
+const wrW = [
+  { id: 'wr1', ts: wrNow - 14 * wrDay + 1000, duration: 50, items: [
+    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 70, reps: 8 }, { weight: 70, reps: 8 }] } ] },
+  { id: 'wr2', ts: wrNow - 7 * wrDay + 1000, duration: 60, items: [
+    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 80, reps: 5 }, { weight: 80, reps: 5 }] },
+    { exerciseId: 'squat', exerciseName: '杠铃深蹲', muscle: 'legs', sets: [{ weight: 100, reps: 5 }] } ] },
+  { id: 'wr3', ts: wrNow + 1000, duration: 45, items: [
+    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 85, reps: 5 }] } ] },
+  { id: 'wr4', ts: wrNow + wrDay + 1000, duration: 30, items: [
+    { exerciseId: 'ohp', exerciseName: '杠铃推举', muscle: 'shoulder', sets: [{ weight: 55, reps: 6 }] } ] }
+];
+const wrReps = wrMod.buildWeeklyReports(wrW, 8);
+assert(wrReps.length === 8, '返回 8 周（含空周）');
+const wrCur = wrReps[7], wrLast = wrReps[6], wrOld = wrReps[5];
+assert(wrCur.workouts === 2 && wrCur.volume === 755 && wrCur.sets === 2 && wrCur.duration === 75, '本周聚合正确（2 次/755kg/2 组/75 分钟，实际 ' + wrCur.volume + '）');
+assert(wrCur.streak === 2, '本周连续训练 2 天（实际 ' + wrCur.streak + '）');
+assert(wrCur.prs === 2 && wrCur.newPRs[0].name === '杠铃卧推' && wrCur.newPRs[0].weight === 85 &&
+       wrCur.newPRs[1].name === '杠铃推举' && wrCur.newPRs[1].weight === 55, '本周 PR：卧推 85 / 推举 55（超过历史）');
+assert(wrLast.workouts === 1 && wrLast.volume === 1300 && wrLast.prs === 2 &&
+       wrLast.newPRs[0].name === '杠铃卧推' && wrLast.newPRs[0].weight === 80, '上周 PR：卧推 80 超过 70 / 深蹲 100 首破');
+assert(wrLast.groups === 3 && wrLast.groupsCovered.indexOf('胸') >= 0 && wrLast.groupsCovered.indexOf('股四头') >= 0, '上周肌群覆盖 3 组（胸/股四头/腘绳）');
+assert(wrLast.prevVolume === 1120 && wrLast.volumePct === 16, '上周环比 +16%（实际 ' + wrLast.volumePct + '）');
+assert(wrCur.prevVolume === 1300 && wrCur.volumePct === -42, '本周环比 -42%（实际 ' + wrCur.volumePct + '）');
+assert(wrOld.workouts === 1 && wrOld.volume === 1120 && wrOld.volumePct === null, '最早周无上周基线 → 环比 null（首周）');
+assert(wrReps[3].workouts === 0 && wrReps[3].prs === 0 && wrReps[3].groups === 0 &&
+       wrReps[3].newPRs.length === 0 && wrReps[3].streak === 0, '空周正常返回不崩溃');
+assert(wrMod.buildWeeklyReports(null, 8).length === 8 && wrMod.buildWeeklyReports([], 8).every(w => w.workouts === 0), '空/脏数据 → 8 条空周安全');
+assert(wrMod.buildWeeklyReports([{ evil: true }, { id: 'x', ts: 'abc', items: 'bad' }], 8)[7].workouts === 0, '脏训练记录安全过滤');
+
+// 17.2 PR 口径：该动作本周最大重量 > 该动作历史最大重量才计新 PR（与 util.exercisePR 语义同源）
+const wrHist = wrMod.buildWeeklyReports([
+  { id: 'h1', ts: wrNow - 14 * wrDay + 1000, items: [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 90, reps: 5 }] }] },
+  { id: 'h2', ts: wrNow + 1000, items: [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 85, reps: 5 }] }] }
+], 8);
+assert(wrHist[7].prs === 0 && wrHist[7].newPRs.length === 0, '本周 85 < 历史 90 → 不算新 PR（严格历史比较）');
+const wrEqual = wrMod.buildWeeklyReports([
+  { id: 'e1', ts: wrNow + 1000, items: [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 85, reps: 5 }] }] },
+  { id: 'e2', ts: wrNow + 1000, items: [{ exerciseId: 'squat', exerciseName: '深蹲', muscle: 'legs', sets: [{ weight: 100, reps: 5 }] }] }
+], 8);
+assert(wrEqual[7].prs === 2, '首次训练全部算新 PR');
+
+// 17.3 PR 口径与月度总结一致：无历史时本周 PR 数 === monthlySummary.prCount（同一动作首破语义）
+const wrConsistStart = Math.max(wrNow + 1000, wrMonthStart);
+const wrConsist = [
+  { id: 'c1', ts: wrConsistStart, items: [
+    { exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 85, reps: 5 }] },
+    { exerciseId: 'squat', exerciseName: '深蹲', muscle: 'legs', sets: [{ weight: 100, reps: 5 }] },
+    { exerciseId: 'deadlift', exerciseName: '硬拉', muscle: 'back', sets: [{ weight: 120, reps: 3 }] } ] }
+];
+const wrCReps = wrMod.buildWeeklyReports(wrConsist, 8);
+assert(wrCReps[7].prs === util.monthlySummary(wrConsist).prCount && wrCReps[7].prs === 3, '本周 PR 数与月度总结口径一致（首周 3 个动作 3 个 PR）');
+
+// 17.4 周标签：跨年 / 跨月格式
+assert(wrMod.weekRangeLabel(util.weekStart(new Date(2027, 0, 2).getTime())) === '12/28-1/3', '跨年周标签 12/28-1/3');
+assert(wrMod.weekRangeLabel(util.weekStart(new Date(2026, 7, 1).getTime())) === '7/27-8/2', '跨月周标签 7/27-8/2');
+assert(wrReps[7].label.indexOf('/') >= 0 && wrReps[7].label.indexOf('-') >= 0, '周标签格式 M/D-M/D');
+
+// 17.5 统计页联动：卡片数据 / 切换周（只切索引不重算）/ 边界 / 空态 / PR 跳转 / 分享冒烟
+store.clearAll(); store.ensureInit();
+wx._store.gym_workouts = wrW;
+wx.navigateTo = o => navLog.push('nav:' + o.url);
+freshRequire('./pages/stats/stats.js');
+const stWr = instantiate(pageCfg);
+stWr.loadStats();
+assert(stWr.data.weeklyReports.length === 8 && stWr.data.weeklyIndex === 7, '周报 8 周，默认最新一周（索引 7）');
+assert(stWr.data.weeklyReport && stWr.data.weeklyReport.hasData && stWr.data.weeklyReport.workouts === 2 &&
+       stWr.data.weeklyReport.volume === 755 && stWr.data.weeklyReport.prs === 2, '周报卡最新周数据正确（2 次/755kg/2 PR）');
+assert(stWr.data.weeklyReport.deltaText === '较上周 -42%' && stWr.data.weeklyReport.deltaClass === 'weekly-delta-down', '环比文案：-42%（灰色）');
+stWr.onWeekPrev();
+assert(stWr.data.weeklyIndex === 6 && stWr.data.weeklyReport.hasData && stWr.data.weeklyReport.deltaText === '较上周 +16%' &&
+       stWr.data.weeklyReport.deltaClass === 'weekly-delta-up', '切上一周：上周数据 +16%（绿色）');
+stWr.onWeekNext();
+assert(stWr.data.weeklyIndex === 7, '切回最新一周');
+assert(stWr.data.weeklyReports.length === 8 && stWr.data.weeklyReports[7].volume === 755, '切换周不重新聚合（8 周与数据不变）');
+for (let wrI = 0; wrI < 30; wrI++) stWr.onWeekPrev();
+assert(stWr.data.weeklyIndex === 0, '最早一周再左点 → 夹紧在 0 不崩');
+for (let wrI = 0; wrI < 30; wrI++) stWr.onWeekNext();
+assert(stWr.data.weeklyIndex === 7, '最新一周再右点 → 夹紧在 7 不崩');
+
+// 17.6 上周训练本周没练 → 本周空态
+const wrGap = [
+  { id: 'g1', ts: wrNow - 7 * wrDay + 1000, items: [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 80, reps: 5 }] }] }
+];
+wx._store.gym_workouts = wrGap;
+const stWrGap = instantiate(pageCfg);
+stWrGap.loadStats();
+assert(stWrGap.data.weeklyIndex === 7 && stWrGap.data.weeklyReport.hasData === false &&
+       stWrGap.data.weeklyReport.deltaText === '本周未训练' && stWrGap.data.weeklyReport.workouts === 0, '跨周空态：本周 workouts=0 显示"本周未训练"');
+stWrGap.onWeekPrev();
+assert(stWrGap.data.weeklyReport.hasData === true && stWrGap.data.weeklyReport.workouts === 1, '切上一周仍有数据');
+
+// 17.7 空数据 → 周报空态，页面正常
+store.clearAll(); store.ensureInit();
+const stWrEmpty = instantiate(pageCfg);
+stWrEmpty.loadStats();
+assert(stWrEmpty.data.weeklyReports.length === 8 && stWrEmpty.data.weeklyReport.hasData === false &&
+       stWrEmpty.data.weeklyReport.deltaText === '本周未训练', '空数据：周报卡空态不崩');
+
+// 17.8 PR 行点击 → 历史页
+wx._store.gym_workouts = wrW;
+const stWrPr = instantiate(pageCfg);
+stWrPr.loadStats();
+navLog.length = 0;
+stWrPr.onWeeklyPrTap();
+assert(navLog[navLog.length - 1] === 'nav:/pages/history/history', 'PR 行点击跳历史页');
+
+// 17.9 分享卡 canvas 冒烟（mock 下生成不崩）
+const wrCtx = {
+  fillStyle: '', font: '', textAlign: '',
+  fillRect() {}, fillText() {}, measureText(t) { return { width: (t || '').length * 10 }; }
+};
+stWrPr.paintWeeklyShare(wrCtx, 300, 400);
+stWrPr.onWeeklyShare();
+assert(stWrPr.data.weeklyShareVisible === true, '分享面板打开');
+stWrPr.onSaveWeeklyShare();
+stWrPr.onCloseWeeklyShare();
+assert(stWrPr.data.weeklyShareVisible === false, '分享面板关闭（mock canvas 不崩）');
+
+
 
 

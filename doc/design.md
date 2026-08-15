@@ -1,6 +1,6 @@
 ﻿# 设计文档（Design）
 
-版本：v2.21.0 | 更新：2026-08-13
+版本：v2.24.0 | 更新：2026-08-15
 
 ## 1. 技术选型
 
@@ -180,6 +180,42 @@
 - **数据指纹缓存**：`_dataFingerprint()` 基于训练（长度+首末 ts）/体重/摄入/自定义动作/资料生成指纹；指纹未变时 `loadStats` 直接复用上次计算结果（`_statsCache`），切 tab 回来零重算
 - **setData 两级拆分**：critical（简报/频率/体重/减量提示）先渲染，rest（图表/热力图/PR/分析）随后
 - 分析计算抽为 `computeAnalytics`，新鲜计算与缓存命中两条路径共用
+
+### 4.11 重量单位换算（v2.24）
+
+- 存储统一 kg；`utils/units.js` 提供显示层换算——`displayWeight`（kg→显示单位，四舍五入一位）、`storedWeight`（显示→kg）、`weightText`（"60 kg"/"132.3 lb"）、`volumeText`
+- 换算点位：训练页重量输入/预填/超负荷建议、组编辑器单位标注、历史记录组显示、统计页 PR/容量/体重/月度/平衡、1RM 图表
+- 纯本地显示层换算，不改存储结构与备份格式（CSV 导出保持 kg 原始数据）
+- 组间休息自动开始设置 `autoRest` 同存于 `gym_settings`
+
+### 4.12 连续打卡与成就（v2.24）
+
+- `utils/achievements.js` 纯函数：`streakInfo`（当前连续含今天，今天未练从昨天算；历史最长）、`computeAchievements`（9 枚徽章：首训/10·50·100 次训练/连续 3·7·30 天/累计容量 10 万·50 万 kg）
+- 训练天数按日期去重（同一天多次训练算 1 天）；成就用"历史最长"避免解锁后回退
+- 统计页"连续打卡"卡展示当前连续 + 已解锁数 + 徽章网格
+
+### 4.13 训练目标（v2.24）
+
+- `utils/goals.js`：`goalProgress`——体重目标 `(当前-起始)/(目标-起始)` 归一化为进度（增肌/减脂通用）；力量目标按动作历史最大重量/目标
+- 存储 `gym_goals`：`{ bodyweight: { target, start }, strength: [{ exerciseId, name, target }] }`（力量目标最多 3 个）
+- 编辑页 `pages/goals`（招牌动作 picker），统计页进度条卡片展示 + 提示文案
+
+### 4.14 肌肉恢复建议（v2.24）
+
+- `utils/muscle-recovery.js`：`weeklyGroupSets` 复用 muscle-heatmap 的 MUSCLE_GROUPS 与 target 词映射，统计**本周（周一至今）正式组数**（热身组不计入，与统计口径一致）
+- 建议范围 `RECOMMENDED_SETS`（胸/背/肩 8-16，二头/三头/臀/腘绳/小腿 4-10，股四头 6-14，腹 4-12 等；心肺不评估）
+- 判定：`high` 超练（>max）/`low` 欠练（<min）/`ok`/`none`；tips 给超练与欠练提示（对标 Fitbod/Hevy recovery）
+
+### 4.15 身体围度（v2.24）
+
+- 存储 `gym_measurements`：`[{ ts, chest, waist, hips, armLeft, armRight, thighLeft, thighRight }]`（cm），至少一项有效字段才入库
+- `util.measurementTrend` 逐字段取有效点，`pages/measurements` 页记录 + 按部位自身 min-max 归一化的迷你趋势条 + 历史删除
+- 统计页"身体围度"摘要卡展示最近 3 个有记录部位的最新值与变化
+
+### 4.16 历史编辑与复制上次（v2.24）
+
+- 历史页"编辑"→ `pending_edit_workout`（读后即删）→ 训练页加载该训练进草稿（重量换算显示单位），保存时**保留原 id/ts/date/duration**，只更新 items/note/plan（对标 Strong/Hevy 编辑旧训练）
+- 训练页"重复上次训练"快捷条：最近一次训练动作/组数带入草稿，组预填上次重量/次数（对标 Hevy Repeat）
 
 ## 5. UI 设计规范
 

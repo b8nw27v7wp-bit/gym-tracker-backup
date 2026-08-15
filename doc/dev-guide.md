@@ -25,23 +25,29 @@ gym-tracker/
 │   └── plans.js                    训练计划模板（5 套 17 日）
 │   └── foods.js                    食物热量库（205 种 × 8 分类）
 ├── utils/
-│   ├── store.js                    本地存储 CRUD + schema 迁移 + 备份导入导出 + 模板 + 水摄入
-│   ├── util.js                     纯函数计算层（容量/周统计/PR/1RM/热力图/体重/计划完成度/数据分析）
+│   ├── store.js                    本地存储 CRUD + schema 迁移 + 备份导入导出 + 模板 + 水摄入 + 设置/围度/目标
+│   ├── util.js                     纯函数计算层（容量/周统计/PR/1RM/热力图/体重/计划完成度/数据分析/围度趋势）
 │   ├── muscle-heatmap.js           部位热力图（GitHub 风格肌群矩阵）：MUSCLE_GROUPS 分组/按周聚合/分档/占比
 │   ├── training-intelligence.js    训练智能：渐进超负荷/动作轮换/减量检测/PR 预测
+│   ├── units.js                    重量单位换算（kg/lb）+ 自动休息设置（v5）
+│   ├── achievements.js             连续打卡 + 成就徽章（v5）
+│   ├── goals.js                    训练目标进度（体重 + 力量）（v5）
+│   ├── muscle-recovery.js          肌肉恢复建议：每周组数 vs 建议范围（v5）
+│   ├── weekly-report.js            训练周报：最近 8 周每周总结（容量/PR/肌群/连续天数/环比）（Batch3）
 │   ├── plan.js                     计划查询 + 训练草稿生成（支持自建计划合并）
 │   ├── nutrition.js                营养计算器（BMR/BMI/体脂率/宏量营养素）
 │   ├── plate-calculator.js         杠铃片计算器
 │   ├── substitute.js               动作替代推荐
 │   └── warmup.js                   热身组生成器
-├── pages/                          17 个页面（4 tab + 13 子页）
+├── pages/                          19 个页面（4 tab + 15 子页）
 │   ├── train  exercises  knowledge  stats          # tab 页
 │   ├── history  exercise-detail  knowledge-detail  # v2.0 子页
 │   ├── plans  plan-edit  calculator  data  privacy  # v2.1/v2.3 子页
 │   ├── muscle-detail  food  profile                 # v2.14 子页
-│   └── export  exercise-edit                        # v2.22/v2.23 子页
+│   ├── export  exercise-edit                        # v2.22/v2.23 子页
+│   └── measurements  goals                          # v2.24/v5 子页
 ├── doc/                            项目文档（建构规划见 doc/architecture.md §1-§10，索引见 §9）
-└── test.js                         数据层单测（541 项断言）
+└── test.js                         数据层单测（626 项断言）
 ```
 
 ## 3. 开发规范

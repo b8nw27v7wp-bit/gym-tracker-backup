@@ -190,6 +190,57 @@
     <view class="delta {{deltaClass}}">{{deltaText}}</view>
   </view>
 
+  <!-- 训练周报（Batch3）：最近 8 周每周总结，左右切换回看 -->
+  <view class="card">
+    <view class="weekly-head">
+      <view class="card-title" style="margin:0;">训练周报</view>
+      <view wx:if="{{weeklyReport.hasData}}" class="weekly-share" bindtap="onWeeklyShare">分享</view>
+    </view>
+    <view class="weekly-nav">
+      <view class="weekly-arrow {{weeklyIndex === 0 ? 'weekly-arrow-dis' : ''}}" bindtap="onWeekPrev" hover-class="weekly-arrow-hover">‹</view>
+      <text class="weekly-label">{{weeklyReport.label}}</text>
+      <view class="weekly-arrow {{weeklyIndex >= weeklyReportCount - 1 ? 'weekly-arrow-dis' : ''}}" bindtap="onWeekNext" hover-class="weekly-arrow-hover">›</view>
+    </view>
+    <view wx:if="{{weeklyReport.hasData}}">
+      <view class="weekly-hero">{{weeklyReport.workouts}} 次训练 · {{weeklyReport.volume}} {{unitLabel}} · {{weeklyReport.duration}} 分钟</view>
+      <view class="weekly-delta {{weeklyReport.deltaClass}}">{{weeklyReport.deltaText}}</view>
+      <view class="weekly-detail">
+        <view class="weekly-detail-item" wx:if="{{weeklyReport.prs > 0}}">
+          <text class="weekly-detail-num">{{weeklyReport.prs}}</text>
+          <text class="weekly-detail-label">新 PR</text>
+        </view>
+        <view class="weekly-detail-item">
+          <text class="weekly-detail-num">{{weeklyReport.groups}}</text>
+          <text class="weekly-detail-label">覆盖肌群</text>
+        </view>
+        <view class="weekly-detail-item">
+          <text class="weekly-detail-num">{{weeklyReport.streak}}</text>
+          <text class="weekly-detail-label">连续训练（天）</text>
+        </view>
+        <view class="weekly-detail-item">
+          <text class="weekly-detail-num">{{weeklyReport.sets}}</text>
+          <text class="weekly-detail-label">总组数</text>
+        </view>
+      </view>
+      <view wx:if="{{weeklyReport.newPRs.length > 0}}" class="weekly-pr" bindtap="onWeeklyPrTap" hover-class="weekly-pr-hover">
+        <view class="weekly-pr-row">
+          <text class="weekly-pr-label">新纪录</text>
+          <text class="weekly-pr-more">查看历史 ›</text>
+        </view>
+        <view class="weekly-pr-chips">
+          <view wx:for="{{weeklyReport.newPRs}}" wx:key="name" class="weekly-pr-chip">{{item.name}} {{item.weight}} {{unitLabel}}</view>
+        </view>
+      </view>
+      <view class="weekly-groups" wx:if="{{weeklyReport.groupsCovered.length > 0}}">
+        <text class="weekly-groups-label">肌群</text>
+        <text wx:for="{{weeklyReport.groupsCovered}}" wx:key="*this" class="cov-chip">{{item}}</text>
+      </view>
+    </view>
+    <view wx:else class="weekly-empty">
+      <text>本周未训练</text>
+    </view>
+  </view>
+
   <!-- 训练频率 -->
   <view class="card" wx:if="{{hasData}}">
     <view class="card-title">训练频率</view>
@@ -516,6 +567,21 @@
         <text class="freq-label">{{item.label}}</text>
         <text class="freq-value">{{item.count}}</text>
       </view>
+    </view>
+  </view>
+
+  <!-- 周报分享卡 modal（canvas 2d 生成图片保存相册） -->
+  <view class="chart-mask" wx:if="{{weeklyShareVisible}}" bindtap="onCloseWeeklyShare">
+    <view class="chart-panel" catchtap="noop">
+      <view class="chart-panel-head">
+        <view>
+          <view class="chart-panel-title">训练周报 · {{weeklyReport.label}}</view>
+          <view class="chart-panel-sub">{{weeklyReport.workouts}} 次训练 · {{weeklyReport.volume}} {{unitLabel}} 容量</view>
+        </view>
+        <view class="chart-close" bindtap="onCloseWeeklyShare">✕</view>
+      </view>
+      <canvas type="2d" id="weeklyShareCanvas" class="chart-canvas-lg"></canvas>
+      <view class="chart-save" bindtap="onSaveWeeklyShare">保存图片到相册</view>
     </view>
   </view>
 </view>

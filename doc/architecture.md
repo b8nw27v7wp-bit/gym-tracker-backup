@@ -1,6 +1,6 @@
 ﻿# 建构规划与模块管理（Architecture）
 
-版本：v2.23.3 | 更新：2026-08-15
+版本：v2.24.0 | 更新：2026-08-15
 配套：`dev-guide.md`（开发指引）/ `design.md`（设计决策）/ `testing.md`（测试体系）
 
 ---
@@ -13,7 +13,7 @@
 1. **纯函数分层**：计算/聚合逻辑全部抽为 `utils/*` 纯函数模块（无 wx 依赖），node 可直接单测
 2. **数据兜底**：任何非法/脏数据不崩溃（原型链注入防御、未知词忽略计数、类型强校验）
 3. **浅色极简 UI**：白底卡片、主文字 #1d1d1f、强调 indigo #4f46e5、蓝系数据色板
-4. **测试门禁**：主套件 541 项 + 专项 579 项全绿才可提交
+4. **测试门禁**：主套件 594 项 + 专项 579 项全绿才可提交
 5. **页面瘦身**：页面 JS 只做编排（读 store → 调纯函数 → setData），不内联业务计算
 
 **分层架构**
@@ -22,18 +22,18 @@
 ┌─────────────────────────────────────────────┐
 │ app.js / app.json / app.wxss  （应用壳：初始化/主题/路由） │
 ├─────────────────────────────────────────────┤
-│ 页面层 pages/（4 tab + 13 子页） + 自定义 tabBar        │
+│ 页面层 pages/（4 tab + 15 子页） + 自定义 tabBar        │
 │   └ 组件层 components/（ex-card / set-editor / empty-state）│
 ├─────────────────────────────────────────────┤
 │ 编排层（页面内）store 读写 + 纯函数调用 + setData 渲染     │
 ├─────────────────────────────────────────────┤
-│ 纯函数层 utils/（16 个模块，无 wx 依赖，node 可测）       │
+│ 纯函数层 utils/（17 个模块，无 wx 依赖，node 可测）       │
 ├─────────────────────────────────────────────┤
 │ 数据层 data/（动作库/知识库/计划/食物/肌群映射，静态数据）    │
 ├─────────────────────────────────────────────┤
-│ 存储层 wx.setStorageSync（16 个业务 key + 3 个跨页 key） │
+│ 存储层 wx.setStorageSync（16 个业务 key + 4 个跨页 key） │
 ├─────────────────────────────────────────────┤
-│ 测试 test.js（541）+ scripts/verify-*.js（专项 579）    │
+│ 测试 test.js（626）+ scripts/verify-*.js（专项 579）    │
 └─────────────────────────────────────────────┘
 ```
 
@@ -45,14 +45,14 @@
 gym-tracker/
 ├── app.js / app.json / app.wxss / sitemap.json  应用壳
 ├── project.config.json / project.private.config.json
-├── pages/                17 个页面（4 tab + 13 子页，见 §4）
+├── pages/                19 个页面（4 tab + 15 子页，见 §4）
 ├── components/           3 个自定义组件（见 §5）
 ├── custom-tab-bar/       自定义 tabBar（4 tab 选中态）
 ├── data/                 静态数据层（见 §3.2）
-├── utils/                纯函数层（16 个模块，见 §3.1）
+├── utils/                纯函数层（17 个模块，见 §3.1）
 ├── doc/                  11 份文档（见 §9）
 ├── scripts/              11 个专项验证脚本（见 §8）
-├── test.js               主测试套件（541 项）
+├── test.js               主测试套件（626 项）
 └── README.md             项目说明
 ```
 
@@ -60,13 +60,18 @@ gym-tracker/
 
 ## 3. 数据层管理
 
-### 3.1 纯函数模块 utils/（16 个，无 wx 依赖，node 可测）
+### 3.1 纯函数模块 utils/（17 个，无 wx 依赖，node 可测）
 
 | 模块 | 职责 | 关键导出 | 主要消费者 |
 |---|---|---|---|
-| `store.js` | 存储 CRUD + schema 迁移（v4）+ 备份导入导出 + 模板/水摄入/Tabata | getWorkouts/saveWorkout/addBodyweight/exportData/importData/migrate | 全部页面 |
-| `util.js` | 容量/周统计/PR/1RM/日历热力图/体重/计划完成度/数据分析 | calcWorkout/weekCompare/heatmap/exercisePR/est1RMHistory/weeklyVolume/bodyweightTrend | stats/train/history |
+| `store.js` | 存储 CRUD + schema 迁移（v5）+ 备份导入导出 + 模板/水摄入/Tabata + 设置/围度/目标 | getWorkouts/saveWorkout/addBodyweight/exportData/importData/migrate/getSettings/addMeasurement/saveGoals | 全部页面 |
+| `util.js` | 容量/周统计/PR/1RM/日历热力图/体重/计划完成度/数据分析/围度趋势 | calcWorkout/weekCompare/heatmap/exercisePR/est1RMHistory/weeklyVolume/bodyweightTrend/measurementTrend | stats/train/history/measurements |
 | `training-intelligence.js` | 训练智能：渐进超负荷/动作轮换/减量检测/PR 预测 | indexSessions/overloadAdvice/rotationAdvice/deloadAdvice/predictPR | train/stats |
+| `units.js` | 重量单位换算（kg/lb 显示/输入）+ 自动休息设置（v5） | displayWeight/storedWeight/weightText/volumeText/autoRestEnabled | train/history/stats |
+| `achievements.js` | 连续打卡 + 成就徽章（v5） | streakInfo/computeAchievements | stats |
+| `goals.js` | 训练目标进度：体重 + 力量（v5） | goalProgress | stats/goals |
+| `muscle-recovery.js` | 肌肉恢复建议：本周每肌群组数 vs 建议范围（v5） | weeklyGroupSets/recoveryAdvice | stats |
+| `weekly-report.js` | 训练周报聚合（Batch3 遗留，未接入页面） | buildWeeklyReports/weekRangeLabel | — |
 | `muscle-heatmap.js` | 部位热力图（GitHub 风格矩阵）：分组/按周聚合/分档/占比 | MUSCLE_GROUPS/aggregateZoneCountsByWeek/colorLevel/zoneShare | stats |
 | `custom-exercises.js` | 自定义动作：校验/合并/查找/部位推导 | findExercise/mergeExercises/deriveMuscleFromTarget | train/exercises/exercise-edit/stats |
 | `plan.js` | 计划查询 + 训练草稿生成（内置+自建合并） | getPlan/buildDraftFromPlan/planSummaries | plans/train |
@@ -80,6 +85,7 @@ gym-tracker/
 | `goals.js` | 训练目标进度（体重目标 + 力量目标） | goalProgress | goals/profile/stats |
 | `muscle-recovery.js` | 肌群恢复建议（按推荐组数上限评估疲劳） | recoveryAdvice/weeklyGroupSets | stats |
 | `units.js` | 单位系统（kg/lb 换算 + 展示） | displayWeight/storedWeight/volumeText/autoRestEnabled | train/stats/history/calculator |
+| `weekly-report.js` | 训练周报（Batch3）：最近 N 周每周总结聚合（容量/PR/肌群/连续天数/环比） | buildWeeklyReports/weekRangeLabel | stats |
 
 **依赖规则**：utils 之间允许依赖（如 training-intelligence → util；muscle-heatmap → data/muscle-map），但禁止页面反向依赖纯函数内部状态；新增纯函数模块必须带 node 单测。
 
@@ -110,9 +116,9 @@ gym-tracker/
 | `gym_water_intake` | 水摄入 | |
 | `gym_workout_templates` | 训练模板 | |
 | `gym_tabata_settings` | Tabata 设置 | |
-| `gym_settings` | 应用设置 | `{ unit: 'kg'\|'lb', autoRest: bool }` |
-| `gym_measurements` | 身体围度记录 | `[{ ts, chest, waist, hips, armLeft, armRight, thighLeft, thighRight }]`（cm） |
-| `gym_goals` | 训练目标 | `{ bodyweight: { target, start }, strength: [{ exerciseId, name, target }] }` |
+| `gym_settings` | 应用设置（v5） | `{ unit: 'kg'\|'lb', autoRest: bool }` |
+| `gym_measurements` | 身体围度（v5） | `[{ ts, chest?, waist?, hips?, armLeft?, armRight?, thighLeft?, thighRight? }]`（cm） |
+| `gym_goals` | 训练目标（v5） | `{ bodyweight: { target, start }\|null, strength: [{ exerciseId, name, target }] }` |
 | `gym_inited_v1` | v1 遗留初始化标记 | |
 
 **跨页临时通信 key（非持久数据，读后即删）**
@@ -122,10 +128,11 @@ gym-tracker/
 | `pending_muscle_key` | train → exercises | "在动作库查看当前部位"联动筛选 |
 | `pending_exercise` | exercise-detail → train | 动作详情"去记录"预选动作 |
 | `pending_plan_day` | plans → train | 计划日一键填充草稿 |
+| `pending_edit_workout` | history → train | 历史训练编辑加载（v5） |
 
 ---
 
-## 4. 板块与页面管理（17 页）
+## 4. 板块与页面管理（19 页）
 
 ### 4.0 功能板块矩阵（4 tab 板块 + 子功能归属）
 
@@ -134,8 +141,8 @@ gym-tracker/
 | **训练** | train | history、plans、plan-edit、exercise-detail（去记录） | training-intelligence、rest-advice、plate-calculator、warmup、substitute、plan、set-editor 组件 | verify-user-scenarios（休息/计时）、主套件 10f/10g/14 |
 | **动作库** | exercises | exercise-detail、exercise-edit、muscle-detail | custom-exercises、data/exercises、muscle-map、ex-card 组件 | verify-muscle-map、verify-page-match（动作详情×173） |
 | **知识** | knowledge | knowledge-detail | data/knowledge | 主套件 §3（30 篇完整性） |
-| **统计** | stats | profile、export、data、calculator、food、privacy | util、muscle-heatmap、training-intelligence（deload/PR 预测）、nutrition、export、store | verify-muscle-heatmap、verify-extreme（30 天数据）、主套件 10d/12 |
-| **数据底座** | —（app.js/store 初始化） | — | store（schema v4 迁移/导入导出） | verify-security-final/round2、verify-hardening、verify-boundaries |
+| **统计** | stats | profile、export、data、calculator、food、privacy、measurements、goals | util、muscle-heatmap、training-intelligence（deload/PR 预测）、nutrition、export、units、achievements、goals、muscle-recovery、store | verify-muscle-heatmap、verify-extreme（30 天数据）、主套件 10d/12/16 |
+| **数据底座** | —（app.js/store 初始化） | — | store（schema v5 迁移/导入导出） | verify-security-final/round2、verify-hardening、verify-boundaries |
 
 板块管理规则：子页归属以板块矩阵为准；跨板块跳转必须经 tab 页或明确入口（见 §6 导航图）；新增子功能先归入板块再建页面。
 
@@ -143,16 +150,16 @@ gym-tracker/
 
 | 页面 | 职责 | 关键数据流 | 入口/出口 |
 |---|---|---|---|
-| `pages/train/train` | 训练记录主流程：选部位→选动作→记组→保存；休息计时/热身组/训练智能建议/模板/Tabata/递减组 | store.getWorkouts → lastRecords/sessionsIndex → draft（不可变更新）→ saveWorkout | ← exercises（部位）/exercise-detail（预选）/plans（计划填充） |
+| `pages/train/train` | 训练记录主流程：选部位→选动作→记组→保存；休息计时/自动休息/热身组/训练智能建议/模板/Tabata/递减组/复制上次/历史编辑 | store.getWorkouts → lastRecords/sessionsIndex → draft（不可变更新）→ saveWorkout | ← exercises（部位）/exercise-detail（预选）/plans（计划填充）/history（编辑） |
 | `pages/exercises/exercises` | 动作库浏览（10 部位/类型/难度筛选 + 搜索），自定义动作"我的动作"合并展示 | exercisesData.ALL + customExercises.mergeExercises | → exercise-detail / exercise-edit / train |
 | `pages/knowledge/knowledge` | 知识库列表（5 分类） | knowledge 数据 | → knowledge-detail |
 | `pages/stats/stats` | 统计总览：简报/热量/容量图/日历热力图/肌群矩阵/分布/PR+1RM 预测/体重/月度/平衡/密度/频率 | store + util + muscleHeatmap + trainingIntelligence；**指纹缓存**（数据未变零重算） | → profile/calculator/food |
 
-### 4.2 子页（13）
+### 4.2 子页（15）
 
 | 页面 | 职责 | 关键点 |
 |---|---|---|
-| `pages/history/history` | 训练历史列表/展开/删除 + 分享卡 canvas 生成 | 删除二次确认；分享权限引导 |
+| `pages/history/history` | 训练历史列表/展开/编辑/删除 + 分享卡 canvas 生成 | 编辑走 pending_edit_workout → 训练页；删除二次确认；分享权限引导 |
 | `pages/exercise-detail/exercise-detail` | 动作详情：步骤/错误/贴士 + 部位知识 + 替代动作 + 关联文章 | 同页推荐跳转用 redirectTo 防栈溢出；"去记录"写 pending_exercise |
 | `pages/muscle-detail/muscle-detail` | 部位训练指南（10 部位切换 + 发力肌群词 + 分区动作） | 非法 key 兜底回胸部 |
 | `pages/knowledge-detail/knowledge-detail` | 文章详情（para/list 渲染） | |
@@ -162,9 +169,11 @@ gym-tracker/
 | `pages/food/food` | 食物热量查询（205 种）/快捷克数/今日摄入 | 克数非法值拦截 |
 | `pages/data/data` | 数据管理：导出/导入/清空/容量 | 导入预览 + 覆盖确认 |
 | `pages/privacy/privacy` | 隐私协议 | |
-| `pages/profile/profile` | 个人中心：昵称头像/体重入口/导出入口 | |
+| `pages/profile/profile` | 个人中心：昵称头像/身体资料/应用设置（单位/自动休息）/围度与目标入口 | |
 | `pages/export/export` | 训练数据导出 CSV（UTF-8 BOM）/ JSON 备份 | 分享/复制剪贴板 |
 | `pages/exercise-edit/exercise-edit` | 自定义动作表单（肌群 picker 限定已知词） | 编辑/删除（确认弹窗），内置动作无编辑入口 |
+| `pages/measurements/measurements` | 身体围度记录/趋势/历史（v5） | 至少一项围度校验 0-300cm；趋势条按部位自身范围归一化 |
+| `pages/goals/goals` | 训练目标编辑：体重 + 最多 3 个力量目标（v5） | 目标重量按招牌动作历史最大重量追踪 |
 
 ---
 
@@ -186,13 +195,13 @@ train ──部位联动──▶ exercises ──▶ exercise-detail ──去�
   │                    │                 │
   │                    └──▶ exercise-edit（自定义动作）
   │
-  ├──▶ history（历史/分享）
+  ├──▶ history（历史/分享/编辑──▶ train）
   ├──▶ plans ◀──开始训练── train
   │         └──▶ plan-edit
   ├──▶ exercises（动作库入口，携带部位）
   │
 knowledge ──▶ knowledge-detail
-stats ──▶ profile ──▶ export / calculator / food
+stats ──▶ profile ──▶ export / calculator / food / measurements / goals
            calculator ──▶（保存资料回 stats）
 tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 ```
@@ -203,12 +212,14 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 
 | 机制 | 位置 | 说明 |
 |---|---|---|
-| 数据指纹缓存 | stats.js `_dataFingerprint/_statsCache` | 训练/体重/摄入/自定义/资料未变 → loadStats 零重算，切 tab 秒开 |
-| setData 两级拆分 | stats.js | critical（简报）先渲染，rest（图表）随后 |
+| 数据指纹缓存 | stats.js `_dataFingerprint/_statsCache` | 训练/体重/摄入/自定义/资料/设置/围度/目标未变 → loadStats 零重算，切 tab 秒开 |
+| setData 两级拆分 | stats.js | critical（简报/成就/目标）先渲染，rest（图表/恢复）随后 |
 | 不可变更新 | train.js draft | concat/map 生成新数组，保证 setData diff 生效 |
 | 绘制序号防竞态 | stats.js `_heatDrawSeq`（旧）/ drawVolumeChart | 异步 canvas 绘制防乱序 |
 | 会话索引 | train.js `sessionsIndex` | 训练智能建议一次构建多处复用 |
 | 原型链注入防御 | muscle-heatmap/custom-exercises/store | hasOwnProperty 校验，__proto__ 零命中 |
+| 单位换算单一出口 | utils/units.js | 存储统一 kg，显示层按设置换算（训练/历史/统计/围度） |
+| 组间休息自动开始 | train.js onDoneEdit | 完成动作保存后按推荐秒数自动启动休息（可设置关闭） |
 
 ---
 
@@ -216,7 +227,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 
 | 套件 | 项数 | 覆盖 |
 |---|---|---|
-| `test.js`（主套件，15 节） | 541 | 数据层 + 页面冒烟 + 训练智能 + 安全守门 + 审计回归 |
+| `test.js`（主套件，16 节） | 594 | 数据层 + 页面冒烟 + 训练智能 + 安全守门 + 审计回归 + v5 单位/成就/目标/恢复/围度/编辑/重复 |
 | `verify-muscle-map.js` | 68 | 发力图↔部位一致性 + 注入 |
 | `verify-muscle-heatmap.js` | 35 | 肌群矩阵：色阶/分组/分周聚合/性能/注入 |
 | `verify-modules.js` | 11 | **建构管理守门**：模块可加载/依赖无环/页面四件套/tab 注册/组件完整/存储 key 单一出口与文档一致/跨页 key 成对/文档↔代码一致 |
@@ -228,7 +239,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 | `verify-user-scenarios.js` | 68 | 用户场景（误操作/中断/损坏恢复） |
 | `verify-nav.js` | 1 | 导航审计（注册/跳转方式/栈溢出/兜底） |
 | `verify-page-match.js` | 4 | 页面数据匹配 |
-| **合计** | **1111** | 提交门槛：主套件 + 全部专项全绿 |
+| **合计** | **1173** | 提交门槛：主套件 + 全部专项全绿 |
 
 ---
 
@@ -273,7 +284,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 4. [ ] architecture §3.3 表格同步
 
 ### 通用
-1. [ ] 提交前跑全量：`node test.js` + 12 个专项脚本（1111 项）
+1. [ ] 提交前跑全量：`node test.js` + 12 个专项脚本（1173 项）
 2. [ ] 模块/页面/存储 key 变更后跑 `scripts/verify-modules.js`（建构管理守门）
 3. [ ] 文档同步（architecture 板块矩阵/模块表 + changelog + 涉及文档）
 4. [ ] 手工清单抽查改动模块（微信开发者工具）

@@ -2,6 +2,37 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.25.0（2026-08-15）— 训练周报（Batch3）
+
+对标 Hevy 的"每周训练总结"：自动汇总每周训练表现，可回看最近 8 周，看进步与趋势。
+
+- **feat(stats)**: 训练周报卡——容量卡下方新增"训练周报"，顶部标题 + 左右箭头切换周（默认最新一周），中央显示"训练 X 次 · 容量 Y kg · Z 分钟"，环比行（较上周 +15%/-8%/首周，绿 + 灰 - 克制配色），明细行（新 PR 个数/覆盖肌群数/连续训练天数/总组数）；无数据周显示"本周未训练"空态
+- **feat(utils)**: 新增纯函数 `utils/weekly-report.js`（buildWeeklyReports 最近 8 周含空周 / weekRangeLabel 跨月跨年标签）——PR 判定与月度总结口径一致（该动作本周最大正式重量 > 该动作本周之前历史最大正式重量）；肌群覆盖复用 muscle-heatmap 14 分组；无 wx 依赖 node 可单测
+- **feat(stats)**: 切换周只切 setData 索引不重算聚合（一次算 8 周）；PR 行可点击跳历史页核对
+- **feat(stats)**: 周报分享卡（canvas 2d 生成图片保存相册，参考 history.js 分享实现，无新依赖）：周次/训练次数/容量/新纪录/肌群覆盖
+- **test**: 主套件 594→626（新增第 17 节 32 项：聚合正确性/PR 口径与月度总结一致与历史严格比较/环比边界（上周 0→首周）/空周/切换索引与边界夹紧/跨年跨月周标签/空态/分享冒烟）；architecture/dev-guide/README 同步（utils 16→17 模块）
+- 全量回归：主套件 626 + 专项 579 项全绿
+
+## v2.24.0（2026-08-15）— 竞品对标 P0/P1：记录体验 + 追踪激励
+
+对标 Strong/Hevy/JEFIT/训记/Keep 落地的 8 项功能（P0 记录体验 + P1 追踪激励）：
+
+### 记录体验（P0）
+- **feat(train)**: 组间休息自动开始——完成动作保存后自动按推荐秒数（热身 60s/正式 90s）启动休息倒计时（对标 Strong/Hevy），已有休息在跑先停后开；可设置关闭
+- **feat(history+train)**: 历史训练编辑——历史页"编辑"跳转训练页加载旧训练进草稿（重量换算显示单位），保存覆盖原记录且**保留原 id/ts/date/duration**（只更新 items/note/plan）；训练页编辑模式条 + 放弃编辑
+- **feat(train)**: 复制上次训练——一键重复最近一次训练到草稿（对标 Hevy Repeat），动作/组数/上次重量次数预填，训练页顶部快捷条
+- **feat(settings+units)**: 重量单位 kg/lb 切换——新增 `utils/units.js`（displayWeight/storedWeight/weightText/volumeText 纯函数），个人中心设置切换；训练页输入/预填/渐进超负荷建议、组编辑器单位标注、历史记录、统计页 PR/容量/体重/月度总结/肌群平衡、1RM 图表全链路换算；存储仍统一 kg（CSV 导出保持 kg 原始数据）
+
+### 追踪与激励（P1）
+- **feat(profile+stats)**: 连续打卡与成就——`utils/achievements.js`（streakInfo/computeAchievements），统计页"连续打卡"卡：当前/最长连续天数 + 9 枚成就徽章（首训/累计 10·50·100 次/连续 3·7·30 天/容量 10 万·50 万 kg）
+- **feat(goals+stats)**: 训练目标与进度——`utils/goals.js` + 新页 `pages/goals`（体重目标 + 最多 3 个招牌动作力量目标），统计页进度条卡 + 提示文案
+- **feat(stats)**: 肌肉恢复建议——`utils/muscle-recovery.js`（本周每肌群正式组数 vs 建议范围 8-16 组等），统计页 14 肌群状态条 + 超练/欠练提示（对标 Fitbod/Hevy recovery）
+- **feat(measurements+stats)**: 身体围度追踪——新页 `pages/measurements`（胸/腰/臀/左臂/右臂/左腿/右腿 7 部位，逐部位迷你趋势条 + 历史删除），统计页围度摘要卡
+- **feat(store)**: schema v5 迁移——新增 `gym_settings`（unit/autoRest）、`gym_measurements`、`gym_goals`，备份导出/导入/清空/容量统计/数据指纹全适配；addMeasurement 至少一项有效字段防御
+- **chore(modules)**: `utils/units` / `achievements` / `goals` / `muscle-recovery` 4 个纯函数模块；dev-guide/architecture/design/requirements/README 同步
+- **test**: 主套件 541→594（新增第 16 节 53 项：单位换算往返/lb 输入保存 132.3lb→60kg/编辑保留原 ts 与换算/重复上次预填/连续打卡/成就解锁/目标进度/恢复判定与热身组排除/围度 CRUD 与趋势/导入导出含新字段/统计页新卡片）；verify-modules 新增 pending_edit_workout 跨页 key 对
+- 全量回归：主套件 594 + 专项 579 项全绿（1173 项）
+
 ## v2.23.3（2026-08-15）— 训练智能 + 统计页性能
 
 - **feat(utils)**: 新增 `utils/training-intelligence.js` 训练智能纯函数模块——`indexSessions`（按动作索引会话，一次构建多处复用，自重动作保留）、`overloadAdvice`（渐进超负荷：按最近 2 次最高重量组建议本次重量/次数，进步/持平/回落/首次四态，步长 <100kg +2.5 / <200kg +5 / 大重量 +10）、`rotationAdvice`（近 30 天使用 ≥8 次推荐替代动作，排除自身）、`deloadAdvice`（近 3 周容量连续下降 ≥20% → 减量建议；连续上升 ≥30% → 冲 PR 建议）、`predictPR`（1RM 历史线性回归预测 2 周后）

@@ -808,10 +808,12 @@ function getMeasurements() {
 function addMeasurement(record) {
   if (!record || typeof record !== 'object') return null;
   var safe = { ts: record.ts || Date.now() };
+  var any = false;
   ['chest', 'waist', 'hips', 'armLeft', 'armRight', 'thighLeft', 'thighRight'].forEach(function (f) {
     var v = util.toNum(record[f]);
-    if (v > 0) safe[f] = Math.round(v * 10) / 10;
+    if (v > 0 && v <= 300) { safe[f] = Math.round(v * 10) / 10; any = true; }
   });
+  if (!any) return null; // 无任何有效围度字段 → 拒绝
   var list = getMeasurements();
   list.push(safe);
   try {

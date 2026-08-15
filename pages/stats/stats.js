@@ -10,6 +10,7 @@ var units = require('../../utils/units');
 var achievements = require('../../utils/achievements');
 var goalsUtil = require('../../utils/goals');
 var muscleRecovery = require('../../utils/muscle-recovery');
+var weeklyReport = require('../../utils/weekly-report');
 
 // 展示 PR 的招牌动作
 var PR_EXERCISES = ['bench', 'squat', 'deadlift', 'ohp', 'pullup', 'db-bench', 'leg-press', 'bb-row'];
@@ -66,7 +67,13 @@ Page({
     achievementUnlocked: 0,
     goals: null,
     recovery: null,
-    measurementSummary: []
+    measurementSummary: [],
+    // 训练周报（Batch3）
+    weeklyReports: [],
+    weeklyReportCount: 0,
+    weeklyIndex: -1,   // 当前浏览的周（-1 = 未浏览，首次默认最新一周）
+    weeklyReport: null,
+    weeklyShareVisible: false // 周报分享卡（canvas 生成）
   },
 
   onShow: function () {
@@ -87,15 +94,17 @@ Page({
   },
 
   onUnload: function () {
-    this.setData({ chartVisible: false });
+    this.setData({ chartVisible: false, weeklyShareVisible: false });
   },
 
   // 切走 tab 时关闭图表弹层，避免回来时残留
   onHide: function () {
-    this.setData({ chartVisible: false });
+    this.setData({ chartVisible: false, weeklyShareVisible: false });
   },
   loadStats: function () {
     var workouts = store.getWorkouts();
+    // 训练周报（不依赖数据指纹，8 周聚合成本低；空数据也要生成空态）
+    this.buildWeeklyReportData(workouts);
     // 热量板块（不依赖训练记录，无训练也显示）
     this.calcCalories(workouts);
     if (workouts.length === 0) {
@@ -279,10 +288,7 @@ Page({
     // 部位热力图（v3.3 GitHub 风格肌群矩阵）：按周 × 肌群分组聚合，纯 WXML 渲染（无 canvas）
     // resolver 用 id→动作 哈希（内置优先，与 customExercises.findExercise 语义一致），
     // 避免数百次训练 × 动作条目对 173 个动作做线性查找
-    var exById = {};
-    var customList = store.getCustomExercises();
-    (Array.isArray(customList) ? customList : []).forEach(function (ex) { if (ex && ex.id) exById[ex.id] = ex; });
-    exercisesData.ALL.forEach(function (ex) { if (ex && ex.id) exById[ex.id] = ex; });
+    var exById = this._buildExById();
     var heatAgg = muscleHeatmap.aggregateZoneCountsByWeek(workouts, 12, function (id) {
       return Object.prototype.hasOwnProperty.call(exById, id) ? exById[id] : null;
     });
@@ -327,7 +333,7 @@ Page({
     });
     // v5：身体围度摘要（最近 3 个有记录的部位 + 变化）
     var msTrend = util.measurementTrend(store.getMeasurements());
-    var measurementSummary = msTrend.fields.filter(function (f) { return f.has; }).slice(0, 3).map(function (f) {
+    var measurementSummary = msTrend.fields.filter(function (f) { return f.points.length > 0; }).slice(0, 3).map(function (f) {
       return {
         key: f.key,
         name: f.name,
@@ -467,6 +473,236 @@ Page({
       freqTrend: freqTrend,
       balanceReady: balance.total > 0
     };
+  },
+
+  // ---------- 训练周报（Batch3） ----------
+  // id→动作 哈希（内置 + 自定义），供热力图/恢复/周报复用，避免线性查找
+  _buildExById: function () {
+    var exById = {};
+    var customList = store.getCustomExercises();
+    (Array.isArray(customList) ? customList : []).forEach(function (ex) { if (ex && ex.id) exById[ex.id] = ex; });
+    exercisesData.ALL.forEach(function (ex) { if (ex && ex.id) exById[ex.id] = ex; });
+    return exById;
+  },
+
+  // 一次算 8 周，切换只切索引（不重复聚合）
+  buildWeeklyReportData: function (workouts) {
+    var exById = this._buildExById();
+    var resolver = function (id) {
+      return Object.prototype.hasOwnProperty.call(exById, id) ? exById[id] : null;
+    };
+    var reports = weeklyReport.buildWeeklyReports(workouts, 8, { resolver: resolver });
+    this.setData({ weeklyReports: reports, weeklyReportCount: reports.length });
+    // 保留用户当前浏览周（-1 = 首次 → 默认最新一周）
+    this.applyWeeklyIndex(this.data.weeklyIndex);
+  },
+
+  // 切换浏览索引（越界夹紧，最早/最新再点不崩）
+  applyWeeklyIndex: function (idx) {
+    var reports = this.data.weeklyReports || [];
+    if (reports.length === 0) {
+      this.setData({ weeklyIndex: 0, weeklyReport: null });
+      return;
+    }
+    var target = (typeof idx === 'number' && idx >= 0) ? idx : reports.length - 1;
+    if (target < 0) target = 0;
+    if (target > reports.length - 1) target = reports.length - 1;
+    this.setData({ weeklyIndex: target, weeklyReport: this._buildWeeklyView(reports, target) });
+  },
+
+  onWeekPrev: function () {
+    var cur = this.data.weeklyIndex;
+    if (!(typeof cur === 'number')) cur = (this.data.weeklyReportCount || 1) - 1;
+    this.applyWeeklyIndex(Math.max(cur - 1, 0));
+  },
+
+  onWeekNext: function () {
+    var cur = this.data.weeklyIndex;
+    if (!(typeof cur === 'number')) cur = -1; // 未浏览过 → 交由 applyWeeklyIndex 落到最新周
+    var max = (this.data.weeklyReportCount || 1) - 1;
+    this.applyWeeklyIndex(Math.min(cur + 1, max));
+  },
+
+  // 周报展示对象：单位换算 + 环比文案（绿色 + / 灰色 -，克制的配色；首周与空周灰）
+  _buildWeeklyView: function (reports, idx) {
+    var r = reports[idx];
+    var view = {
+      label: r.label,
+      workouts: r.workouts,
+      volume: Math.round(units.displayWeight(r.volume)),
+      duration: r.duration,
+      prs: r.prs,
+      newPRs: r.newPRs.map(function (p) {
+        return { name: p.name, weight: Math.round(units.displayWeight(p.weight)) };
+      }),
+      sets: r.sets,
+      groups: r.groups,
+      groupsCovered: r.groupsCovered,
+      streak: r.streak,
+      hasData: r.workouts > 0,
+      isLatest: idx === reports.length - 1
+    };
+    var deltaText = '';
+    var deltaClass = 'weekly-delta-flat';
+    if (r.workouts === 0) {
+      deltaText = '本周未训练';
+    } else if (r.volumePct === null) {
+      deltaText = '首周';
+    } else if (r.volumePct > 0) {
+      deltaText = '较上周 +' + r.volumePct + '%';
+      deltaClass = 'weekly-delta-up';
+    } else if (r.volumePct < 0) {
+      deltaText = '较上周 ' + r.volumePct + '%';
+      deltaClass = 'weekly-delta-down';
+    } else {
+      deltaText = '与上周持平';
+    }
+    view.deltaText = deltaText;
+    view.deltaClass = deltaClass;
+    return view;
+  },
+
+  // 有新 PR 时点击 → 历史页（进历史记录核对）
+  onWeeklyPrTap: function () {
+    wx.navigateTo({ url: '/pages/history/history' });
+  },
+
+  // ---------- 周报分享卡（canvas 生成图片保存相册，参考 history.js 分享实现） ----------
+  onWeeklyShare: function () {
+    var self = this;
+    this.setData({ weeklyShareVisible: true }, function () {
+      self.drawWeeklyShare();
+    });
+  },
+
+  onCloseWeeklyShare: function () {
+    this.setData({ weeklyShareVisible: false });
+  },
+
+  drawWeeklyShare: function () {
+    var self = this;
+    wx.createSelectorQuery()
+      .select('#weeklyShareCanvas')
+      .fields({ node: true, size: true })
+      .exec(function (res) {
+        if (!res || !res[0] || !res[0].node) return;
+        var canvas = res[0].node;
+        var width = res[0].width;
+        var height = res[0].height;
+        if (width <= 0 || height <= 0) return;
+        var dpr = wx.getSystemInfoSync().pixelRatio;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        var ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        self.paintWeeklyShare(ctx, width, height);
+      });
+  },
+
+  paintWeeklyShare: function (ctx, W, H) {
+    var r = this.data.weeklyReport;
+    if (!r || !r.hasData) return;
+    var unit = this.data.unitLabel || 'kg';
+    // 底色
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+    // 品牌条
+    ctx.fillStyle = '#1d1d1f';
+    ctx.fillRect(0, 0, W, 72);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 26px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('铁馆日志 GYM TRACKER', 24, 46);
+    // 周次
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('训练周报 · ' + r.label, 24, 108);
+    // 容量大数字
+    ctx.fillStyle = '#1d1d1f';
+    ctx.font = 'bold 56px sans-serif';
+    var volText = String(r.volume);
+    ctx.fillText(volText, 24, 184);
+    ctx.font = '26px sans-serif';
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillText(unit + ' 容量', 24 + ctx.measureText(volText).width + 12, 178);
+    // 统计行
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '22px sans-serif';
+    ctx.fillText(r.workouts + ' 次训练 · ' + r.duration + ' 分钟 · ' + r.sets + ' 组', 24, 226);
+    // 分隔线
+    ctx.fillStyle = '#f3f4f6';
+    ctx.fillRect(24, 250, W - 48, 2);
+    // 新 PR
+    var y = 292;
+    if (r.newPRs.length > 0) {
+      ctx.fillStyle = '#10b981';
+      ctx.font = '22px sans-serif';
+      ctx.fillText('新纪录 ' + r.prs + ' 个', 24, y);
+      y += 36;
+      ctx.fillStyle = '#1d1d1f';
+      r.newPRs.slice(0, 5).forEach(function (p) {
+        ctx.fillText(p.name, 24, y);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#9ca3af';
+        ctx.fillText(p.weight + ' ' + unit, W - 24, y);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#1d1d1f';
+        y += 36;
+      });
+    } else {
+      ctx.fillStyle = '#9ca3af';
+      ctx.fillText('本周未打破纪录，持续进步', 24, y);
+      y += 36;
+    }
+    // 肌群覆盖
+    if (r.groupsCovered.length > 0) {
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '22px sans-serif';
+      ctx.fillText('覆盖肌群：' + r.groupsCovered.join(' / '), 24, y + 12);
+    }
+    // 底部
+    ctx.fillStyle = '#f3f4f6';
+    ctx.fillRect(0, H - 56, W, 56);
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '18px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('铁馆日志 Gym Tracker · 数据记录于本机', W / 2, H - 24);
+    ctx.textAlign = 'left';
+  },
+
+  onSaveWeeklyShare: function () {
+    var self = this;
+    wx.createSelectorQuery()
+      .select('#weeklyShareCanvas')
+      .fields({ node: true })
+      .exec(function (res) {
+        if (!res || !res[0] || !res[0].node) return;
+        wx.canvasToTempFilePath({
+          canvas: res[0].node,
+          success: function (r) {
+            wx.saveImageToPhotosAlbum({
+              filePath: r.tempFilePath,
+              success: function () {
+                wx.showToast({ title: '已保存到相册', icon: 'success' });
+                self.setData({ weeklyShareVisible: false });
+              },
+              fail: function () {
+                wx.showModal({
+                  title: '保存失败',
+                  content: '需要相册权限才能保存图片',
+                  confirmText: '去设置',
+                  success: function (m) {
+                    if (m.confirm) wx.openSetting();
+                  }
+                });
+              }
+            });
+          },
+          fail: function () {
+            wx.showToast({ title: '生成图片失败', icon: 'none' });
+          }
+        });
+      });
   },
 
   // ---------- 热量板块 ----------
