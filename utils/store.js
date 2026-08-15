@@ -871,7 +871,7 @@ function saveGoals(goals) {
       }
     });
   }
-  if (goals.weeklyVolume && goals.weeklyVolume.target) {
+  if (goals.weeklyVolume && util.toNum(goals.weeklyVolume.target) > 0) {
     safe.weeklyVolume = { target: Math.round(util.toNum(goals.weeklyVolume.target)) };
   }
   try {

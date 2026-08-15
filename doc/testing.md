@@ -432,5 +432,6 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 | scripts/verify-modules.js | 建构管理守门（模块可加载/依赖无环/页面四件套/tab/组件/存储 key 单一出口/跨页 key/文档一致） | 11 |
 | `scripts/verify-nav.js` | 导航审计 | 1 |
 | `scripts/verify-page-match.js` | 页面数据匹配 | 4 |
+| `scripts/verify-v6.js` | v6 边界+安全专项（训练日提醒/周容量目标/单位换算/重量趋势/订阅守卫：脏输入、原型注入、周界、非法值） | 60 |
 
-**总计：1229 项测试**
+**总计：1289 项测试**

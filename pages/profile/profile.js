@@ -195,6 +195,8 @@ Page({
   // 请求订阅消息授权（微信订阅消息需模板，此处为授权状态；推送服务需后端）
   requestReminderSubscription: function () {
     if (!wx.requestSubscribeMessage) return;
+    // 未配置订阅消息模板：跳过授权请求（避免真实设备报错），仅用应用内提醒
+    if (!TRAIN_REMINDER_TEMPLATE_ID) return;
     var self = this;
     wx.requestSubscribeMessage({
       tmplIds: [TRAIN_REMINDER_TEMPLATE_ID],

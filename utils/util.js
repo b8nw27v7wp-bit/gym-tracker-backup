@@ -16,7 +16,7 @@ function setVolume(set) {
 
 // 是否热身组（热身组不纳入统计）
 function isWarmup(set) {
-  return !!set.warmup;
+  return !!(set && set.warmup);
 }
 
 // 一次训练：{ volume 总容量, weightVolume 负重容量, sets 正式组数, reps 正式组总次数, maxWeight 最大重量, warmupSets 热身组数 }
@@ -373,7 +373,11 @@ function weeklyPlanProgress(workouts, plan, weekStartTs) {
   var today = todayStr();
   var todayDone = false;
   (workouts || []).forEach(function (w) {
-    if (w.ts < weekStartTs) return;
+    // 脏数据防御：null/非对象/非法 ts 跳过（stateless 纯函数不崩溃）
+    if (!w || typeof w !== 'object') return;
+    var ts = Number(w.ts);
+    if (!isFinite(ts) || ts < 0) return;
+    if (ts < weekStartTs) return;
     if (!w.plan || w.plan.planId !== plan.id) return;
     if (w.date === today) todayDone = true;
     if (w.plan.dayId) doneSet[w.plan.dayId] = true;
@@ -504,12 +508,14 @@ function bodyweightTrend(list) {
 function strengthCurve(exerciseId, workouts, limit) {
   var points = [];
   (workouts || []).forEach(function (w) {
-    (w.items || []).forEach(function (item) {
+    if (!w || typeof w !== 'object') return; // 脏数据防御
+    (Array.isArray(w.items) ? w.items : []).forEach(function (item) {
+      if (!item || typeof item !== 'object') return;
       if (item.exerciseId !== exerciseId) return;
       var maxWeight = 0;
-      (item.sets || []).forEach(function (s) {
-        if (s.warmup) return; // 跳过热身组
-        var wt = toNum(s.weight);
+      (Array.isArray(item.sets) ? item.sets : []).forEach(function (s) {
+        if (s && s.warmup) return; // 跳过热身组
+        var wt = toNum(s && s.weight);
         if (wt > maxWeight) maxWeight = wt;
       });
       if (maxWeight > 0) {

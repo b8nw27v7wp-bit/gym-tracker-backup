@@ -2,6 +2,15 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.26.1（2026-08-15）— v6 边界/安全加固
+
+- **fix(security)**: `util.weeklyPlanProgress` 遇 null/非对象/非法 ts 的 workout 元素崩溃（`w.ts` 读 null）——增加脏数据防御（今日新增的 plan-reminder 纯函数暴露此路径）
+- **fix(security)**: `util.isWarmup(null)` 崩溃——sets 数组含 null 元素时 `!!set.warmup` 抛 TypeError；改 `!!(set && set.warmup)`（同日新增 weeklyVolumeProgress 的 calcWorkout 调用暴露此路径）
+- **fix(security)**: `util.strengthCurve` 遇 null workout 元素崩溃（`w.items` 读 null）——增加 `!w || typeof w !== 'object'` 防御 + items/sets 非数组兜底（动作详情页趋势图数据源）
+- **fix(validation)**: `store.saveGoals` weeklyVolume 负值/非数字目标未过滤（`if (target)` 对 -5 truthy）——改 `util.toNum(target) > 0` 校验
+- **test**: 新增专项 `scripts/verify-v6.js`（60 项边界+安全）——训练日提醒脏输入/原型污染/周界、周容量目标脏 workouts/热身排除/进度超 100%、store 设置与目标脏存储清洗/__proto__ 不泄漏、单位换算非法值归零、重量趋势脏数据/自重/limit/同日去重、订阅消息模板未配置守卫；专项 579→639 项，合计 1289 项
+- 全量回归：主套件 650 + 专项 639 项全绿（1289 项）
+
 ## v2.26.0（2026-08-15）— 训练计划与目标：训练日提醒 + 每周容量目标 + 动作重量趋势
 
 对标训记/Hevy 的 3 个亮点落地：
