@@ -142,7 +142,46 @@ function colorLevel(count, maxCount) {
 }
 
 // 训练量档位颜色（level 0 = 灰色未训练，1-4 蓝系由浅到深）
-var LEVEL_COLORS = ['#e5e7eb', '#dbeafe', '#93c5fd', '#3b82f6', '#1d4ed8'];
+var LEVEL_COLORS = ['#f3f4f6', '#dbeafe', '#93c5fd', '#3b82f6', '#1d4ed8'];
+
+// zone key → 中文展示名（点击信息条/无障碍用）
+// 规则：先查完整 key，查不到则去掉 -l/-r 侧标再查，再查不到返回 key 本身
+var ZONE_NAMES = {
+  'neck': '颈',
+  'trap-f': '斜方肌上', 'trap-b': '斜方肌上', 'trap-mid': '斜方肌中',
+  'shoulder-f': '三角肌前束', 'shoulder-b': '三角肌后束',
+  'chest-upper': '上胸', 'chest-mid': '中胸', 'chest-lower': '下胸',
+  'bicep': '肱二头肌', 'tricep': '肱三头肌', 'forearm': '前臂',
+  'abs-upper': '上腹', 'abs-lower': '下腹', 'oblique': '腹斜肌',
+  'lat': '背阔肌', 'erector': '竖脊肌',
+  'glute': '臀大肌', 'hamstring': '腘绳肌',
+  'quad': '股四头肌', 'calf': '小腿', 'tibialis': '胫骨前肌',
+  'heart': '心肺'
+};
+
+// zone key → 中文名（含 -l/-r 侧标剥离兜底）
+function zoneName(key) {
+  if (typeof key !== 'string') return '';
+  if (Object.prototype.hasOwnProperty.call(ZONE_NAMES, key)) return ZONE_NAMES[key];
+  var base = key.replace(/-(l|r)$/, '');
+  if (Object.prototype.hasOwnProperty.call(ZONE_NAMES, base)) return ZONE_NAMES[base];
+  return key;
+}
+
+// 某 zone 训练量占全身训练量的百分比（0-100 整数；全身无训练返回 0）
+function zoneShare(counts, key) {
+  var total = 0;
+  if (counts && typeof counts === 'object') {
+    Object.keys(counts).forEach(function (k) {
+      var v = Number(counts[k]);
+      if (isFinite(v) && v > 0) total += v;
+    });
+  }
+  if (total <= 0) return 0;
+  var c = Number(counts[key]);
+  if (!(isFinite(c) && c > 0)) return 0;
+  return Math.round(c / total * 100);
+}
 
 // 画布点击命中测试：归一化坐标 (nx, ny) → zoneKey 或 null
 // zoneList 传入 FRONT_ZONES / BACK_ZONES；共用块（neck/前臂）在两侧画布上都可命中
@@ -168,5 +207,8 @@ module.exports = {
   aggregateZoneCounts: aggregateZoneCounts,
   colorLevel: colorLevel,
   LEVEL_COLORS: LEVEL_COLORS,
+  ZONE_NAMES: ZONE_NAMES,
+  zoneName: zoneName,
+  zoneShare: zoneShare,
   zoneAt: zoneAt
 };

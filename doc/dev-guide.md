@@ -38,7 +38,7 @@ gym-tracker/
 │   ├── plans  plan-edit  calculator  data  privacy  # v2.1/v2.3 子页
 │   └── muscle-detail  food  profile                 # 新增子页
 ├── doc/                            项目文档
-└── test.js                         数据层单测（450 项断言）
+└── test.js                         数据层单测（464 项断言）
 ```
 
 ## 3. 开发规范

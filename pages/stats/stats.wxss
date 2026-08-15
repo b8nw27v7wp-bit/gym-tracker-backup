@@ -442,28 +442,53 @@
 }
 
 /* 部位热力图 */
-.heat-body-row {
+.heat-tabs {
   display: flex;
-  gap: 24rpx;
-  margin-top: 8rpx;
+  justify-content: center;
+  gap: 12rpx;
+  margin: 16rpx 0 20rpx;
 }
 
-.heat-side {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.heat-side-label {
-  font-size: 22rpx;
+.heat-tab {
+  padding: 10rpx 40rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
   color: #9ca3af;
-  margin-bottom: 8rpx;
+  background: #f3f4f6;
+  transition: all 0.2s;
+}
+
+.heat-tab-active {
+  color: #ffffff;
+  background: #1d1d1f;
+  font-weight: 500;
 }
 
 .heat-canvas {
   width: 100%;
-  height: 420rpx;
+  height: 520rpx;
+}
+
+.heat-selected {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 16rpx;
+  margin-top: 16rpx;
+  padding: 16rpx 24rpx;
+  background: #f7f7f8;
+  border-radius: 12rpx;
+}
+
+.heat-selected-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.heat-selected-val {
+  font-size: 24rpx;
+  color: #6b7280;
 }
 
 .heat-tip {

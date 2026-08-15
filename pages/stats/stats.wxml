@@ -198,15 +198,17 @@
       <text class="heat-days" wx:else>近 12 周肌群训练量</text>
     </view>
     <view wx:if="{{heatHasData}}">
-      <view class="heat-body-row">
-        <view class="heat-side">
-          <text class="heat-side-label">正面</text>
-          <canvas type="2d" id="heatFront" class="heat-canvas" data-side="front" bindtap="onHeatTap"></canvas>
-        </view>
-        <view class="heat-side">
-          <text class="heat-side-label">背面</text>
-          <canvas type="2d" id="heatBack" class="heat-canvas" data-side="back" bindtap="onHeatTap"></canvas>
-        </view>
+      <view class="heat-tabs">
+        <view class="heat-tab {{heatSide === 'front' ? 'heat-tab-active' : ''}}"
+              data-side="front" bindtap="onHeatSwitch">正面</view>
+        <view class="heat-tab {{heatSide === 'back' ? 'heat-tab-active' : ''}}"
+              data-side="back" bindtap="onHeatSwitch">背面</view>
+      </view>
+      <canvas type="2d" id="heatCanvas" class="heat-canvas" bindtap="onHeatTap"></canvas>
+      <view class="heat-selected" wx:if="{{heatSelected}}">
+        <text class="heat-selected-name">{{heatSelected.name}}</text>
+        <text class="heat-selected-val" wx:if="{{heatSelected.sets > 0}}">近 12 周 {{heatSelected.sets}} 组 · {{heatSelected.sessions}} 次训练 · 占全身 {{heatSelected.share}}%</text>
+        <text class="heat-selected-val" wx:else>近 12 周未训练</text>
       </view>
       <view class="heat-legend">
         <text class="heat-legend-text">未练</text>
@@ -217,7 +219,7 @@
         <view class="heat-cell heat-l4 legend-cell"></view>
         <text class="heat-legend-text">多</text>
       </view>
-      <view class="heat-tip">颜色深浅 = 该部位近 12 周训练组数 · 点击身体部位查看</view>
+      <view class="heat-tip">颜色深浅 = 该部位近 12 周训练组数 · 点击身体部位查看详情</view>
     </view>
     <view wx:else class="heat-empty">
       <text class="heat-empty-text">开始训练后生成部位热力图</text>

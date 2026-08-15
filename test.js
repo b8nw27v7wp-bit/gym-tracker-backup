@@ -1461,7 +1461,7 @@ assert(mh.colorLevel(0, 5) === 0, '0 训练量 → 0 档（灰）');
 assert(mh.colorLevel(1, 5) === 1 && mh.colorLevel(2, 5) === 2 && mh.colorLevel(3, 5) === 3 && mh.colorLevel(4, 5) === 4, '训练量分档 1-4（越大越深）');
 assert(mh.colorLevel(5, 5) === 4 && mh.colorLevel(4, 3) === 4, '≥75% 最大量 → 4 档');
 assert(mh.colorLevel('3', 5) === 3, '字符串数字兼容');
-assert(mh.LEVEL_COLORS.length === 5 && mh.LEVEL_COLORS[0] === '#e5e7eb' && mh.LEVEL_COLORS[1] === '#dbeafe' && mh.LEVEL_COLORS[4] === '#1d4ed8', '档位颜色 5 个（灰 + 蓝 4 档）');
+assert(mh.LEVEL_COLORS.length === 5 && mh.LEVEL_COLORS[0] === '#f3f4f6' && mh.LEVEL_COLORS[1] === '#dbeafe' && mh.LEVEL_COLORS[4] === '#1d4ed8', '档位颜色 5 个（灰 + 蓝 4 档）');
 
 // 13.5 画布命中测试
 const neckZ = muscleMap.ZONES['neck'];
@@ -1495,6 +1495,38 @@ wx._store.gym_workouts = [{ id: 'z', ts: mhWeek, items: [{ exerciseId: 'old', ta
 const stHeatBad = instantiate(pageCfg);
 stHeatBad.loadStats();
 assert(stHeatBad.data.heatHasData === false, '未知 target 词统计页不崩溃 → 空态');
+
+// 13.6.1 zone 中文名映射（v2.23 热力图优化）
+assert(mh.zoneName('chest-upper-l') === '上胸' && mh.zoneName('chest-upper-r') === '上胸', 'zoneName 侧标剥离（-l/-r）');
+assert(mh.zoneName('neck') === '颈' && mh.zoneName('heart') === '心肺', 'zoneName 完整 key 命中');
+assert(mh.zoneName('lat-l') === '背阔肌' && mh.zoneName('calf-r') === '小腿', 'zoneName 背/腿部位');
+assert(mh.zoneName('not-a-zone') === 'not-a-zone', 'zoneName 未知 key 原样返回');
+assert(mh.zoneName(undefined) === '' && mh.zoneName(null) === '', 'zoneName 非法输入安全');
+// 42 个 zone 全部有中文名（无遗漏）
+let zoneNameMissing = [];
+muscleMap.FRONT_ZONES.concat(muscleMap.BACK_ZONES).forEach(z => {
+  const n = mh.zoneName(z);
+  if (!n || n === z) zoneNameMissing.push(z);
+});
+assert(zoneNameMissing.length === 0, '42 块 zone 全部有中文名（缺: ' + zoneNameMissing.join(',') + '）');
+
+// 13.6.2 zone 占比计算
+assert(mh.zoneShare({ 'chest-mid-l': 3, 'quad-l': 2 }, 'chest-mid-l') === 60, 'zoneShare 占比 3/5 → 60%');
+assert(mh.zoneShare({ 'chest-mid-l': 3 }, 'chest-mid-l') === 100, 'zoneShare 单部位 → 100%');
+assert(mh.zoneShare({ 'chest-mid-l': 3, 'quad-l': 2 }, 'bicep-l') === 0, 'zoneShare 未训练部位 → 0');
+assert(mh.zoneShare({}, 'chest-mid-l') === 0 && mh.zoneShare(null, 'chest-mid-l') === 0, 'zoneShare 空数据安全');
+
+// 13.6.3 正/背面 tab 切换联动
+wx._store.gym_workouts = [mhW1, mhW2];
+const stHeatTab = instantiate(pageCfg);
+stHeatTab.loadStats();
+assert(stHeatTab.data.heatSide === 'front', '热力图默认正面');
+stHeatTab.onHeatSwitch({ currentTarget: { dataset: { side: 'back' } } });
+assert(stHeatTab.data.heatSide === 'back' && stHeatTab.data.heatSelected === null, '切换背面清空选中');
+stHeatTab.onHeatSwitch({ currentTarget: { dataset: { side: 'front' } } });
+assert(stHeatTab.data.heatSide === 'front', '切回正面');
+stHeatTab.onHeatSwitch({ currentTarget: { dataset: { side: 'x' } } });
+assert(stHeatTab.data.heatSide === 'front', '非法 side 不切换');
 
 // 13.7 训练页组间休息推荐联动
 freshRequire('./pages/train/train.js');
