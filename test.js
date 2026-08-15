@@ -2174,6 +2174,78 @@ stV6.loadStats();
 assert(stV6.data.planReminder === null, '关闭提醒设置后不显示提醒');
 store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
 
+// ---------- 19. 用户逻辑/非常规逻辑修复回归（v2.26.4） ----------
+console.log('19. 用户逻辑/非常规逻辑（单位切换草稿/计划标记残留/防重入/覆盖确认）');
+function trainPageV26() {
+  freshRequire('./pages/train/train.js');
+  const tp = instantiate(pageCfg);
+  tp.sessionStartTs = Date.now();
+  tp.onLoad();
+  return tp;
+}
+function todayStr19() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+// 19.1 单位切换：草稿重量自动换算（防保存误存）
+store.clearAll(); store.ensureInit();
+store.saveSettings({ unit: 'kg', autoRest: true });
+const tpA = trainPageV26();
+tpA.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '60', reps: '8' }] }];
+store.saveSettings({ unit: 'lb', autoRest: true });
+tpA.onShow();
+assert(tpA.data.draft[0].sets[0].weight === '132.3', 'kg 60 → lb 草稿换算 132.3（实际 ' + tpA.data.draft[0].sets[0].weight + '）');
+tpA.onSave();
+assert(store.getWorkouts()[0].items[0].sets[0].weight === 60, 'lb 草稿保存仍存 60kg（实际 ' + store.getWorkouts()[0].items[0].sets[0].weight + '）');
+// 反向：lb → kg
+store.clearAll(); store.ensureInit();
+store.saveSettings({ unit: 'lb', autoRest: true });
+const tpB = trainPageV26();
+tpB.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '132.3', reps: '8' }] }];
+store.saveSettings({ unit: 'kg', autoRest: true });
+tpB.onShow();
+assert(tpB.data.draft[0].sets[0].weight === '60', 'lb 132.3 → kg 草稿换算 60（实际 ' + tpB.data.draft[0].sets[0].weight + '）');
+store.saveSettings({ unit: 'kg', autoRest: true });
+
+// 19.2 重复上次训练：清空残留计划标记（防错误打卡）
+store.clearAll(); store.ensureInit();
+store.saveWorkout({ id: 'w_plan19', ts: Date.now() - 5000, date: todayStr19(), duration: 40, plan: { planId: 'ppl', dayId: 'push' }, items: [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 60, reps: 8 }] }] });
+store.saveWorkout({ id: 'w_last19', ts: Date.now(), date: todayStr19(), duration: 40, items: [{ exerciseId: 'squat', exerciseName: '深蹲', muscle: 'legs', sets: [{ weight: 100, reps: 5 }] }] });
+const tpC = trainPageV26();
+tpC.loadWorkoutForEdit('w_plan19');
+assert(tpC.data.planInfo && tpC.data.planInfo.planId === 'ppl', '编辑带计划标记的训练（planInfo 就位）');
+tpC.data.draft = [];
+tpC.onRepeatLast();
+assert(tpC.data.planInfo === null, '重复上次训练清空 planInfo（实际 ' + JSON.stringify(tpC.data.planInfo) + '）');
+tpC.onSave();
+assert(store.getWorkouts()[0].plan === undefined, '重复保存的训练无计划标记');
+
+// 19.3 保存防重入：连点不产生重复记录
+store.clearAll(); store.ensureInit();
+const tpD = trainPageV26();
+tpD.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '60', reps: '8' }] }];
+tpD.onSave(); tpD.onSave(); tpD.onSave();
+assert(store.getWorkouts().length === 1, '连点 3 次保存只存 1 条（实际 ' + store.getWorkouts().length + '）');
+// 防重入锁释放：再次保存可用
+tpD.data.draft = [{ exerciseId: 'squat', exerciseName: '深蹲', muscle: 'legs', sets: [{ weight: '100', reps: '5' }] }];
+tpD.onSave();
+assert(store.getWorkouts().length === 2, '防重入锁已释放可继续保存（实际 ' + store.getWorkouts().length + '）');
+
+// 19.4 编辑历史加载：已有草稿时弹确认（确认后加载；取消不覆盖）
+store.clearAll(); store.ensureInit();
+store.saveWorkout({ id: 'w_e19', ts: Date.now(), date: todayStr19(), duration: 40, items: [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 60, reps: 8 }] }] });
+const tpE = trainPageV26();
+tpE.data.draft = [{ exerciseId: 'squat', exerciseName: '深蹲', muscle: 'legs', sets: [{ weight: '100', reps: '5' }] }];
+wx.showModal = o => o.success && o.success({ confirm: false }); // 用户取消
+tpE.loadWorkoutForEdit('w_e19');
+assert(tpE.data.draft[0].exerciseId === 'squat', '取消确认不覆盖草稿');
+wx.showModal = o => o.success && o.success({ confirm: true }); // 用户确认
+tpE.loadWorkoutForEdit('w_e19');
+assert(tpE.data.draft[0].exerciseId === 'bench' && tpE.data.editWorkoutId === 'w_e19', '确认后加载编辑目标');
+store.clearAll(); store.ensureInit();
+store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
+
 
 
 

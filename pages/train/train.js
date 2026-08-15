@@ -69,6 +69,8 @@ Page({
     this.lastRecords = util.lastRecordsMap(store.getWorkouts());
     // 训练智能会话索引（渐进超负荷建议 / 动作轮换提醒，一次构建多处复用）
     this.sessionsIndex = trainingIntelligence.indexSessions(store.getWorkouts());
+    // 当前重量单位（草稿换算基准）
+    this._lastUnit = units.unitLabel();
     // 加载训练模板
     this.setData({ templates: store.getWorkoutTemplates() });
     this.refreshDraftMeta();
@@ -95,6 +97,40 @@ Page({
       todayWeek: util.weekdayCN(d.getTime()),
       unitLabel: units.unitLabel()
     });
+    // 单位切换：草稿重量按旧单位换算到新单位（防保存时误换算导致数据损坏）
+    var newUnit = units.unitLabel();
+    if (this._lastUnit && this._lastUnit !== newUnit) {
+      var oldUnit = this._lastUnit;
+      var conv = function (w) {
+        if (w === '' || w === undefined || w === null) return w;
+        return String(units.displayWeight(units.storedWeight(w, oldUnit), newUnit));
+      };
+      if (this.data.draft.length > 0) {
+        var draft = this.data.draft.map(function (item) {
+          var item2 = Object.assign({}, item);
+          item2.sets = item.sets.map(function (s) {
+            var s2 = Object.assign({}, s);
+            s2.weight = conv(s2.weight);
+            return s2;
+          });
+          return item2;
+        });
+        this.setData({ draft: draft });
+        this.refreshDraftMeta();
+      }
+      // 组编辑态中的重量一并换算（防混合单位）
+      if (this.data.step === 'edit' && this.data.editing && Array.isArray(this.data.editing.sets)) {
+        var editing = Object.assign({}, this.data.editing);
+        editing.sets = editing.sets.map(function (s) {
+          var s2 = Object.assign({}, s);
+          s2.weight = conv(s2.weight);
+          return s2;
+        });
+        this.setData({ editing: editing });
+      }
+      wx.showToast({ title: '重量单位已切换，草稿已自动换算', icon: 'none' });
+    }
+    this._lastUnit = newUnit;
     // 启动本次训练计时（从页面展示开始）
     if (!this.data.sessionStarted) {
       this.setData({ sessionStarted: true });
@@ -609,11 +645,13 @@ Page({
 
   // ---------- 保存 ----------
   onSave: function () {
+    if (this._saving) return; // 防重入：双击/弹窗双确认不产生重复记录
     var draft = this.data.draft;
     if (draft.length === 0) {
       wx.showToast({ title: '还没有记录任何动作', icon: 'none' });
       return;
     }
+    this._saving = true;
     // 统计全空组（重量和次数都没填），保存时自动跳过
     var emptyCount = 0;
     draft.forEach(function (item) {
@@ -680,6 +718,7 @@ Page({
       }
       // 所有动作的组都为空：不保存
       if (workout.items.length === 0) {
+        self._saving = false; // 释放防重入锁
         wx.showToast({ title: '没有可保存的有效数据', icon: 'none' });
         return;
       }
@@ -689,6 +728,7 @@ Page({
       self.refreshDraftMeta();
       self.sessionStartTs = Date.now();
       self.setData({ sessionMinutes: 0, sessionPaused: false, pauseAccumMs: 0, pauseStartTs: 0, pausedMinutes: 0 });
+      self._saving = false; // 保存完成释放防重入锁
       wx.showToast({ title: isEdit ? '已保存修改' : '已保存', icon: 'none' });
     };
     if (emptyCount > 0) {
@@ -698,7 +738,11 @@ Page({
         confirmText: '保存',
         cancelText: '返回填写',
         success: function (res) {
-          if (res.confirm) doSave();
+          if (res.confirm) {
+            doSave();
+          } else {
+            self._saving = false; // 用户返回填写 → 释放防重入锁
+          }
         }
       });
     } else {
@@ -959,43 +1003,60 @@ Page({
         })
       };
     });
-    this.setData({ draft: draft, step: 'pick', note: last.note || '', editWorkoutId: '' });
+    this.setData({ draft: draft, step: 'pick', note: last.note || '', editWorkoutId: '', planInfo: null });
     this.refreshDraftMeta();
     wx.showToast({ title: '已复制上次训练', icon: 'success' });
   },
 
   // ---------- 编辑历史训练（v5） ----------
   // 从历史页"编辑"跳转而来：加载该训练进草稿，保存时覆盖原记录（保留 id/ts/date/duration）
+  // 已有未保存草稿时先确认，防止静默覆盖丢失
   loadWorkoutForEdit: function (id) {
-    var w = store.getWorkout(id);
-    if (!w) {
-      wx.showToast({ title: '记录不存在或已删除', icon: 'none' });
+    var self = this;
+    var doLoad = function () {
+      var w = store.getWorkout(id);
+      if (!w) {
+        wx.showToast({ title: '记录不存在或已删除', icon: 'none' });
+        return;
+      }
+      var draft = (w.items || []).map(function (item) {
+        return {
+          exerciseId: item.exerciseId,
+          exerciseName: item.exerciseName,
+          muscle: item.muscle,
+          target: item.target || [],
+          note: item.note || '',
+          sets: (item.sets || []).map(function (s) {
+            var wv = (s.weight !== undefined && s.weight !== null && s.weight !== '') ? String(units.displayWeight(s.weight)) : '';
+            var r = (s.reps !== undefined && s.reps !== null && s.reps !== '') ? String(s.reps) : '';
+            var rpe = (s.rpe !== undefined && s.rpe !== null && s.rpe !== '') ? String(s.rpe) : '';
+            return { weight: wv, reps: r, rpe: rpe, warmup: !!s.warmup };
+          })
+        };
+      });
+      self.setData({
+        draft: draft,
+        step: 'pick',
+        note: w.note || '',
+        editWorkoutId: id,
+        planInfo: (w.plan && w.plan.planId) ? { planId: w.plan.planId, dayId: w.plan.dayId } : null
+      });
+      self.refreshDraftMeta();
+      wx.showToast({ title: '正在编辑历史训练', icon: 'none' });
+    };
+    if (this.data.draft.length > 0) {
+      wx.showModal({
+        title: '替换当前草稿？',
+        content: '编辑历史记录将替换当前未保存的 ' + this.data.draft.length + ' 个动作',
+        confirmText: '替换',
+        cancelText: '取消',
+        success: function (res) {
+          if (res.confirm) doLoad();
+        }
+      });
       return;
     }
-    var draft = (w.items || []).map(function (item) {
-      return {
-        exerciseId: item.exerciseId,
-        exerciseName: item.exerciseName,
-        muscle: item.muscle,
-        target: item.target || [],
-        note: item.note || '',
-        sets: (item.sets || []).map(function (s) {
-          var wv = (s.weight !== undefined && s.weight !== null && s.weight !== '') ? String(units.displayWeight(s.weight)) : '';
-          var r = (s.reps !== undefined && s.reps !== null && s.reps !== '') ? String(s.reps) : '';
-          var rpe = (s.rpe !== undefined && s.rpe !== null && s.rpe !== '') ? String(s.rpe) : '';
-          return { weight: wv, reps: r, rpe: rpe, warmup: !!s.warmup };
-        })
-      };
-    });
-    this.setData({
-      draft: draft,
-      step: 'pick',
-      note: w.note || '',
-      editWorkoutId: id,
-      planInfo: (w.plan && w.plan.planId) ? { planId: w.plan.planId, dayId: w.plan.dayId } : null
-    });
-    this.refreshDraftMeta();
-    wx.showToast({ title: '正在编辑历史训练', icon: 'none' });
+    doLoad();
   },
 
   // 放弃编辑：清空草稿并退出编辑模式
