@@ -185,7 +185,7 @@ exercise = {
 
 1. 下载安装[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
 2. 导入项目：选择 `E:\ts\gym-tracker` 目录，填入自己的小程序 AppID（未注册前可选游客模式预览）
-3. `node test.js` 验证数据层（450 项断言）
+3. `node test.js` 验证数据层（464 项断言）
 4. 页面逻辑改动后跑 mock Page/wx 冒烟测试（方法见 doc/testing.md 第 4 章）
 
 ## 上线流程（个人主体）
