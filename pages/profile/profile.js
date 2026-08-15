@@ -1,6 +1,10 @@
-// 个人中心页：用户信息展示 + 头像昵称设置 + 身体资料 + 功能入口 + 应用设置（v5）
+// 个人中心页：用户信息展示 + 头像昵称设置 + 身体资料 + 功能入口 + 应用设置（v5/v6）
 // 注意：wx.getUserProfile 已废弃（2021年4月），现使用 open-type="chooseAvatar" + type="nickname"
 var store = require('../../utils/store');
+
+// 订阅消息模板 ID：在小程序后台（mp.weixin.qq.com → 订阅消息）申请"训练计划提醒"类目模板后填入
+// 未配置时 requestSubscribeMessage 会失败 → 自动降级为仅应用内提醒，不影响功能
+var TRAIN_REMINDER_TEMPLATE_ID = '';
 
 Page({
   data: {
@@ -174,6 +178,41 @@ Page({
     store.saveSettings(s);
     this.setData({ settings: store.getSettings() });
     wx.showToast({ title: s.autoRest ? '已开启自动休息' : '已关闭自动休息', icon: 'none' });
+  },
+
+  // 训练日提醒开关（v6）
+  // 应用内：开启后训练页/统计页显示"今日待练训练日"提醒条
+  // 订阅消息：开启时请求 wx.requestSubscribeMessage 授权（真正推送需后端；模板未配置/拒绝时仅应用内提醒）
+  onToggleReminder: function () {
+    var s = store.getSettings();
+    s.trainReminder = !s.trainReminder;
+    store.saveSettings(s);
+    this.setData({ settings: store.getSettings() });
+    if (s.trainReminder) this.requestReminderSubscription();
+    wx.showToast({ title: s.trainReminder ? '已开启训练日提醒' : '已关闭训练日提醒', icon: 'none' });
+  },
+
+  // 请求订阅消息授权（微信订阅消息需模板，此处为授权状态；推送服务需后端）
+  requestReminderSubscription: function () {
+    if (!wx.requestSubscribeMessage) return;
+    var self = this;
+    wx.requestSubscribeMessage({
+      tmplIds: [TRAIN_REMINDER_TEMPLATE_ID],
+      success: function (res) {
+        var state = res && res[TRAIN_REMINDER_TEMPLATE_ID];
+        if (state === 'accept') {
+          var s = store.getSettings();
+          s.reminderSubscribed = true;
+          store.saveSettings(s);
+          self.setData({ settings: store.getSettings() });
+        } else {
+          wx.showToast({ title: '已关闭订阅，将继续应用内提醒', icon: 'none' });
+        }
+      },
+      fail: function () {
+        wx.showToast({ title: '订阅消息未配置或不可用，应用内提醒仍生效', icon: 'none' });
+      }
+    });
   },
 
   // 身体围度入口

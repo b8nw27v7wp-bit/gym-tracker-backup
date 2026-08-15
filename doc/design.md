@@ -1,6 +1,6 @@
 ﻿# 设计文档（Design）
 
-版本：v2.24.0 | 更新：2026-08-15
+版本：v2.26.0 | 更新：2026-08-15
 
 ## 1. 技术选型
 
@@ -216,6 +216,23 @@
 
 - 历史页"编辑"→ `pending_edit_workout`（读后即删）→ 训练页加载该训练进草稿（重量换算显示单位），保存时**保留原 id/ts/date/duration**，只更新 items/note/plan（对标 Strong/Hevy 编辑旧训练）
 - 训练页"重复上次训练"快捷条：最近一次训练动作/组数带入草稿，组预填上次重量/次数（对标 Hevy Repeat）
+
+### 4.17 训练日提醒（v2.26）
+
+- 纯函数 `utils/plan-reminder.js`：`todayPlanReminder(workouts, weeklyPlan, customPlans)`——复用 `util.weeklyPlanProgress`，有周计划且存在"下一个未完成训练日"且今日未完成时返回提醒；无周计划/计划不存在/今日已完成/全部完成返回 null
+- 展示位：训练页与统计页顶部"今日待练"提醒条（点击写 `pending_plan_day` 一键填充）；受 `gym_settings.trainReminder` 控制
+- 订阅消息：设置开启时 `wx.requestSubscribeMessage` 申请授权（模板 ID `TRAIN_REMINDER_TEMPLATE_ID` 常量可配）；**纯本地应用无法直接下发推送**（微信要求后端调用 subscribeMessage.send），本实现提供授权状态 + 应用内提醒，接入后端后即可推送——fail/拒绝时优雅降级 toast 说明
+
+### 4.18 每周容量目标（v2.26）
+
+- `utils/goals.js`：`weeklyVolumeProgress(goals, workouts)`——本周（周一至今）容量（calcWorkout 口径，热身组不计）vs `goals.weeklyVolume.target`，返回 { target, current, progress, done, remaining }
+- 存储：`gym_goals.weeklyVolume = { target }`（kg，容量显示单位换算在页面层）
+- 展示：统计页"每周容量目标"卡——canvas 2d 圆弧进度环（背景灰环 + 进度弧，≥100% 绿色 #10b981 否则 indigo #4f46e5），中央百分比 + "本周还需 X"；未设目标引导卡；弹窗设置/编辑/删除（清空输入框删除）
+
+### 4.19 动作重量趋势（v2.26）
+
+- 复用 `util.strengthCurve(id, workouts)`（每次训练最大重量，按天去重取最大，跳过热身组），上限 60 点
+- 展示位：动作详情页"重量趋势"卡——canvas 2d 折线（y 轴向上取整到 10、末点放大高亮、≤8 点全显数值标签否则首/峰/末、x 轴首尾日期）；重量按 `units.displayWeight` 换算显示单位；不足 2 点显示空态（自重动作无附加重量历史为空态）
 
 ## 5. UI 设计规范
 

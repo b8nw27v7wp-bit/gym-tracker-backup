@@ -64,6 +64,31 @@ function goalProgress(goals, workouts, bodyweights) {
   };
 }
 
+// 每周容量目标（v6）：本周容量 vs 目标容量
+// goals = store.getGoals()；返回 { target, current, progress, done, remaining } 或 null（未设目标）
+function weeklyVolumeProgress(goals, workouts) {
+  if (!goals || !goals.weeklyVolume || !goals.weeklyVolume.target) return null;
+  var target = util.toNum(goals.weeklyVolume.target);
+  if (target <= 0) return null;
+  var weekStart = util.weekStart(Date.now());
+  var current = 0;
+  (Array.isArray(workouts) ? workouts : []).forEach(function (w) {
+    if (!w || typeof w !== 'object') return;
+    var ts = Number(w.ts);
+    if (!isFinite(ts) || ts < 0) return;
+    if (ts >= weekStart) current += util.calcWorkout(w).volume;
+  });
+  var progress = Math.round((current / target) * 100);
+  return {
+    target: Math.round(target),
+    current: Math.round(current),
+    progress: progress,
+    done: current >= target,
+    remaining: Math.max(Math.round(target - current), 0)
+  };
+}
+
 module.exports = {
-  goalProgress: goalProgress
+  goalProgress: goalProgress,
+  weeklyVolumeProgress: weeklyVolumeProgress
 };

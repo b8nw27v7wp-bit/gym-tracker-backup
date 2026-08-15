@@ -2085,6 +2085,96 @@ stWrPr.onSaveWeeklyShare();
 stWrPr.onCloseWeeklyShare();
 assert(stWrPr.data.weeklyShareVisible === false, '分享面板关闭（mock canvas 不崩）');
 
+// ---------- v6：训练日提醒 / 每周容量目标 / 动作重量趋势 ----------
+console.log('18. v6 训练日提醒·每周容量目标·动作趋势');
+const planReminderMod = require('./utils/plan-reminder');
+const goalsModV6 = require('./utils/goals');
+
+// 18.1 训练日提醒（纯函数，内置 PPL 计划：push 推日 / pull 拉日）
+store.clearAll(); store.ensureInit();
+store.setWeeklyPlan('ppl');
+const wpV6 = store.getWeeklyPlan();
+assert(wpV6 && wpV6.planId === 'ppl', '周计划已设置');
+let remV6 = planReminderMod.todayPlanReminder([], wpV6, []);
+assert(remV6 && remV6.planId === 'ppl' && remV6.dayId === 'push' && remV6.dayName === '推日', '未练时提醒第一个训练日');
+store.saveWorkout({ id: 'rp1', ts: Date.now(), date: util.todayStr(), plan: { planId: 'ppl', dayId: 'push' }, items: [] });
+assert(planReminderMod.todayPlanReminder(store.getWorkouts(), wpV6, []) === null, '今日已完成不提醒');
+assert(planReminderMod.todayPlanReminder([], null, []) === null, '无周计划不提醒');
+assert(planReminderMod.todayPlanReminder([], { planId: 'nope', weekStart: wpV6.weekStart }, []) === null, '计划不存在不提醒');
+const remNull = planReminderMod.todayPlanReminder(null, wpV6, []);
+assert(remNull && remNull.planId === 'ppl', '空训练安全（null 不崩，按未练处理）');
+store.clearAll(); store.ensureInit();
+
+// 18.2 每周容量目标（纯函数）
+const vw = [
+  { id: 'v1', ts: util.weekStart(Date.now()) + 1000, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 10 }] }] },
+  { id: 'v2', ts: Date.now(), items: [{ exerciseId: 'squat', sets: [{ weight: 100, reps: 5 }] }] }
+];
+let vgV6 = goalsModV6.weeklyVolumeProgress({ weeklyVolume: { target: 1100 } }, vw);
+assert(vgV6 && vgV6.current === 1100 && vgV6.progress === 100 && vgV6.done === true, '周容量达成 1100/1100');
+vgV6 = goalsModV6.weeklyVolumeProgress({ weeklyVolume: { target: 2000 } }, vw);
+assert(vgV6 && vgV6.progress === 55 && vgV6.done === false && vgV6.remaining === 900, '周容量 55%（剩 900）');
+assert(goalsModV6.weeklyVolumeProgress(null, []) === null, '无目标安全');
+assert(goalsModV6.weeklyVolumeProgress({ weeklyVolume: null }, []) === null, '目标清空安全');
+assert(goalsModV6.weeklyVolumeProgress({ weeklyVolume: { target: 0 } }, []) === null, '目标 0 安全');
+
+// 18.3 store：提醒设置 + 周目标存储/导出导入
+store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
+assert(store.getSettings().trainReminder === true && store.getSettings().reminderSubscribed === false, '提醒设置默认值');
+store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: false, reminderSubscribed: true });
+assert(store.getSettings().trainReminder === false && store.getSettings().reminderSubscribed === true, '提醒设置保存/读取');
+store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
+store.saveGoals({ weeklyVolume: { target: 5000 } });
+assert(store.getGoals().weeklyVolume && store.getGoals().weeklyVolume.target === 5000, '周容量目标存储');
+const expV6 = store.exportData();
+assert(expV6.settings && expV6.settings.trainReminder === true && expV6.goals && expV6.goals.weeklyVolume.target === 5000, '导出含提醒设置/周目标');
+const impV6 = store.importData(expV6);
+assert(impV6.ok && store.getGoals().weeklyVolume.target === 5000, '导入含周目标');
+
+// 18.4 动作重量趋势（strengthCurve 纯函数 + 详情页数据）
+const curveW = [
+  { id: 'c1', ts: Date.now() - 3 * 86400000, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 8 }, { weight: 70, reps: 5 }] }] },
+  { id: 'c2', ts: Date.now() - 2 * 86400000, items: [{ exerciseId: 'bench', sets: [{ weight: 65, reps: 8 }] }] },
+  { id: 'c3', ts: Date.now(), items: [{ exerciseId: 'squat', sets: [{ weight: 100, reps: 5 }] }] }
+];
+const scV6 = util.strengthCurve('bench', curveW);
+assert(scV6.length === 2 && scV6[0].weight === 70 && scV6[1].weight === 65, '力量曲线按天去重取最大（70/65）');
+freshRequire('./pages/exercise-detail/exercise-detail.js');
+wx._store.gym_workouts = curveW;
+const edV6 = instantiate(pageCfg);
+edV6.onLoad({ id: 'bench' });
+assert(edV6.data.trendHas === true && edV6.data.trendPoints.length === 2, '详情页趋势数据');
+assert(edV6.data.trendPoints[0].weight === 70 && edV6.data.trendUnit === 'kg', '趋势首点 70kg / 单位 kg（实际 ' + edV6.data.trendPoints[0].weight + '）');
+// lb 模式换算
+store.saveSettings({ unit: 'lb', autoRest: true, trainReminder: true });
+const edLb = instantiate(pageCfg);
+edLb.onLoad({ id: 'bench' });
+assert(Math.abs(edLb.data.trendPoints[0].weight - 154.3) < 0.1 && edLb.data.trendUnit === 'lb', 'lb 模式趋势换算（70kg→154.3lb）');
+store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
+// 无历史动作 → 空态
+const edNone = instantiate(pageCfg);
+edNone.onLoad({ id: 'pullup' });
+assert(edNone.data.trendHas === false, '无历史动作趋势空态');
+
+// 18.5 统计页 v6 卡片（周容量目标 + 训练日提醒）
+wx.createSelectorQuery = () => ({ select: () => ({ fields: () => ({ exec: cb => cb([]) }) }) });
+wx.getSystemInfoSync = () => ({ pixelRatio: 2 });
+store.clearAll(); store.ensureInit();
+store.setWeeklyPlan('ppl');
+store.saveGoals({ weeklyVolume: { target: 5000 } });
+wx._store.gym_workouts = vw;
+freshRequire('./pages/stats/stats.js');
+const stV6 = instantiate(pageCfg);
+stV6.loadStats();
+assert(stV6.data.volGoal && stV6.data.volGoal.target === 5000 && stV6.data.volGoal.current === 1100 && stV6.data.volGoal.progress === 22, '统计页周容量目标（1100/5000=22%）');
+assert(stV6.data.planReminder && stV6.data.planReminder.planId === 'ppl', '统计页训练日提醒');
+// 关闭提醒设置 → 统计页不显示提醒
+store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: false });
+stV6.loadStats();
+assert(stV6.data.planReminder === null, '关闭提醒设置后不显示提醒');
+store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
+
+
 
 
 

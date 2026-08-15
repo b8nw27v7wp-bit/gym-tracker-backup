@@ -1,6 +1,6 @@
 ﻿# 项目路线图（Roadmap）
 
-版本：v2.21.0 | 更新：2026-08-13
+版本：v2.26.0 | 更新：2026-08-15
 
 > 本文档定义项目发展方向与优先级。每个方向完成时更新状态并记录到 changelog.md。
 > 优先级定义：P0 核心可用 / P1 重要增强 / P2 锦上添花
@@ -138,6 +138,33 @@
 | UI 打磨：全项目去装饰 emoji（计时/搜索/空态/图标 8 处） | ✅ 完成 |
 | 组件化：set-editor / ex-card / empty-state 三个组件抽出并接入 | ✅ 完成 |
 | 修复 train 页自定义计划一键填充失效（applyPlanDay 未传 custom） | ✅ 完成 |
+
+## v2.24.0 迭代 ✅（2026-08-15）— 竞品对标 P0/P1
+
+对标 Strong/Hevy/JEFIT/训记/Keep 落地 8 项（记录体验 + 追踪激励）：
+
+| 任务 | 状态 |
+|-----|------|
+| 组间休息自动开始（完成动作保存后按推荐秒数自动启动，可设置关闭） | ✅ 完成 |
+| 历史训练编辑（加载旧训练进草稿，保存覆盖保留原时间） | ✅ 完成 |
+| 复制上次训练（一键 Repeat，组带上次重量/次数预填） | ✅ 完成 |
+| 重量单位 kg/lb 切换（utils/units.js + 设置项，训练/历史/统计全链路换算） | ✅ 完成 |
+| 连续打卡 + 成就徽章（streakInfo/computeAchievements + 统计页卡） | ✅ 完成 |
+| 训练目标与进度（pages/goals + goals.js + 统计页进度条） | ✅ 完成 |
+| 肌肉恢复建议（muscle-recovery.js：每肌群每周组数 vs 建议范围） | ✅ 完成 |
+| 身体围度追踪（pages/measurements + measurementTrend + 统计页摘要） | ✅ 完成 |
+| schema v5 迁移（gym_settings/gym_measurements/gym_goals）+ 备份导入导出适配 | ✅ 完成 |
+
+## v2.26.0 迭代 ✅（2026-08-15）— 训练计划与目标（提醒/周容量目标/动作趋势）
+
+| 任务 | 状态 |
+|-----|------|
+| 训练日提醒：本周计划待练训练日应用内提醒条（train/stats 页 + 设置开关） | ✅ 完成 |
+| 训练日提醒：微信订阅消息授权申请（模板可配，推送需后端，优雅降级） | ✅ 完成 |
+| 每周容量目标：goals.weeklyVolume + weeklyVolumeProgress 纯函数 | ✅ 完成 |
+| 每周容量目标：统计页 canvas 进度环 + 弹窗设置/编辑/删除 | ✅ 完成 |
+| 动作重量趋势图：动作详情页 canvas 折线（strengthCurve + 单位换算 + 空态） | ✅ 完成 |
+| schema 字段扩展：gym_settings.trainReminder/reminderSubscribed、gym_goals.weeklyVolume + 备份适配 | ✅ 完成 |
 
 ## 完成标准（每方向通用）
 

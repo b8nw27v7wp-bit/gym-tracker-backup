@@ -99,6 +99,12 @@
       <text class="menu-sub">{{settings.autoRest ? '开' : '关'}}</text>
       <text class="menu-arrow">›</text>
     </view>
+    <view class="menu-item" bindtap="onToggleReminder">
+      <text class="menu-text">训练日提醒</text>
+      <text class="menu-sub">{{settings.trainReminder ? (settings.reminderSubscribed ? '开 · 已订阅' : '开') : '关'}}</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-note">开启后，到本周计划训练日时在应用内提醒你；订阅消息推送需后端</view>
   </view>
 
   <!-- 数据与隐私 -->

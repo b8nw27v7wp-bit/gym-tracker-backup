@@ -279,6 +279,13 @@
   margin-right: 12rpx;
 }
 
+.menu-note {
+  font-size: 21rpx;
+  color: #9ca3af;
+  padding: 12rpx 0 4rpx;
+  line-height: 1.5;
+}
+
 .menu-arrow {
   font-size: 32rpx;
   color: #d1d5db;

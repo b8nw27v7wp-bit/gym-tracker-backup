@@ -13,7 +13,7 @@
 1. **纯函数分层**：计算/聚合逻辑全部抽为 `utils/*` 纯函数模块（无 wx 依赖），node 可直接单测
 2. **数据兜底**：任何非法/脏数据不崩溃（原型链注入防御、未知词忽略计数、类型强校验）
 3. **浅色极简 UI**：白底卡片、主文字 #1d1d1f、强调 indigo #4f46e5、蓝系数据色板
-4. **测试门禁**：主套件 594 项 + 专项 579 项全绿才可提交
+4. **测试门禁**：主套件 650 项 + 专项 579 项全绿才可提交
 5. **页面瘦身**：页面 JS 只做编排（读 store → 调纯函数 → setData），不内联业务计算
 
 **分层架构**
@@ -27,13 +27,13 @@
 ├─────────────────────────────────────────────┤
 │ 编排层（页面内）store 读写 + 纯函数调用 + setData 渲染     │
 ├─────────────────────────────────────────────┤
-│ 纯函数层 utils/（17 个模块，无 wx 依赖，node 可测）       │
+│ 纯函数层 utils/（18 个模块，无 wx 依赖，node 可测）       │
 ├─────────────────────────────────────────────┤
 │ 数据层 data/（动作库/知识库/计划/食物/肌群映射，静态数据）    │
 ├─────────────────────────────────────────────┤
 │ 存储层 wx.setStorageSync（16 个业务 key + 4 个跨页 key） │
 ├─────────────────────────────────────────────┤
-│ 测试 test.js（626）+ scripts/verify-*.js（专项 579）    │
+│ 测试 test.js（650）+ scripts/verify-*.js（专项 579）    │
 └─────────────────────────────────────────────┘
 ```
 
@@ -49,10 +49,10 @@ gym-tracker/
 ├── components/           3 个自定义组件（见 §5）
 ├── custom-tab-bar/       自定义 tabBar（4 tab 选中态）
 ├── data/                 静态数据层（见 §3.2）
-├── utils/                纯函数层（17 个模块，见 §3.1）
+├── utils/                纯函数层（18 个模块，见 §3.1）
 ├── doc/                  11 份文档（见 §9）
 ├── scripts/              11 个专项验证脚本（见 §8）
-├── test.js               主测试套件（626 项）
+├── test.js               主测试套件（650 项）
 └── README.md             项目说明
 ```
 
@@ -71,7 +71,8 @@ gym-tracker/
 | `achievements.js` | 连续打卡 + 成就徽章（v5） | streakInfo/computeAchievements | stats |
 | `goals.js` | 训练目标进度：体重 + 力量（v5） | goalProgress | stats/goals |
 | `muscle-recovery.js` | 肌肉恢复建议：本周每肌群组数 vs 建议范围（v5） | weeklyGroupSets/recoveryAdvice | stats |
-| `weekly-report.js` | 训练周报聚合（Batch3 遗留，未接入页面） | buildWeeklyReports/weekRangeLabel | — |
+| `weekly-report.js` | 训练周报聚合（Batch3）：最近 8 周每周总结（容量/PR/肌群/连续天数/环比） | buildWeeklyReports/weekRangeLabel | stats |
+| `plan-reminder.js` | 训练日提醒（v6）：本周计划下一个待练训练日 | todayPlanReminder | train/stats/profile |
 | `muscle-heatmap.js` | 部位热力图（GitHub 风格矩阵）：分组/按周聚合/分档/占比 | MUSCLE_GROUPS/aggregateZoneCountsByWeek/colorLevel/zoneShare | stats |
 | `custom-exercises.js` | 自定义动作：校验/合并/查找/部位推导 | findExercise/mergeExercises/deriveMuscleFromTarget | train/exercises/exercise-edit/stats |
 | `plan.js` | 计划查询 + 训练草稿生成（内置+自建合并） | getPlan/buildDraftFromPlan/planSummaries | plans/train |
@@ -81,11 +82,6 @@ gym-tracker/
 | `substitute.js` | 动作替代推荐（同部位同类型优先不同器械） | getSubstitutes | train/exercise-detail |
 | `rest-advice.js` | 组间休息推荐（热身 60s/正式 90s） | recommendedRestSecs/restAdvice | train |
 | `export.js` | CSV/JSON 序列化（RFC4180/UTF-8 BOM） | serializeCSV/buildJSON | export/data |
-| `achievements.js` | 成就/连续训练天数系统 | ACHIEVEMENTS/streakInfo/workoutDays | profile/stats |
-| `goals.js` | 训练目标进度（体重目标 + 力量目标） | goalProgress | goals/profile/stats |
-| `muscle-recovery.js` | 肌群恢复建议（按推荐组数上限评估疲劳） | recoveryAdvice/weeklyGroupSets | stats |
-| `units.js` | 单位系统（kg/lb 换算 + 展示） | displayWeight/storedWeight/volumeText/autoRestEnabled | train/stats/history/calculator |
-| `weekly-report.js` | 训练周报（Batch3）：最近 N 周每周总结聚合（容量/PR/肌群/连续天数/环比） | buildWeeklyReports/weekRangeLabel | stats |
 
 **依赖规则**：utils 之间允许依赖（如 training-intelligence → util；muscle-heatmap → data/muscle-map），但禁止页面反向依赖纯函数内部状态；新增纯函数模块必须带 node 单测。
 
@@ -138,7 +134,7 @@ gym-tracker/
 
 | 板块 | 主页面 | 子页/入口 | 核心模块 | 专项覆盖 |
 |---|---|---|---|---|
-| **训练** | train | history、plans、plan-edit、exercise-detail（去记录） | training-intelligence、rest-advice、plate-calculator、warmup、substitute、plan、set-editor 组件 | verify-user-scenarios（休息/计时）、主套件 10f/10g/14 |
+| **训练** | train | history、plans、plan-edit、exercise-detail（去记录） | training-intelligence、rest-advice、plate-calculator、warmup、substitute、plan、plan-reminder、set-editor 组件 | verify-user-scenarios（休息/计时）、主套件 10f/10g/14/18 |
 | **动作库** | exercises | exercise-detail、exercise-edit、muscle-detail | custom-exercises、data/exercises、muscle-map、ex-card 组件 | verify-muscle-map、verify-page-match（动作详情×173） |
 | **知识** | knowledge | knowledge-detail | data/knowledge | 主套件 §3（30 篇完整性） |
 | **统计** | stats | profile、export、data、calculator、food、privacy、measurements、goals | util、muscle-heatmap、training-intelligence（deload/PR 预测）、nutrition、export、units、achievements、goals、muscle-recovery、store | verify-muscle-heatmap、verify-extreme（30 天数据）、主套件 10d/12/16 |
@@ -220,6 +216,9 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 | 原型链注入防御 | muscle-heatmap/custom-exercises/store | hasOwnProperty 校验，__proto__ 零命中 |
 | 单位换算单一出口 | utils/units.js | 存储统一 kg，显示层按设置换算（训练/历史/统计/围度） |
 | 组间休息自动开始 | train.js onDoneEdit | 完成动作保存后按推荐秒数自动启动休息（可设置关闭） |
+| 训练日提醒 | utils/plan-reminder.js + train/stats | 本周计划待练训练日应用内提醒条（设置可控）；订阅授权存 reminderSubscribed，推送需后端 |
+| 周容量目标进度环 | stats.js drawGoalRing | 本周容量 vs 目标 canvas 圆弧（≥100% 绿色），指纹含 goals.weeklyVolume |
+| 动作重量趋势 | exercise-detail.js paintTrend | strengthCurve 每次训练最大重量 canvas 折线，kg/lb 显示换算 |
 
 ---
 
@@ -227,7 +226,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 
 | 套件 | 项数 | 覆盖 |
 |---|---|---|
-| `test.js`（主套件，16 节） | 594 | 数据层 + 页面冒烟 + 训练智能 + 安全守门 + 审计回归 + v5 单位/成就/目标/恢复/围度/编辑/重复 |
+| `test.js`（主套件，17 节） | 626 | 数据层 + 页面冒烟 + 训练智能 + 安全守门 + 审计回归 + v5 单位/成就/目标/恢复/围度/编辑/重复 + 训练周报 |
 | `verify-muscle-map.js` | 68 | 发力图↔部位一致性 + 注入 |
 | `verify-muscle-heatmap.js` | 35 | 肌群矩阵：色阶/分组/分周聚合/性能/注入 |
 | `verify-modules.js` | 11 | **建构管理守门**：模块可加载/依赖无环/页面四件套/tab 注册/组件完整/存储 key 单一出口与文档一致/跨页 key 成对/文档↔代码一致 |
@@ -239,7 +238,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 | `verify-user-scenarios.js` | 68 | 用户场景（误操作/中断/损坏恢复） |
 | `verify-nav.js` | 1 | 导航审计（注册/跳转方式/栈溢出/兜底） |
 | `verify-page-match.js` | 4 | 页面数据匹配 |
-| **合计** | **1173** | 提交门槛：主套件 + 全部专项全绿 |
+| **合计** | **1229** | 提交门槛：主套件 + 全部专项全绿 |
 
 ---
 
@@ -284,7 +283,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 4. [ ] architecture §3.3 表格同步
 
 ### 通用
-1. [ ] 提交前跑全量：`node test.js` + 12 个专项脚本（1173 项）
+1. [ ] 提交前跑全量：`node test.js` + 12 个专项脚本（1229 项）
 2. [ ] 模块/页面/存储 key 变更后跑 `scripts/verify-modules.js`（建构管理守门）
 3. [ ] 文档同步（architecture 板块矩阵/模块表 + changelog + 涉及文档）
 4. [ ] 手工清单抽查改动模块（微信开发者工具）

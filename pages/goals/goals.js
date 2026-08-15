@@ -1,9 +1,10 @@
-// 训练目标设置页（v5）：体重目标 + 最多 3 个力量目标（招牌动作最大重量）
+// 训练目标设置页（v5/v6）：体重目标 + 最多 3 个力量目标 + 每周容量目标
 // 进度在统计页展示；本页只负责编辑/保存
 var store = require('../../utils/store');
 var util = require('../../utils/util');
 var exercisesData = require('../../data/exercises/index');
 var goalsUtil = require('../../utils/goals');
+var units = require('../../utils/units');
 
 var PR_EXERCISES = ['bench', 'squat', 'deadlift', 'ohp', 'pullup', 'db-bench', 'leg-press', 'bb-row'];
 
@@ -12,6 +13,8 @@ Page({
     exerciseOptions: [],
     bwTarget: '',
     bwStart: '',
+    weeklyVolume: '',
+    unitLabel: 'kg',
     strength: [
       { exerciseId: '', target: '' },
       { exerciseId: '', target: '' },
@@ -24,7 +27,8 @@ Page({
       exerciseOptions: PR_EXERCISES.map(function (id) {
         var ex = exercisesData.getExercise(id);
         return { id: id, name: ex ? ex.name : id };
-      })
+      }),
+      unitLabel: units.unitLabel()
     });
   },
 
@@ -40,18 +44,22 @@ Page({
     var goals = store.getGoals();
     var bwTarget = '';
     var bwStart = '';
+    var weeklyVolume = '';
     var strength = [];
     var existing = (goals && Array.isArray(goals.strength)) ? goals.strength : [];
     if (goals && goals.bodyweight) {
       bwTarget = String(goals.bodyweight.target);
       bwStart = goals.bodyweight.start ? String(goals.bodyweight.start) : '';
     }
+    if (goals && goals.weeklyVolume) {
+      weeklyVolume = String(units.displayWeight(goals.weeklyVolume.target));
+    }
     for (var i = 0; i < 3; i++) {
       strength.push(existing[i]
         ? { exerciseId: existing[i].exerciseId, target: String(existing[i].target) }
         : { exerciseId: '', target: '' });
     }
-    this.setData({ bwTarget: bwTarget, bwStart: bwStart, strength: strength });
+    this.setData({ bwTarget: bwTarget, bwStart: bwStart, weeklyVolume: weeklyVolume, strength: strength, unitLabel: units.unitLabel() });
   },
 
   onBwInput: function (e) {
@@ -79,7 +87,7 @@ Page({
   },
 
   onSave: function () {
-    var goals = { bodyweight: null, strength: [] };
+    var goals = { bodyweight: null, strength: [], weeklyVolume: null };
     var bwTarget = parseFloat(this.data.bwTarget);
     if (isFinite(bwTarget) && bwTarget > 0 && bwTarget <= 500) {
       var start = parseFloat(this.data.bwStart);
@@ -87,6 +95,10 @@ Page({
         target: bwTarget,
         start: (isFinite(start) && start > 0 && start <= 500) ? start : 0
       };
+    }
+    var wv = parseFloat(this.data.weeklyVolume);
+    if (isFinite(wv) && wv > 0 && wv <= 1000000) {
+      goals.weeklyVolume = { target: Math.max(units.storedWeight(wv), 1) };
     }
     var self = this;
     this.data.strength.forEach(function (row) {

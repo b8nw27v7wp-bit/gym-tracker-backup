@@ -10,6 +10,7 @@ var customExercises = require('../../utils/custom-exercises');
 var trainingIntelligence = require('../../utils/training-intelligence');
 var substitute = require('../../utils/substitute');
 var units = require('../../utils/units');
+var planReminder = require('../../utils/plan-reminder');
 
 var timer = null; // 计时器句柄
 
@@ -230,25 +231,17 @@ Page({
     this.setData(set);
   },
 
-  // 本周计划今日提醒：有周计划且下一个训练日未完成时显示
+  // 本周计划今日提醒：有周计划且下一个训练日未完成时显示（受训练日提醒设置控制）
   refreshPlanReminder: function () {
-    var wp = store.getWeeklyPlan();
-    if (!wp) { this.setData({ planReminder: null }); return; }
-    var custom = store.getCustomPlans();
-    var plan = planUtil.getPlan(wp.planId, custom);
-    if (!plan) { this.setData({ planReminder: null }); return; }
-    var progress = util.weeklyPlanProgress(store.getWorkouts(), plan, wp.weekStart);
-    // 今日已完成或本周全部完成 → 不打扰
-    if (!progress.nextDay || progress.todayDone) {
-      this.setData({ planReminder: null });
-      return;
-    }
+    if (!store.getSettings().trainReminder) { this.setData({ planReminder: null }); return; }
+    var r = planReminder.todayPlanReminder(store.getWorkouts(), store.getWeeklyPlan(), store.getCustomPlans());
+    if (!r) { this.setData({ planReminder: null }); return; }
     this.setData({
       planReminder: {
-        planId: plan.id,
-        planName: plan.name,
-        dayName: progress.nextDay.name,
-        dayId: progress.nextDay.id
+        planId: r.planId,
+        planName: r.planName,
+        dayName: r.dayName,
+        dayId: r.dayId
       }
     });
   },

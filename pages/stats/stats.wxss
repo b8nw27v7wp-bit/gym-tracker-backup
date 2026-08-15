@@ -1611,3 +1611,118 @@
   color: #4f46e5;
   text-align: center;
 }
+
+/* ========== v6：训练日提醒条 ========== */
+.plan-reminder-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16rpx 32rpx 0;
+  background: linear-gradient(90deg, #f5f6ff 0%, #ffffff 100%);
+  border: 1rpx solid #e0e7ff;
+  border-radius: 20rpx;
+  padding: 20rpx 28rpx;
+}
+
+.plan-reminder-hover {
+  background: #eef2ff;
+}
+
+.plan-reminder-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-reminder-title {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.plan-reminder-sub {
+  font-size: 21rpx;
+  color: #6b7280;
+  margin-top: 4rpx;
+}
+
+.plan-reminder-btn {
+  font-size: 24rpx;
+  color: #ffffff;
+  background: #4f46e5;
+  border-radius: 999rpx;
+  padding: 12rpx 32rpx;
+  flex-shrink: 0;
+}
+
+/* ========== v6：每周容量目标进度环 ========== */
+.goal-ring-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.goal-ring-edit {
+  font-size: 24rpx;
+  color: #4f46e5;
+}
+
+.goal-ring-body {
+  display: flex;
+  align-items: center;
+}
+
+.goal-ring-canvas {
+  width: 180rpx;
+  height: 180rpx;
+  flex-shrink: 0;
+}
+
+.goal-ring-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: -130rpx;
+  width: 130rpx;
+}
+
+.goal-ring-num {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.goal-ring-sub {
+  font-size: 19rpx;
+  color: #9ca3af;
+  margin-top: 4rpx;
+  text-align: center;
+}
+
+.goal-ring-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+}
+
+.goal-ring-val {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.goal-ring-label {
+  font-size: 20rpx;
+  color: #9ca3af;
+  margin-top: 4rpx;
+}
+
+.goal-ring-empty {
+  padding: 16rpx 0 8rpx;
+}
+
+.goal-ring-empty-text {
+  font-size: 23rpx;
+  color: #9ca3af;
+}

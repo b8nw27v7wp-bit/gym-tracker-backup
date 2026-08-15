@@ -282,3 +282,22 @@
   color: #6b7280;
   margin-top: 6rpx;
 }
+
+/* v6：重量趋势图 */
+.trend-hint {
+  font-size: 21rpx;
+  color: #9ca3af;
+  margin-bottom: 12rpx;
+}
+
+.trend-canvas {
+  width: 100%;
+  height: 280rpx;
+}
+
+.trend-empty {
+  padding: 32rpx 0;
+  text-align: center;
+  font-size: 23rpx;
+  color: #9ca3af;
+}

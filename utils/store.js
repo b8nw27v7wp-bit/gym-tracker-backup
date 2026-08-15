@@ -774,13 +774,15 @@ function saveTabataSettings(settings) {
 }
 
 // ---------- 应用设置（v5） ----------
-// { unit: 'kg'|'lb'（重量显示单位）, autoRest: bool（组间休息自动开始） }
+// { unit: 'kg'|'lb'（重量显示单位）, autoRest: bool（组间休息自动开始）, trainReminder: bool（训练日提醒）, reminderSubscribed: bool（订阅消息已授权） }
 function getSettings() {
   var s = wx.getStorageSync(KEY_SETTINGS);
-  if (!s || typeof s !== 'object') return { unit: 'kg', autoRest: true };
+  if (!s || typeof s !== 'object') return { unit: 'kg', autoRest: true, trainReminder: true, reminderSubscribed: false };
   return {
     unit: s.unit === 'lb' ? 'lb' : 'kg',
-    autoRest: s.autoRest !== false
+    autoRest: s.autoRest !== false,
+    trainReminder: s.trainReminder !== false,
+    reminderSubscribed: !!s.reminderSubscribed
   };
 }
 
@@ -788,7 +790,9 @@ function saveSettings(settings) {
   if (!settings || typeof settings !== 'object') return false;
   var safe = {
     unit: settings.unit === 'lb' ? 'lb' : 'kg',
-    autoRest: settings.autoRest !== false
+    autoRest: settings.autoRest !== false,
+    trainReminder: settings.trainReminder !== false,
+    reminderSubscribed: !!settings.reminderSubscribed
   };
   try {
     wx.setStorageSync(KEY_SETTINGS, safe);
@@ -830,7 +834,7 @@ function removeMeasurement(ts) {
 }
 
 // ---------- 训练目标（v5） ----------
-// { bodyweight: { target, start } | null, strength: [{ exerciseId, name, target }] }
+// { bodyweight: { target, start } | null, strength: [{ exerciseId, name, target }], weeklyVolume: { target } | null }
 function getGoals() {
   var g = wx.getStorageSync(KEY_GOALS);
   if (!g || typeof g !== 'object') return null;
@@ -838,7 +842,8 @@ function getGoals() {
     bodyweight: (g.bodyweight && g.bodyweight.target) ? g.bodyweight : null,
     strength: Array.isArray(g.strength) ? g.strength.filter(function (s) {
       return s && s.exerciseId && s.target;
-    }) : []
+    }) : [],
+    weeklyVolume: (g.weeklyVolume && g.weeklyVolume.target) ? g.weeklyVolume : null
   };
 }
 
@@ -846,7 +851,8 @@ function saveGoals(goals) {
   if (!goals || typeof goals !== 'object') return false;
   var safe = {
     bodyweight: null,
-    strength: []
+    strength: [],
+    weeklyVolume: null
   };
   if (goals.bodyweight && goals.bodyweight.target) {
     safe.bodyweight = {
@@ -864,6 +870,9 @@ function saveGoals(goals) {
         });
       }
     });
+  }
+  if (goals.weeklyVolume && goals.weeklyVolume.target) {
+    safe.weeklyVolume = { target: Math.round(util.toNum(goals.weeklyVolume.target)) };
   }
   try {
     wx.setStorageSync(KEY_GOALS, safe);

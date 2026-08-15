@@ -2,6 +2,29 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.26.0（2026-08-15）— 训练计划与目标：训练日提醒 + 每周容量目标 + 动作重量趋势
+
+对标训记/Hevy 的 3 个亮点落地：
+
+### 训练日提醒（F36）
+- **feat(utils)**: 新增纯函数 `utils/plan-reminder.js`——`todayPlanReminder(workouts, weeklyPlan, customPlans)` 判断本周计划下一个待练训练日（复用 weeklyPlanProgress，今日已完成/全部完成不打扰，无周计划/计划不存在返回 null）
+- **feat(train+stats)**: 训练页与统计页顶部提醒条"今日待练：计划名 · 训练日名"（点击一键填充计划日）；受"训练日提醒"设置控制
+- **feat(profile)**: 设置新增"训练日提醒"开关——开启时请求 `wx.requestSubscribeMessage` 订阅消息授权（模板 ID 常量可配，未配置/拒绝时优雅降级为应用内提醒，toast 说明）；授权状态存 `gym_settings.reminderSubscribed`
+- **说明**: 纯本地应用无法直接下发订阅消息（微信要求后端调用 subscribeMessage.send），本实现提供授权流程 + 应用内提醒；接入后端后即可真正推送
+
+### 每周容量目标（F37）
+- **feat(goals)**: `utils/goals.js` 新增 `weeklyVolumeProgress(goals, workouts)`——本周容量 vs 目标，返回 { target, current, progress, done, remaining }；`gym_goals.weeklyVolume` 存储
+- **feat(stats)**: 统计页"每周容量目标"卡——canvas 2d 进度环（≥100% 变绿）+ 当前/目标容量 + "本周还需 X"提示；未设目标显示引导卡；弹窗设置/编辑/删除目标（容量按显示单位，存储统一 kg）
+- **feat(goals)**: 目标编辑页新增"每周容量目标"输入
+
+### 动作重量趋势（F38）
+- **feat(exercise-detail)**: 动作详情页新增"重量趋势"卡——canvas 2d 折线展示每次训练最大重量（复用 util.strengthCurve 按天去重取最大，kg/lb 自动换算），末点高亮 + 数值标签（≤8 点全显，多则首/峰/末）；无记录显示空态
+
+### 其他
+- **feat(store)**: `gym_settings` 新增 trainReminder/reminderSubscribed；`gym_goals` 新增 weeklyVolume；备份导出导入/清空/数据指纹适配
+- **test**: 主套件 626→650（新增第 18 节 24 项：提醒四态/周容量进度/设置与周目标存储导出导入/力量曲线去重/详情页趋势与 lb 换算/统计页目标环与提醒开关联动）；verify-modules 同步
+- 全量回归：主套件 650 + 专项 579 项全绿（1229 项）
+
 ## v2.25.0（2026-08-15）— 训练周报（Batch3）
 
 对标 Hevy 的"每周训练总结"：自动汇总每周训练表现，可回看最近 8 周，看进步与趋势。

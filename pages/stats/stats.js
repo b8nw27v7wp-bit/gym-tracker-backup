@@ -10,6 +10,7 @@ var units = require('../../utils/units');
 var achievements = require('../../utils/achievements');
 var goalsUtil = require('../../utils/goals');
 var muscleRecovery = require('../../utils/muscle-recovery');
+var planReminder = require('../../utils/plan-reminder');
 var weeklyReport = require('../../utils/weekly-report');
 
 // 展示 PR 的招牌动作
@@ -73,7 +74,10 @@ Page({
     weeklyReportCount: 0,
     weeklyIndex: -1,   // 当前浏览的周（-1 = 未浏览，首次默认最新一周）
     weeklyReport: null,
-    weeklyShareVisible: false // 周报分享卡（canvas 生成）
+    weeklyShareVisible: false, // 周报分享卡（canvas 生成）
+    // v6：训练日提醒 + 每周容量目标
+    planReminder: null,   // 今日待练训练日提醒 { planId, planName, dayName, dayId }
+    volGoal: null         // 每周容量目标 { target, current, progress, done, remaining }（显示单位）
   },
 
   onShow: function () {
@@ -234,13 +238,14 @@ Page({
         var trend = [];
         if (recent.length > 0) {
           var maxEst = 1;
-          recent.forEach(function (p) { if (p.est > maxEst) maxEst = p.est; });
+          recent.forEach(function (p) { if (units.displayWeight(p.est) > maxEst) maxEst = units.displayWeight(p.est); });
           trend = recent.map(function (p) {
             var d = new Date(p.ts);
+            var est = units.displayWeight(p.est);
             return {
               label: (d.getMonth() + 1) + '/' + d.getDate(),
-              est: p.est,
-              height: Math.max(Math.round((p.est / maxEst) * 100), 8)
+              est: est,
+              height: Math.max(Math.round((est / maxEst) * 100), 8)
             };
           });
         }
@@ -344,6 +349,19 @@ Page({
     });
     var unitLabel = units.unitLabel();
 
+    // v6：训练日提醒（受"训练日提醒"设置控制）
+    var settings = store.getSettings();
+    var reminder = settings.trainReminder
+      ? planReminder.todayPlanReminder(workouts, store.getWeeklyPlan(), store.getCustomPlans())
+      : null;
+    // v6：每周容量目标（进度环，容量换算显示单位）
+    var volGoal = goalsUtil.weeklyVolumeProgress(store.getGoals(), workouts);
+    if (volGoal) {
+      volGoal.target = Math.round(units.displayWeight(volGoal.target));
+      volGoal.current = Math.round(units.displayWeight(volGoal.current));
+      volGoal.remaining = Math.round(units.displayWeight(volGoal.remaining));
+    }
+
     // 首屏关键数据（先渲染，视觉更快）
     var critical = {
       hasData: true,
@@ -370,7 +388,9 @@ Page({
       achievements: ach.list,
       achievementUnlocked: ach.unlockedCount,
       goals: goalsProgress,
-      measurementSummary: measurementSummary
+      measurementSummary: measurementSummary,
+      planReminder: reminder,
+      volGoal: volGoal
     };
     // 次级数据（图表/热力图/PR/分析/恢复）
     var rest = {
@@ -412,7 +432,7 @@ Page({
     s += '|i:' + (Array.isArray(intake) ? intake.length : 0);
     s += '|c:' + (JSON.stringify(customs || []) || '');
     s += '|p:' + (JSON.stringify(profile || {}) || '');
-    s += '|st:' + (settings ? settings.unit : 'kg') + ':' + (settings ? settings.autoRest : 1);
+    s += '|st:' + (settings ? settings.unit : 'kg') + ':' + (settings ? settings.autoRest : 1) + ':' + (settings ? settings.trainReminder : 1);
     s += '|m:' + (Array.isArray(measurements) ? measurements.length : 0);
     s += '|g:' + (JSON.stringify(goals || {}) || '');
     return s;
@@ -444,12 +464,54 @@ Page({
     if (wx.nextTick) {
       wx.nextTick(function () {
         self.drawVolumeChart();
+        self.drawGoalRing();
       });
     } else {
       setTimeout(function () {
         self.drawVolumeChart();
+        self.drawGoalRing();
       }, 80);
     }
+  },
+
+  // 每周容量目标进度环（canvas 2d 圆弧；卡片未渲染时节点为空直接返回）
+  drawGoalRing: function () {
+    var self = this;
+    wx.createSelectorQuery()
+      .select('#goalRing')
+      .fields({ node: true, size: true })
+      .exec(function (res) {
+        if (!res || !res[0] || !res[0].node) return;
+        var canvas = res[0].node;
+        var width = res[0].width;
+        var height = res[0].height;
+        if (width <= 0 || height <= 0) return;
+        var vg = self.data.volGoal;
+        if (!vg || !vg.target) return;
+        var dpr = wx.getSystemInfoSync().pixelRatio;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        var ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        var cx = width / 2;
+        var cy = height / 2;
+        var r = Math.min(width, height) / 2 - 10;
+        ctx.lineWidth = 14;
+        ctx.lineCap = 'round';
+        // 背景环
+        ctx.strokeStyle = '#f3f4f6';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+        // 进度弧（≥100% 绿色，否则 indigo）
+        var pct = Math.min(Math.max(vg.progress, 0), 100);
+        var start = -Math.PI / 2;
+        var end = start + Math.PI * 2 * (pct / 100);
+        ctx.strokeStyle = pct >= 100 ? '#10b981' : '#4f46e5';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, start, end);
+        ctx.stroke();
+      });
   },
 
   // ---------- 数据分析增强 ----------
@@ -760,6 +822,48 @@ Page({
 
   onOpenMeasurements: function () {
     wx.navigateTo({ url: '/pages/measurements/measurements' });
+  },
+
+  // 训练日提醒条：携带计划日跳转训练页一键填充
+  onFillReminder: function () {
+    var r = this.data.planReminder;
+    if (!r) return;
+    wx.setStorageSync('pending_plan_day', { planId: r.planId, dayId: r.dayId });
+    wx.switchTab({ url: '/pages/train/train' });
+  },
+
+  // 设置/编辑每周容量目标（弹窗输入，容量按显示单位，存储统一 kg）
+  onSetVolumeGoal: function () {
+    var self = this;
+    var cur = this.data.volGoal ? this.data.volGoal.target : '';
+    wx.showModal({
+      title: '每周容量目标',
+      editable: true,
+      placeholderText: '如 10000（' + this.data.unitLabel + '）',
+      content: cur ? '当前目标 ' + cur + ' ' + this.data.unitLabel + '（清空输入框可删除目标）' : '',
+      confirmText: '保存',
+      success: function (res) {
+        if (!res.confirm) return;
+        var input = String(res.content || '').trim();
+        var g = store.getGoals() || { bodyweight: null, strength: [], weeklyVolume: null };
+        if (!input) {
+          g.weeklyVolume = null;
+          store.saveGoals(g);
+          self.loadStats();
+          wx.showToast({ title: '已删除容量目标', icon: 'none' });
+          return;
+        }
+        var v = parseFloat(input);
+        if (!isFinite(v) || v <= 0 || v > 1000000) {
+          wx.showToast({ title: '请输入有效目标容量', icon: 'none' });
+          return;
+        }
+        g.weeklyVolume = { target: Math.max(units.storedWeight(v), 1) };
+        store.saveGoals(g);
+        self.loadStats();
+        wx.showToast({ title: '目标已保存', icon: 'success' });
+      }
+    });
   },
 
   onOpenCalculator: function () {

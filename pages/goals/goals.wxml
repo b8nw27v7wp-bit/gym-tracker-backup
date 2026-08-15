@@ -19,6 +19,18 @@
   </view>
 
   <view class="card">
+    <view class="card-title">每周容量目标</view>
+    <view class="goal-row">
+      <text class="goal-label">目标容量（{{unitLabel}}）</text>
+      <view class="goal-input-wrap">
+        <input class="goal-input" type="number" value="{{weeklyVolume}}" data-field="weeklyVolume" bindinput="onBwInput" placeholder="如 10000" />
+        <text class="goal-unit">{{unitLabel}}</text>
+      </view>
+    </view>
+    <view class="goal-tip">统计页显示本周容量进度环；按周（周一~周日）统计</view>
+  </view>
+
+  <view class="card">
     <view class="card-title">力量目标（最多 3 个）</view>
     <view class="goal-tip" style="margin-bottom: 8rpx;">目标重量按该动作历史最大重量追踪</view>
     <view wx:for="{{strength}}" wx:key="index" class="goal-row">

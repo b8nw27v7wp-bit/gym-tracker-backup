@@ -28,6 +28,15 @@
     </view>
   </view>
 
+  <!-- 训练日提醒条（v6）：本周计划待练训练日 -->
+  <view class="plan-reminder-bar" wx:if="{{planReminder}}" hover-class="plan-reminder-hover" bindtap="onFillReminder">
+    <view class="plan-reminder-left">
+      <text class="plan-reminder-title">今日待练：{{planReminder.planName}} · {{planReminder.dayName}}</text>
+      <text class="plan-reminder-sub">本周计划提醒 · 点击一键填充</text>
+    </view>
+    <view class="plan-reminder-btn">开始</view>
+  </view>
+
   <!-- 本周简报 -->
   <view class="card" wx:if="{{hasData}}">
     <view class="card-title">本周简报</view>
@@ -188,6 +197,35 @@
     <view class="card-sub">本周训练容量</view>
     <view class="big-num">{{weekVolume}} <text class="big-unit">{{unitLabel}}</text></view>
     <view class="delta {{deltaClass}}">{{deltaText}}</view>
+  </view>
+
+  <!-- 每周容量目标（v6）：进度环 -->
+  <view class="card goal-ring-card" wx:if="{{volGoal}}">
+    <view class="goal-ring-head">
+      <view class="card-title" style="margin:0;">每周容量目标</view>
+      <text class="goal-ring-edit" bindtap="onSetVolumeGoal">编辑</text>
+    </view>
+    <view class="goal-ring-body">
+      <canvas type="2d" id="goalRing" class="goal-ring-canvas"></canvas>
+      <view class="goal-ring-info">
+        <text class="goal-ring-num">{{volGoal.progress >= 100 ? 100 : volGoal.progress}}%</text>
+        <text class="goal-ring-sub">{{volGoal.done ? '本周目标已达成' : '本周还需 ' + volGoal.remaining + ' ' + unitLabel}}</text>
+      </view>
+      <view class="goal-ring-side">
+        <text class="goal-ring-val">{{volGoal.current}} / {{volGoal.target}} {{unitLabel}}</text>
+        <text class="goal-ring-label">当前 / 目标容量</text>
+      </view>
+    </view>
+  </view>
+  <!-- 未设目标引导 -->
+  <view class="card goal-ring-card" wx:if="{{!volGoal && hasData}}">
+    <view class="goal-ring-head">
+      <view class="card-title" style="margin:0;">每周容量目标</view>
+      <text class="goal-ring-edit" bindtap="onSetVolumeGoal">设置</text>
+    </view>
+    <view class="goal-ring-empty">
+      <text class="goal-ring-empty-text">设定每周目标容量，追踪本周训练进度</text>
+    </view>
   </view>
 
   <!-- 训练周报（Batch3）：最近 8 周每周总结，左右切换回看 -->
@@ -430,7 +468,7 @@
       <!-- 1RM 迷你趋势 + 大图入口 -->
       <view class="pr-trend-wrap" wx:if="{{item.trend.length > 0}}">
         <view class="pr-trend">
-          <view class="pr-trend-bar" wx:for="{{item.trend}}" wx:for-item="t" wx:key="label" style="height: {{t.height}}%;" title="{{t.est}}kg"></view>
+          <view class="pr-trend-bar" wx:for="{{item.trend}}" wx:for-item="t" wx:key="label" style="height: {{t.height}}%;" title="{{t.est}}{{unitLabel}}"></view>
         </view>
         <view class="pr-chart-link" wx:if="{{item.trend.length > 1}}">趋势</view>
       </view>

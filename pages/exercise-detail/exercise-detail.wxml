@@ -30,6 +30,16 @@
     </view>
   </view>
 
+  <!-- 重量趋势图（v6，训记式单个动作重量曲线） -->
+  <view class="card">
+    <view class="card-title">重量趋势</view>
+    <view class="trend-hint" wx:if="{{trendHas}}">每次训练最大重量 · 共 {{trendPoints.length}} 次（{{trendUnit}}）</view>
+    <canvas type="2d" id="trendCanvas" class="trend-canvas" wx:if="{{trendHas}}"></canvas>
+    <view class="trend-empty" wx:else>
+      <text>暂无重量记录，记录后这里会显示该动作的重量曲线</text>
+    </view>
+  </view>
+
   <!-- 动作要领 -->
   <view class="card">
     <view class="card-title">动作要领</view>

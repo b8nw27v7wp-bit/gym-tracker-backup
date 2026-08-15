@@ -34,6 +34,7 @@ gym-tracker/
 │   ├── goals.js                    训练目标进度（体重 + 力量）（v5）
 │   ├── muscle-recovery.js          肌肉恢复建议：每周组数 vs 建议范围（v5）
 │   ├── weekly-report.js            训练周报：最近 8 周每周总结（容量/PR/肌群/连续天数/环比）（Batch3）
+│   ├── plan-reminder.js            训练日提醒：本周计划下一个待练训练日（v6）
 │   ├── plan.js                     计划查询 + 训练草稿生成（支持自建计划合并）
 │   ├── nutrition.js                营养计算器（BMR/BMI/体脂率/宏量营养素）
 │   ├── plate-calculator.js         杠铃片计算器
@@ -47,7 +48,7 @@ gym-tracker/
 │   ├── export  exercise-edit                        # v2.22/v2.23 子页
 │   └── measurements  goals                          # v2.24/v5 子页
 ├── doc/                            项目文档（建构规划见 doc/architecture.md §1-§10，索引见 §9）
-└── test.js                         数据层单测（626 项断言）
+└── test.js                         数据层单测（650 项断言）
 ```
 
 ## 3. 开发规范
