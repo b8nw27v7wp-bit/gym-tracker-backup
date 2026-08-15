@@ -1,4 +1,4 @@
-// 个人中心页：用户信息展示 + 头像昵称设置 + 身体资料 + 功能入口
+// 个人中心页：用户信息展示 + 头像昵称设置 + 身体资料 + 功能入口 + 应用设置（v5）
 // 注意：wx.getUserProfile 已废弃（2021年4月），现使用 open-type="chooseAvatar" + type="nickname"
 var store = require('../../utils/store');
 
@@ -9,7 +9,9 @@ Page({
     isLoggedIn: false,
     isEditing: false,       // 是否正在编辑用户信息
     editNickName: '',       // 编辑中的昵称
-    editAvatarUrl: ''       // 编辑中的头像
+    editAvatarUrl: '',      // 编辑中的头像
+    settings: { unit: 'kg', autoRest: true }, // 应用设置
+    measurementCount: 0     // 围度记录数
   },
 
   onLoad: function () {
@@ -27,7 +29,9 @@ Page({
     this.setData({
       wxUser: wxUser,
       profile: profile,
-      isLoggedIn: !!wxUser
+      isLoggedIn: !!wxUser,
+      settings: store.getSettings(),
+      measurementCount: store.getMeasurements().length
     });
   },
 
@@ -151,6 +155,35 @@ Page({
   // 跳转到身体资料编辑
   onEditProfile: function () {
     wx.navigateTo({ url: '/pages/calculator/calculator' });
+  },
+
+  // ---------- 应用设置（v5） ----------
+  // 重量单位切换 kg/lb
+  onToggleUnit: function () {
+    var s = store.getSettings();
+    s.unit = s.unit === 'lb' ? 'kg' : 'lb';
+    store.saveSettings(s);
+    this.setData({ settings: store.getSettings() });
+    wx.showToast({ title: '重量单位：' + (s.unit === 'lb' ? '磅 (lb)' : '公斤 (kg)'), icon: 'none' });
+  },
+
+  // 组间休息自动开始开关
+  onToggleAutoRest: function () {
+    var s = store.getSettings();
+    s.autoRest = !s.autoRest;
+    store.saveSettings(s);
+    this.setData({ settings: store.getSettings() });
+    wx.showToast({ title: s.autoRest ? '已开启自动休息' : '已关闭自动休息', icon: 'none' });
+  },
+
+  // 身体围度入口
+  onMeasurements: function () {
+    wx.navigateTo({ url: '/pages/measurements/measurements' });
+  },
+
+  // 训练目标入口
+  onGoals: function () {
+    wx.navigateTo({ url: '/pages/goals/goals' });
   },
 
   // 跳转到数据管理

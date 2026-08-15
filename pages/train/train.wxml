@@ -1,4 +1,4 @@
-<view class="page">
+﻿<view class="page">
   <!-- 页头 -->
   <view class="header">
     <view class="header-left">
@@ -27,6 +27,24 @@
       <text class="plan-reminder-sub">本周计划 · 点击一键填充</text>
     </view>
     <view class="plan-reminder-btn">开始</view>
+  </view>
+
+  <!-- 编辑历史训练模式条（v5） -->
+  <view class="edit-mode-bar" wx:if="{{editWorkoutId}}">
+    <view class="edit-mode-left">
+      <text class="edit-mode-title">编辑模式</text>
+      <text class="edit-mode-sub">保存后将更新该条历史记录（保留原时间）</text>
+    </view>
+    <view class="edit-mode-cancel" bindtap="onCancelEditWorkout">放弃编辑</view>
+  </view>
+
+  <!-- 复制上次训练快捷条（v5，对标 Hevy Repeat） -->
+  <view class="repeat-bar" wx:if="{{lastWorkoutInfo && draft.length === 0 && !editWorkoutId}}" hover-class="repeat-bar-hover" bindtap="onRepeatLast">
+    <view class="repeat-left">
+      <text class="repeat-title">重复上次训练</text>
+      <text class="repeat-sub">{{lastWorkoutInfo.date}} · {{lastWorkoutInfo.exerciseCount}} 个动作 · {{lastWorkoutInfo.volume}} {{unitLabel}}</text>
+    </view>
+    <view class="repeat-btn">复制</view>
   </view>
 
   <!-- 训练计时 -->
@@ -212,6 +230,8 @@
         >
           <text class="exercise-name">{{item.name}}</text>
           <text wx:if="{{item.lastText}}" class="exercise-last">{{item.lastText}}</text>
+          <text wx:if="{{item.suggestText}}" class="exercise-suggest">{{item.suggestText}}</text>
+          <text wx:if="{{item.rotationText}}" class="exercise-rotation">{{item.rotationText}}</text>
           <view class="exercise-dots">
             <view class="dot {{item.difficulty >= 1 ? 'dot-on' : ''}}"></view>
             <view class="dot {{item.difficulty >= 2 ? 'dot-on' : ''}}"></view>
@@ -233,6 +253,8 @@
         >
           <text class="exercise-name">{{item.name}}</text>
           <text wx:if="{{item.lastText}}" class="exercise-last">{{item.lastText}}</text>
+          <text wx:if="{{item.suggestText}}" class="exercise-suggest">{{item.suggestText}}</text>
+          <text wx:if="{{item.rotationText}}" class="exercise-rotation">{{item.rotationText}}</text>
           <view class="exercise-dots">
             <view class="dot {{item.difficulty >= 1 ? 'dot-on' : ''}}"></view>
             <view class="dot {{item.difficulty >= 2 ? 'dot-on' : ''}}"></view>
@@ -250,6 +272,7 @@
     exercise-name="{{editing.exerciseName}}"
     muscle-name="{{editingMuscleName}}"
     sets="{{editing.sets}}"
+    unit="{{unitLabel}}"
     last-prefill="{{editing.lastPrefillText}}"
     bind:togglewarmup="onToggleWarmup"
     bind:weightinput="onWeightInput"
@@ -278,7 +301,7 @@
       <view class="added-index">{{index + 1}}</view>
       <view class="added-info">
         <text class="added-name">{{item.exerciseName}}</text>
-        <text class="added-sub">{{item.sets.length}} 组 · 容量 {{itemVolumes[index]}} kg</text>
+        <text class="added-sub">{{item.sets.length}} 组 · 容量 {{itemVolumes[index]}} {{unitLabel}}</text>
       </view>
       <view class="added-right">
         <view class="added-move">
@@ -314,7 +337,7 @@
   <!-- 底部保存栏 -->
   <view class="footer" wx:if="{{draft.length > 0}}">
     <view class="footer-summary">
-      <text class="num-accent footer-vol">{{totalVolume}} kg</text>
+      <text class="num-accent footer-vol">{{totalVolume}} {{unitLabel}}</text>
       <text class="footer-sub">{{totalSets}} 组 · {{sessionMinutes}} 分钟</text>
     </view>
     <view class="save-btn" bindtap="onSave">保存训练</view>

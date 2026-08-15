@@ -2,13 +2,28 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.23.3（2026-08-15）— 训练智能 + 统计页性能
+
+- **feat(utils)**: 新增 `utils/training-intelligence.js` 训练智能纯函数模块——`indexSessions`（按动作索引会话，一次构建多处复用，自重动作保留）、`overloadAdvice`（渐进超负荷：按最近 2 次最高重量组建议本次重量/次数，进步/持平/回落/首次四态，步长 <100kg +2.5 / <200kg +5 / 大重量 +10）、`rotationAdvice`（近 30 天使用 ≥8 次推荐替代动作，排除自身）、`deloadAdvice`（近 3 周容量连续下降 ≥20% → 减量建议；连续上升 ≥30% → 冲 PR 建议）、`predictPR`（1RM 历史线性回归预测 2 周后）
+- **feat(train)**: 选动作列表接入训练智能——动作卡新增绿色"建议：本次 Xkg × N 次（较上次 +Xkg）"与琥珀色"近 30 天已练 N 次，可换：X/Y"两行提示
+- **feat(stats)**: 容量卡新增减量周/冲 PR 提示条（近 3 周容量趋势）；PR 卡新增 1RM 趋势预测行（"按当前趋势，2 周后 1RM 预计 X kg"，≥3 点且上升趋势才显示）
+- **perf(stats)**: 统计页性能优化——数据指纹缓存（训练/体重/摄入/自定义动作/资料任一变化才重算，切 tab 回来零重算直接复用结果）；setData 拆两级（首屏关键数据先行渲染）；分析计算抽为 `computeAnalytics` 供两条路径复用
+- **test**: 主套件 487→523（新增 14 节训练智能 36 项：索引/建议四态/轮换/减量检测/PR 预测/页面联动/缓存命中与失效）；全部专项回归绿
+- **docs**: 新增 `doc/architecture.md` 建构规划与模块管理文档——分层架构/功能板块矩阵/模块清单（utils 12 + data 5）/17 页面管理表/存储 key 清单与跨页通信/导航图/测试门禁/变更 Checklist；dev-guide/README 同步引用与计数
+- **chore(modules)**: 新增 `scripts/verify-modules.js` 建构管理守门（11 项）——纯函数模块可加载性、utils/data 依赖图无环、17 页面四件套完整、tab 注册正确、组件/custom-tab-bar 完整、存储 key 单一出口（页面不得绕过 store.js 直读写 gym_*）+ 文档↔代码一致（architecture 模块/文档/脚本/存储清单、dev-guide 测试计数）
+- **fix(audit)**: 代码排查修复 6 项——① `muscleBalance` 部位 key 误写 `shoulders`（应为 `shoulder`，肩部容量此前落入"其他"）② `volumeByMuscle`/`muscleBalance` 热身组容量混入部位分布（与"热身不计统计"口径不一致）③ `exercisePR` 热身组混入最大重量/最佳单组 ④ `weeklyPlanProgress.nextDay` 跳练中间日时指向已完成的训练日 ⑤ `importData` 空数组不覆盖导致备份恢复无法清空现有数据（改按字段是否存在判断，v2 老备份兼容保留）⑥ 移除超级组死代码（`onToggleSuperset`/`getSupersetInfo`/`supersetGroup` 无任何 UI 引用且每次点击生成新 id 永远无法同组，README/roadmap/architecture 同步撤下宣称）
+- **test**: 主套件 523→532（新增 15 节审计回归 9 项：肩部计入推类/热身组排除分布·平衡·PR/跳练中间日 nextDay/空备份恢复/v2 老备份不覆盖/超级组死代码移除）
+- 全量回归：主套件 532 + 专项 579 项全绿（1111 项）
+
 ## v2.23.2（2026-08-15）— 部位热力图改版：GitHub 风格肌群矩阵（放弃人体图方向）
 
 - **feat(stats)**: 部位热力图改版——放弃人体发力图绘制（视觉不达预期），改为 GitHub 贡献图风格的**肌群矩阵**：行 = 14 个肌群分组（颈/斜方/肩/胸/肱二头/肱三头/前臂/腹/背/臀/股四头/腘绳/小腿/心肺），列 = 近 12 周（每 4 周一个标签：12周前…本周），格子色深 = 当周该部位训练组数（复用蓝系 4 档 + 图例），行尾显示近 12 周总组数；纯 WXML 渲染（无 canvas），点击行 → 常驻信息条展示组数/次数/占全身比例（再点取消选中）
 - **refactor(utils)**: muscle-heatmap 重构——移除人体绘制机制（fitBody/zoneShape/zoneShapeCommands/zoneAt/zoneName/SILHOUETTE 等），新增 `MUSCLE_GROUPS`（14 组覆盖全部 45 个 zone，无重复无遗漏）、`zoneGroupOf`、`aggregateZoneCountsByWeek`（按周×分组聚合：同组多 zone 去重、同次训练次数去重、未来周防护）；`aggregateZoneCounts` 保留为 zone 级聚合工具
 - **perf**: 按周聚合 800 次训练/4800 动作条目实测 5ms（专项预算 300ms）
-- **test**: 主套件 483→487（重写 13.5-13.6：分组完整性/分周聚合/矩阵联动/点击 toggle/选中刷新）；专项 `verify-muscle-heatmap.js` 28→14 项（色阶守护/分组完整性/分周正确性/性能预算）
-- 全量回归：主套件 487 + 专项 547 项全绿
+- **feat(stats)**: 两卡 UI 调大美化——日历热力图格子 26→32rpx、肌群矩阵格子 26→30rpx（圆角/间距同步加大，图例色块 20→24rpx，标签字号上调）；矩阵选中行加左侧 indigo 竖条（#4f46e5）+ 名称/组数加深，格子 hover 过渡 0.15s
+- **test**: 主套件 483→487（重写 13.5-13.6：分组完整性/分周聚合/矩阵联动/点击 toggle/选中刷新）；专项 `verify-muscle-heatmap.js` 14→35 项（新增：注入与脏数据安全——zoneGroupOf 原型链 key 零命中不污染、target 注入词、resolver 恶意对象、非法 ts/非数组 sets/null 脏数据、分组 key 原型冲突）
+- **docs**: design.md 新增 4.4 部位热力图（肌群矩阵）设计说明；requirements.md 新增 F24；dev-guide 补 muscle-heatmap 模块；testing.md 同步计数与手工清单
+- 全量回归：主套件 487 + 专项 568 项全绿（安全专项 round2 75 / final 147 / hardening 61 等全部通过）
 
 ## v2.23.1（2026-08-15）— 部位热力图精细打磨（几何/人体比例/交互/性能/健壮性）
 

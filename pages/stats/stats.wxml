@@ -38,7 +38,7 @@
       </view>
       <view class="brief-item">
         <text class="brief-num">{{weekVolume}}</text>
-        <text class="brief-label">容量 kg</text>
+        <text class="brief-label">容量 {{unitLabel}}</text>
       </view>
       <view class="brief-item">
         <text class="brief-num">{{prBreakCount}}</text>
@@ -48,6 +48,72 @@
         <text class="brief-num {{bodyDeltaClass}}">{{bodyDeltaText}}</text>
         <text class="brief-label">体重变化</text>
       </view>
+    </view>
+  </view>
+
+  <!-- 连续打卡 + 成就（v5） -->
+  <view class="card" wx:if="{{hasData && streak}}">
+    <view class="heat-head">
+      <view class="card-title" style="margin:0;">连续打卡</view>
+      <text class="heat-days">最长连续 {{streak.longest}} 天</text>
+    </view>
+    <view class="streak-row">
+      <view class="streak-item">
+        <text class="streak-num">{{streak.current}}</text>
+        <text class="streak-label">当前连续（天）</text>
+      </view>
+      <view class="streak-divider"></view>
+      <view class="streak-item">
+        <text class="streak-num">{{achievementUnlocked}}</text>
+        <text class="streak-label">已解锁成就</text>
+      </view>
+      <view class="streak-divider"></view>
+      <view class="streak-item">
+        <text class="streak-num">{{totalCount}}</text>
+        <text class="streak-label">累计训练</text>
+      </view>
+    </view>
+    <view class="ach-grid">
+      <view wx:for="{{achievements}}" wx:key="key" class="ach-item {{item.unlocked ? 'ach-on' : ''}}">
+        <text class="ach-dot {{item.unlocked ? 'ach-dot-on' : ''}}"></text>
+        <view class="ach-info">
+          <text class="ach-name">{{item.name}}</text>
+          <text class="ach-desc">{{item.desc}} · {{item.progress}}/{{item.target}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 训练目标（v5） -->
+  <view class="card" wx:if="{{goals && goals.hasGoals}}">
+    <view class="goal-head">
+      <view class="card-title" style="margin:0;">训练目标</view>
+      <text class="goal-edit" bindtap="onOpenGoals">编辑</text>
+    </view>
+    <!-- 体重目标 -->
+    <view wx:if="{{goals.bodyweight}}" class="goal-progress-block">
+      <view class="goal-progress-head">
+        <text class="goal-progress-name">体重目标</text>
+        <text class="goal-progress-val">{{goals.bodyweight.current}} → {{goals.bodyweight.target}} {{unitLabel}}</text>
+      </view>
+      <view class="goal-track">
+        <view class="goal-fill {{goals.bodyweight.progress >= 100 ? 'goal-fill-done' : ''}}" style="width: {{goals.bodyweight.progress >= 100 ? 100 : goals.bodyweight.progress}}%;"></view>
+      </view>
+      <text class="goal-progress-pct">{{goals.bodyweight.progress >= 100 ? 100 : goals.bodyweight.progress}}%</text>
+    </view>
+    <!-- 力量目标 -->
+    <view wx:for="{{goals.strength}}" wx:key="exerciseId" class="goal-progress-block">
+      <view class="goal-progress-head">
+        <text class="goal-progress-name">{{item.name}}</text>
+        <text class="goal-progress-val">{{item.current}} / {{item.target}} {{unitLabel}}</text>
+      </view>
+      <view class="goal-track">
+        <view class="goal-fill {{item.done ? 'goal-fill-done' : ''}}" style="width: {{item.progress}}%;"></view>
+      </view>
+      <text class="goal-progress-pct">{{item.progress}}%</text>
+    </view>
+    <view class="goal-advice" wx:if="{{goals.advice.length > 0}}">
+      <text wx:for="{{goals.advice}}" wx:key="*this" class="goal-advice-line">{{item}}</text>
     </view>
   </view>
 
@@ -120,7 +186,7 @@
   <!-- 本周概览 -->
   <view class="card hero-card">
     <view class="card-sub">本周训练容量</view>
-    <view class="big-num">{{weekVolume}} <text class="big-unit">kg</text></view>
+    <view class="big-num">{{weekVolume}} <text class="big-unit">{{unitLabel}}</text></view>
     <view class="delta {{deltaClass}}">{{deltaText}}</view>
   </view>
 
@@ -158,6 +224,8 @@
   <view class="card" wx:if="{{hasData}}">
     <view class="card-title">近 8 周容量</view>
     <canvas type="2d" id="volCanvas" class="chart-canvas"></canvas>
+    <!-- 训练智能：减量周 / 冲 PR 提示 -->
+    <view wx:if="{{deloadTip}}" class="deload-tip deload-{{deloadTrend}}">{{deloadTip}}</view>
   </view>
 
   <!-- 训练热力图 -->
@@ -239,6 +307,48 @@
     </view>
   </view>
 
+  <!-- 肌肉恢复建议（v5）：本周每肌群组数 vs 建议范围 -->
+  <view class="card" wx:if="{{recovery && hasData}}">
+    <view class="heat-head">
+      <view class="card-title" style="margin:0;">肌肉恢复</view>
+      <text class="heat-days">本周各部位组数 vs 建议范围</text>
+    </view>
+    <view wx:for="{{recovery.rows}}" wx:key="key" class="rec-row">
+      <text class="rec-name">{{item.name}}</text>
+      <view class="rec-track">
+        <view class="rec-fill rec-{{item.status}}" style="width: {{item.pct}}%;"></view>
+      </view>
+      <text class="rec-val">{{item.sets}}<text wx:if="{{item.max > 0}}" class="rec-range"> / {{item.max}}</text></text>
+    </view>
+    <view class="rec-tips" wx:if="{{recovery.tips.length > 0}}">
+      <view wx:for="{{recovery.tips}}" wx:key="*this" class="rec-tip">{{item}}</view>
+    </view>
+    <view class="rec-legend">
+      <view class="rec-legend-item"><view class="rec-dot rec-low"></view><text>欠练</text></view>
+      <view class="rec-legend-item"><view class="rec-dot rec-ok"></view><text>正常</text></view>
+      <view class="rec-legend-item"><view class="rec-dot rec-high"></view><text>超练</text></view>
+    </view>
+  </view>
+
+  <!-- 身体围度摘要（v5） -->
+  <view class="card" wx:if="{{measurementSummary.length > 0}}">
+    <view class="bw-head">
+      <view>
+        <view class="card-title" style="margin-bottom: 4rpx;">身体围度</view>
+        <view class="bw-summary">胸/腰/臂/腿围追踪，看体型变化</view>
+      </view>
+      <view class="bw-add" bindtap="onOpenMeasurements">＋ 记录</view>
+    </view>
+    <view class="ms-grid">
+      <view wx:for="{{measurementSummary}}" wx:key="key" class="ms-cell">
+        <text class="ms-cell-name">{{item.name}}</text>
+        <text class="ms-cell-val">{{item.latest}} cm</text>
+        <text class="ms-cell-delta {{item.deltaUp ? 'ms-cell-up' : 'ms-cell-down'}}">{{item.delta > 0 ? '+' : ''}}{{item.delta}}</text>
+      </view>
+    </view>
+    <view class="ms-more" bindtap="onOpenMeasurements">查看全部围度 ›</view>
+  </view>
+
   <!-- 部位分布 -->
   <view class="card" wx:if="{{hasData}}">
     <view class="card-title">部位训练分布</view>
@@ -247,7 +357,7 @@
       <view class="dist-track">
         <view class="dist-fill" style="width: {{item.pct}}%;"></view>
       </view>
-      <text class="dist-val">{{item.volume}} kg</text>
+      <text class="dist-val">{{item.volume}} {{unitLabel}}</text>
     </view>
   </view>
 
@@ -261,8 +371,10 @@
         <text class="pr-date">{{item.dateText}}</text>
       </view>
       <view class="pr-right">
-        <text class="pr-max">{{item.maxWeight}} <text class="pr-unit">kg</text></text>
-        <text class="pr-best">最佳单组 {{item.bestSet}} kg<text wx:if="{{item.est1rm}}"> · 1RM≈{{item.est1rm}}</text></text>
+        <text class="pr-max">{{item.maxWeight}} <text class="pr-unit">{{unitLabel}}</text></text>
+        <text class="pr-best">最佳单组 {{item.bestSet}} {{unitLabel}}<text wx:if="{{item.est1rm}}"> · 1RM≈{{item.est1rm}}</text></text>
+        <!-- 训练智能：1RM 趋势预测 -->
+        <text wx:if="{{item.predText}}" class="pr-predict">{{item.predText}}</text>
       </view>
       <!-- 1RM 迷你趋势 + 大图入口 -->
       <view class="pr-trend-wrap" wx:if="{{item.trend.length > 0}}">
@@ -293,7 +405,7 @@
     <view class="bw-head">
       <view>
         <view class="card-title" style="margin-bottom: 4rpx;">体重趋势</view>
-        <view class="bw-summary">当前 {{bwLatest}} kg · 累计 {{bwDeltaText}}</view>
+        <view class="bw-summary">当前 {{bwLatest}} {{unitLabel}} · 累计 {{bwDeltaText}}</view>
       </view>
       <view class="bw-add" bindtap="onAddBodyweight">＋ 记录</view>
     </view>
@@ -326,7 +438,7 @@
       </view>
       <view class="monthly-item">
         <text class="monthly-num">{{monthly.totalVolume}}</text>
-        <text class="monthly-label">总容量 kg</text>
+        <text class="monthly-label">总容量 {{unitLabel}}</text>
       </view>
       <view class="monthly-item">
         <text class="monthly-num">{{monthly.prCount}}</text>
@@ -365,15 +477,15 @@
     <view class="balance-detail">
       <view class="balance-detail-item">
         <text class="balance-detail-label">推类容量</text>
-        <text class="balance-detail-value">{{balance.push}} kg</text>
+        <text class="balance-detail-value">{{balance.push}} {{unitLabel}}</text>
       </view>
       <view class="balance-detail-item">
         <text class="balance-detail-label">拉类容量</text>
-        <text class="balance-detail-value">{{balance.pull}} kg</text>
+        <text class="balance-detail-value">{{balance.pull}} {{unitLabel}}</text>
       </view>
       <view class="balance-detail-item">
         <text class="balance-detail-label">腿部容量</text>
-        <text class="balance-detail-value">{{balance.legs}} kg</text>
+        <text class="balance-detail-value">{{balance.legs}} {{unitLabel}}</text>
       </view>
     </view>
   </view>

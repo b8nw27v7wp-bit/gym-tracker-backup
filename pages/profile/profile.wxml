@@ -74,7 +74,36 @@
 
   <!-- 功能入口 -->
   <view class="card">
-    <view class="card-title">功能</view>
+    <view class="card-title">追踪与目标</view>
+    <view class="menu-item" bindtap="onMeasurements">
+      <text class="menu-text">身体围度追踪</text>
+      <text class="menu-sub" wx:if="{{measurementCount > 0}}">{{measurementCount}} 次</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="onGoals">
+      <text class="menu-text">训练目标</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 应用设置（v5） -->
+  <view class="card">
+    <view class="card-title">设置</view>
+    <view class="menu-item" bindtap="onToggleUnit">
+      <text class="menu-text">重量单位</text>
+      <text class="menu-sub">{{settings.unit === 'lb' ? '磅 (lb)' : '公斤 (kg)'}}</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="onToggleAutoRest">
+      <text class="menu-text">组间休息自动开始</text>
+      <text class="menu-sub">{{settings.autoRest ? '开' : '关'}}</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 数据与隐私 -->
+  <view class="card">
+    <view class="card-title">数据</view>
     <view class="menu-item" bindtap="onDataManage">
       <text class="menu-text">数据管理</text>
       <text class="menu-arrow">›</text>

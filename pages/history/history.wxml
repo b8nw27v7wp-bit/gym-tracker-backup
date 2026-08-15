@@ -9,7 +9,7 @@
     <view class="work-head" data-index="{{index}}" bindtap="onToggle">
       <view class="work-info">
         <view class="work-date">{{item.dateLabel}} · {{item.timeLabel}}</view>
-        <view class="work-sub">{{item.volume}} kg · {{item.sets}} 组 · {{item.exerciseCount}} 个动作<text wx:if="{{item.durationText}}"> · {{item.durationText}}</text></view>
+        <view class="work-sub">{{item.volume}} {{unitLabel}} · {{item.sets}} 组 · {{item.exerciseCount}} 个动作<text wx:if="{{item.durationText}}"> · {{item.durationText}}</text></view>
       </view>
       <text class="arrow">{{item.expanded ? '▾' : '▸'}}</text>
     </view>
@@ -24,11 +24,12 @@
             wx:for-item="s"
             wx:for-index="si"
             class="detail-set {{s.warmup ? 'detail-set-warm' : ''}}"
-          >{{s.warmup ? '热身 ' : ''}}{{s.weight}}kg×{{s.reps}}{{s.rpe ? ' @RPE' + s.rpe : ''}}</text>
+          >{{s.warmup ? '热身 ' : ''}}{{s.weight}}{{unitLabel}}×{{s.reps}}{{s.rpe ? ' @RPE' + s.rpe : ''}}</text>
         </view>
       </view>
       <view class="share-row">
         <view class="btn-ghost share-btn" data-id="{{item.id}}" bindtap="onShareWorkout">分享训练总结</view>
+        <view class="btn-ghost edit-btn" data-id="{{item.id}}" bindtap="onEditWorkout">编辑</view>
         <view class="btn-ghost danger-btn" data-id="{{item.id}}" bindtap="onDelete">删除本次记录</view>
       </view>
     </view>

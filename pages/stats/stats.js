@@ -5,6 +5,11 @@ var nutrition = require('../../utils/nutrition');
 var exercisesData = require('../../data/exercises/index');
 var muscleMap = require('../../data/muscle-map');
 var muscleHeatmap = require('../../utils/muscle-heatmap');
+var trainingIntelligence = require('../../utils/training-intelligence');
+var units = require('../../utils/units');
+var achievements = require('../../utils/achievements');
+var goalsUtil = require('../../utils/goals');
+var muscleRecovery = require('../../utils/muscle-recovery');
 
 // 展示 PR 的招牌动作
 var PR_EXERCISES = ['bench', 'squat', 'deadlift', 'ohp', 'pullup', 'db-bench', 'leg-press', 'bb-row'];
@@ -36,6 +41,8 @@ Page({
     heatWeekLabels: [], // 周标签（每 4 周一个）
     heatTotalSets: 0,
     heatSelected: null, // 点击选中的肌群信息 { key, name, sets, sessions, share, level }
+    deloadTip: '',      // 训练智能：减量周/冲 PR 提示
+    deloadTrend: '',    // down / up
     muscleDist: [],
     prs: [],
     chartVisible: false,
@@ -51,7 +58,15 @@ Page({
     calIntake: 0,
     calBudget: 0,
     calGap: 0,
-    calGapText: ''
+    calGapText: '',
+    // v5：单位/连续打卡/成就/目标/恢复/围度
+    unitLabel: 'kg',
+    streak: null,
+    achievements: [],
+    achievementUnlocked: 0,
+    goals: null,
+    recovery: null,
+    measurementSummary: []
   },
 
   onShow: function () {
@@ -79,13 +94,31 @@ Page({
   onHide: function () {
     this.setData({ chartVisible: false });
   },
-
   loadStats: function () {
     var workouts = store.getWorkouts();
     // 热量板块（不依赖训练记录，无训练也显示）
     this.calcCalories(workouts);
     if (workouts.length === 0) {
+      this._statsCache = null;
       this.setData({ hasData: false, bwLatest: 0, hasBodyData: false, heatHasData: false, heatTotalSets: 0, heatSelected: null });
+      return;
+    }
+
+    // 数据指纹：训练/体重/摄入/自定义动作/资料任一变化即失效；
+    // 指纹未变（切 tab 回来等场景）直接复用上次计算结果 → 首屏零重算
+    var fp = this._dataFingerprint();
+    if (this._statsCache && this._statsCache.fp === fp) {
+      var c = this._statsCache;
+      this._heatAgg = c.heatAgg;
+      this._heatMaxGroup = c.heatMaxGroup;
+      var cached = {};
+      Object.keys(c.critical).forEach(function (k) { cached[k] = c.critical[k]; });
+      this.setData(cached);
+      var cachedRest = {};
+      Object.keys(c.rest).forEach(function (k) { cachedRest[k] = c.rest[k]; });
+      cachedRest.heatSelected = this._buildHeatSelected(c.heatAgg);
+      this.setData(cachedRest);
+      this._scheduleVolumeDraw();
       return;
     }
 
@@ -123,10 +156,16 @@ Page({
       deltaText = '本周还没有训练';
     }
 
-    // 近 8 周
+    // 训练智能：减量周 / 冲 PR 检测（近 3 周容量趋势）
+    var deload = trainingIntelligence.deloadAdvice(workouts);
+
+    // 近 8 周（容量换算为显示单位）
     var weekly = util.weeklyVolume(workouts, 8);
     var maxVol = 1;
-    weekly.forEach(function (w) { if (w.volume > maxVol) maxVol = w.volume; });
+    weekly.forEach(function (w) {
+      w.volume = Math.round(units.displayWeight(w.volume));
+      if (w.volume > maxVol) maxVol = w.volume;
+    });
     weekly.forEach(function (w) {
       w.height = w.volume > 0 ? Math.max(Math.round((w.volume / maxVol) * 100), 12) : 0;
     });
@@ -163,12 +202,12 @@ Page({
         key: k,
         name: m.name,
         icon: m.icon,
-        volume: Math.round(byMuscle[k]),
+        volume: Math.round(units.displayWeight(byMuscle[k])),
         pct: Math.round((byMuscle[k] / maxMuscle) * 100)
       };
     });
 
-    // PR：只看有记录的招牌动作
+    // PR：只看有记录的招牌动作（含训练智能 1RM 趋势预测）
     var prs = [];
     var prBreakCount = 0;
     PR_EXERCISES.forEach(function (id) {
@@ -196,28 +235,32 @@ Page({
             };
           });
         }
+        // 1RM 趋势预测（≥3 个点且上升趋势才有）
+        var pred = trainingIntelligence.predictPR(workouts, id);
         prs.push({
           id: id,
           name: ex.name,
-          maxWeight: pr.maxWeight,
-          bestSet: Math.round(pr.bestSetVol),
+          maxWeight: units.displayWeight(pr.maxWeight),
+          bestSet: Math.round(units.displayWeight(pr.bestSetVol)),
           dateText: pr.bestDate ? util.fmtDate(pr.bestDate) : '',
-          est1rm: est1rm,
+          est1rm: units.displayWeight(est1rm),
           trend: trend.length >= 2 ? trend : [],
-          trendMax: maxEst || 1
+          trendMax: maxEst || 1,
+          predText: pred ? ('按当前趋势，2 周后 1RM 预计 ' + units.weightText(pred.predicted)) : ''
         });
       }
     });
 
-    // 体重趋势
+    // 体重趋势（显示单位换算）
     var bws = store.getBodyweights();
     var trend = util.bodyweightTrend(bws);
     var hasBodyData = trend.points.length > 0;
     var bodyDeltaText = '';
     var bodyDeltaClass = '';
     if (hasBodyData) {
-      if (trend.delta > 0) { bodyDeltaText = '+' + trend.delta; bodyDeltaClass = 'delta-up'; }
-      else if (trend.delta < 0) { bodyDeltaText = '' + trend.delta; bodyDeltaClass = 'delta-down'; }
+      var dDelta = Math.round(units.displayWeight(trend.delta) * 10) / 10;
+      if (dDelta > 0) { bodyDeltaText = '+' + dDelta; bodyDeltaClass = 'delta-up'; }
+      else if (dDelta < 0) { bodyDeltaText = '' + dDelta; bodyDeltaClass = 'delta-down'; }
       else { bodyDeltaText = '±0'; bodyDeltaClass = 'delta-flat'; }
     }
     var bwPoints = [];
@@ -269,28 +312,36 @@ Page({
     });
 
     // 已选中的肌群 → 用最新聚合刷新信息条数字（不留陈旧值；无数据时清除选中）
-    var heatSelected = null;
-    var prevSelected = this.data.heatSelected;
-    if (prevSelected && prevSelected.key && heatAgg.hasData) {
-      var selSets = heatAgg.groupTotals[prevSelected.key] || 0;
-      var selName = prevSelected.key;
-      muscleHeatmap.MUSCLE_GROUPS.forEach(function (g) { if (g.key === prevSelected.key) selName = g.name; });
-      var maxGroupTotal = 1;
-      Object.keys(heatAgg.groupTotals).forEach(function (k) { if (heatAgg.groupTotals[k] > maxGroupTotal) maxGroupTotal = heatAgg.groupTotals[k]; });
-      this._heatMaxGroup = maxGroupTotal;
-      heatSelected = {
-        key: prevSelected.key,
-        name: selName,
-        sets: selSets,
-        sessions: selSets > 0 ? (heatAgg.groupSessions[prevSelected.key] || 0) : 0,
-        share: selSets > 0 ? muscleHeatmap.zoneShare(heatAgg.groupTotals, prevSelected.key) : 0,
-        level: muscleHeatmap.colorLevel(selSets, maxGroupTotal)
-      };
-    }
+    var heatSelected = this._buildHeatSelected(heatAgg);
 
-    this.setData({
+    // 数据分析增强（月度总结/肌群平衡/密度/频率）
+    var analytics = this.computeAnalytics(workouts);
+
+    // v5：连续打卡 + 成就徽章
+    var ach = achievements.computeAchievements(workouts);
+    // v5：训练目标进度（体重 + 力量）
+    var goalsProgress = goalsUtil.goalProgress(store.getGoals(), workouts, store.getBodyweights());
+    // v5：肌肉恢复建议（本周每肌群组数 vs 建议范围）
+    var recovery = muscleRecovery.recoveryAdvice(workouts, function (id) {
+      return Object.prototype.hasOwnProperty.call(exById, id) ? exById[id] : null;
+    });
+    // v5：身体围度摘要（最近 3 个有记录的部位 + 变化）
+    var msTrend = util.measurementTrend(store.getMeasurements());
+    var measurementSummary = msTrend.fields.filter(function (f) { return f.has; }).slice(0, 3).map(function (f) {
+      return {
+        key: f.key,
+        name: f.name,
+        latest: f.latest,
+        delta: f.delta,
+        deltaUp: f.delta > 0
+      };
+    });
+    var unitLabel = units.unitLabel();
+
+    // 首屏关键数据（先渲染，视觉更快）
+    var critical = {
       hasData: true,
-      weekVolume: Math.round(cmp.thisVol),
+      weekVolume: Math.round(units.displayWeight(cmp.thisVol)),
       deltaText: deltaText,
       deltaClass: deltaClass,
       weekCount: weekCount,
@@ -302,25 +353,87 @@ Page({
       bodyDeltaText: bodyDeltaText,
       bodyDeltaClass: bodyDeltaClass,
       hasBodyData: hasBodyData,
-      bwLatest: trend.latest,
-      bwDeltaText: bodyDeltaText ? '变化 ' + bodyDeltaText + ' kg' : '',
+      bwLatest: units.displayWeight(trend.latest),
+      bwDeltaText: bodyDeltaText ? '变化 ' + bodyDeltaText + ' ' + unitLabel : '',
       bwPoints: bwPoints,
+      heatDays: heatDays,
+      deloadTip: deload ? deload.tip : '',
+      deloadTrend: deload ? deload.trend : '',
+      unitLabel: unitLabel,
+      streak: ach.streak,
+      achievements: ach.list,
+      achievementUnlocked: ach.unlockedCount,
+      goals: goalsProgress,
+      measurementSummary: measurementSummary
+    };
+    // 次级数据（图表/热力图/PR/分析/恢复）
+    var rest = {
       weekly: weekly,
       heatWeeks: heatWeeks,
-      heatDays: heatDays,
       heatHasData: heatAgg.hasData,
       heatRows: heatRows,
       heatWeekLabels: heatWeekLabels,
       heatTotalSets: heatAgg.totalSets,
       heatSelected: heatSelected,
       muscleDist: muscleDist,
-      prs: prs
-    });
+      prs: prs,
+      monthly: analytics.monthly,
+      balance: analytics.balance,
+      balanceReady: analytics.balanceReady,
+      density: analytics.density,
+      freqTrend: analytics.freqTrend,
+      recovery: recovery
+    };
+    this.setData(critical);
+    this.setData(rest);
+    this._statsCache = { fp: fp, critical: critical, rest: rest, heatAgg: heatAgg, heatMaxGroup: this._heatMaxGroup || 1 };
+    this._scheduleVolumeDraw();
+  },
 
-    // 数据分析增强
-    this.loadAnalytics(workouts);
+  // 数据指纹：训练/体重/摄入/自定义动作/资料/设置/围度/目标 任一变化即失效
+  _dataFingerprint: function () {
+    var workouts = store.getWorkouts();
+    var bws = store.getBodyweights();
+    var intake = store.getIntake();
+    var customs = store.getCustomExercises();
+    var profile = store.getProfile();
+    var settings = store.getSettings();
+    var measurements = store.getMeasurements();
+    var goals = store.getGoals();
+    var s = 'w:' + workouts.length;
+    if (workouts.length > 0) s += ':' + workouts[0].ts + ':' + workouts[workouts.length - 1].ts;
+    s += '|b:' + bws.length + (bws.length > 0 ? ':' + bws[bws.length - 1].ts : '');
+    s += '|i:' + (Array.isArray(intake) ? intake.length : 0);
+    s += '|c:' + (JSON.stringify(customs || []) || '');
+    s += '|p:' + (JSON.stringify(profile || {}) || '');
+    s += '|st:' + (settings ? settings.unit : 'kg') + ':' + (settings ? settings.autoRest : 1);
+    s += '|m:' + (Array.isArray(measurements) ? measurements.length : 0);
+    s += '|g:' + (JSON.stringify(goals || {}) || '');
+    return s;
+  },
 
-    // 等 canvas 挂载后绘制容量图（用 nextTick 替代 setTimeout，避免低端机取不到节点）
+  // 已选中肌群 → 用最新聚合刷新信息条（新鲜计算与缓存命中两条路径共用）
+  _buildHeatSelected: function (heatAgg) {
+    var prev = this.data.heatSelected;
+    if (!prev || !prev.key || !heatAgg || !heatAgg.hasData) return null;
+    var selSets = heatAgg.groupTotals[prev.key] || 0;
+    var selName = prev.key;
+    muscleHeatmap.MUSCLE_GROUPS.forEach(function (g) { if (g.key === prev.key) selName = g.name; });
+    var maxGroupTotal = 1;
+    Object.keys(heatAgg.groupTotals).forEach(function (k) { if (heatAgg.groupTotals[k] > maxGroupTotal) maxGroupTotal = heatAgg.groupTotals[k]; });
+    this._heatMaxGroup = maxGroupTotal;
+    return {
+      key: prev.key,
+      name: selName,
+      sets: selSets,
+      sessions: selSets > 0 ? (heatAgg.groupSessions[prev.key] || 0) : 0,
+      share: selSets > 0 ? muscleHeatmap.zoneShare(heatAgg.groupTotals, prev.key) : 0,
+      level: muscleHeatmap.colorLevel(selSets, maxGroupTotal)
+    };
+  },
+
+  // 等 canvas 挂载后绘制容量图（用 nextTick 替代 setTimeout，避免低端机取不到节点）
+  _scheduleVolumeDraw: function () {
     var self = this;
     if (wx.nextTick) {
       wx.nextTick(function () {
@@ -334,26 +447,26 @@ Page({
   },
 
   // ---------- 数据分析增强 ----------
-  loadAnalytics: function (workouts) {
-    // 月度总结
+  // 月度总结 / 肌群平衡 / 训练密度 / 周频率趋势（纯计算，缓存命中时直接复用结果；容量换算显示单位）
+  computeAnalytics: function (workouts) {
     var monthly = util.monthlySummary(workouts);
-
-    // 肌群平衡分析
     var balance = util.muscleBalance(workouts);
-
-    // 训练密度趋势
     var density = util.densityTrend(workouts, 8);
-
-    // 周训练频率趋势
     var freqTrend = util.weeklyFrequencyTrend(workouts, 8);
-
-    this.setData({
+    monthly.totalVolume = Math.round(units.displayWeight(monthly.totalVolume));
+    if (balance.total > 0) {
+      balance.push = Math.round(units.displayWeight(balance.push));
+      balance.pull = Math.round(units.displayWeight(balance.pull));
+      balance.legs = Math.round(units.displayWeight(balance.legs));
+      balance.other = Math.round(units.displayWeight(balance.other));
+    }
+    return {
       monthly: monthly,
       balance: balance,
       density: density,
       freqTrend: freqTrend,
       balanceReady: balance.total > 0
-    });
+    };
   },
 
   // ---------- 热量板块 ----------
@@ -402,6 +515,15 @@ Page({
 
   onOpenProfile: function () {
     wx.navigateTo({ url: '/pages/profile/profile' });
+  },
+
+  // 训练目标 / 身体围度（v5）
+  onOpenGoals: function () {
+    wx.navigateTo({ url: '/pages/goals/goals' });
+  },
+
+  onOpenMeasurements: function () {
+    wx.navigateTo({ url: '/pages/measurements/measurements' });
   },
 
   onOpenCalculator: function () {
@@ -550,7 +672,7 @@ Page({
     var ex = exercisesData.getExercise(id);
     var chartHist = hist.map(function (p) {
       var d = new Date(p.ts);
-      return { ts: p.ts, est: p.est, label: (d.getMonth() + 1) + '/' + d.getDate() };
+      return { ts: p.ts, est: units.displayWeight(p.est), label: (d.getMonth() + 1) + '/' + d.getDate() };
     });
     var self = this;
     this.setData({

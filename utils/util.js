@@ -168,6 +168,7 @@ function fmtDuration(minutes) {
 
 // ---------- 统计 ----------
 // 按部位聚合容量: { chest: 1200, ... }
+// 注：热身组不计入（与容量/PR 统计口径一致）
 function volumeByMuscle(workouts) {
   var map = {};
   (workouts || []).forEach(function (w) {
@@ -175,7 +176,9 @@ function volumeByMuscle(workouts) {
     if (calc.volume <= 0) return;
     (w.items || []).forEach(function (item) {
       var itemVolume = 0;
-      (item.sets || []).forEach(function (s) { itemVolume += setVolume(s); });
+      (item.sets || []).forEach(function (s) {
+        if (s && !s.warmup) itemVolume += setVolume(s);
+      });
       var key = item.muscle || 'other';
       map[key] = (map[key] || 0) + itemVolume;
     });
@@ -259,6 +262,7 @@ function weekCompare(workouts) {
 }
 
 // 动作历史最佳：{ maxWeight 最大重量, bestSetVol 最佳单组容量, bestDate }
+// 注：热身组不计入（与容量统计口径一致）
 function exercisePR(exerciseId, workouts) {
   var maxWeight = 0;
   var bestSetVol = 0;
@@ -267,6 +271,7 @@ function exercisePR(exerciseId, workouts) {
     (w.items || []).forEach(function (item) {
       if (item.exerciseId !== exerciseId) return;
       (item.sets || []).forEach(function (s) {
+        if (s && s.warmup) return;
         var wt = toNum(s.weight);
         if (wt > maxWeight) maxWeight = wt;
         var v = setVolume(s);
@@ -375,8 +380,11 @@ function weeklyPlanProgress(workouts, plan, weekStartTs) {
   });
   var doneIds = [];
   days.forEach(function (d) { if (doneSet[d.id]) doneIds.push(d.id); });
+  // 下一个未完成日：按计划顺序找第一个未打卡的（跳练中间日时不能按 doneIds.length 推断）
   var nextDay = null;
-  if (doneIds.length < totalDays) nextDay = days[doneIds.length] || null;
+  for (var i = 0; i < days.length; i++) {
+    if (!doneSet[days[i].id]) { nextDay = days[i]; break; }
+  }
   return {
     totalDays: totalDays,
     doneCount: doneIds.length,
@@ -554,7 +562,8 @@ function densityTrend(workouts, limit) {
 // 推：胸、肩、三头
 // 拉：背、二头
 // 腿：腿、臀、核心
-var MUSCLE_PUSH = ['chest', 'shoulders'];
+// 注：热身组不计入（与容量统计口径一致）
+var MUSCLE_PUSH = ['chest', 'shoulder']; // 部位 key 为单数 shoulder（data/exercises）
 var MUSCLE_PULL = ['back'];
 var MUSCLE_LEGS = ['legs', 'glutes'];
 var MUSCLE_OTHER = ['core', 'calves', 'swimming', 'cardio', 'arms'];
@@ -565,7 +574,7 @@ function muscleBalance(workouts) {
     (w.items || []).forEach(function (item) {
       var vol = 0;
       (item.sets || []).forEach(function (s) {
-        vol += setVolume(s);
+        if (s && !s.warmup) vol += setVolume(s);
       });
       var muscle = item.muscle || 'other';
       if (MUSCLE_PUSH.indexOf(muscle) >= 0) push += vol;
@@ -682,6 +691,42 @@ function calcWaterIntake(weightKg, activity) {
   return Math.round((base + extra) / 100) * 100; // 四舍五入到 100ml
 }
 
+// ---------- 身体围度（v5） ----------
+// 围度字段定义（存储 key / 中文名），供围度页与统计页共用
+var MEASUREMENT_FIELDS = [
+  { key: 'chest', name: '胸围' },
+  { key: 'waist', name: '腰围' },
+  { key: 'hips', name: '臀围' },
+  { key: 'armLeft', name: '左臂围' },
+  { key: 'armRight', name: '右臂围' },
+  { key: 'thighLeft', name: '左腿围' },
+  { key: 'thighRight', name: '右腿围' }
+];
+
+// 围度记录序列：按时间正序，逐字段取有效记录点
+// 返回 { fields: [{ key, name, points: [{ts, value}], latest, delta }], count }
+function measurementTrend(list) {
+  var sorted = (list || []).slice().sort(function (a, b) { return a.ts - b.ts; });
+  var fields = MEASUREMENT_FIELDS.map(function (f) {
+    var points = [];
+    sorted.forEach(function (m) {
+      if (!m) return;
+      var v = toNum(m[f.key]);
+      if (v > 0) points.push({ ts: m.ts, value: v });
+    });
+    var latest = points.length > 0 ? points[points.length - 1].value : 0;
+    var first = points.length > 0 ? points[0].value : 0;
+    return {
+      key: f.key,
+      name: f.name,
+      points: points,
+      latest: Math.round(latest * 10) / 10,
+      delta: Math.round((latest - first) * 10) / 10
+    };
+  });
+  return { fields: fields, count: sorted.length };
+}
+
 module.exports = {
   toNum: toNum,
   setVolume: setVolume,
@@ -723,5 +768,8 @@ module.exports = {
   muscleBalance: muscleBalance,
   monthlySummary: monthlySummary,
   weeklyFrequencyTrend: weeklyFrequencyTrend,
-  calcWaterIntake: calcWaterIntake
+  calcWaterIntake: calcWaterIntake,
+  // 身体围度（v5）
+  MEASUREMENT_FIELDS: MEASUREMENT_FIELDS,
+  measurementTrend: measurementTrend
 };

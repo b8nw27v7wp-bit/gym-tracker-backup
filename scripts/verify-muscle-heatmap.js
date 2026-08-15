@@ -104,5 +104,68 @@ const ms = Date.now() - t0;
 check(ms < 300, '800 次训练 / 4800 动作条目按周聚合 ' + ms + 'ms（预算 300ms）');
 check(big.totalSets > 10000 && big.groupTotals['chest'] > 1000, '聚合总量合理（totalSets=' + big.totalSets + ' chest=' + big.groupTotals['chest'] + '）');
 
+console.log('⑤ 注入与脏数据安全（v3.3 新代码专项）');
+let secCrash = 0;
+function secTest(fn, name) {
+  try { fn(); check(true, name); }
+  catch (e) { secCrash++; console.log('  💥 崩溃: ' + name + ' → ' + e.message); }
+}
+// zoneGroupOf 原型链 key 注入：零命中且不污染原型
+secTest(() => {
+  ['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'prototype'].forEach(k => {
+    check(mh.zoneGroupOf(k) === null, 'zoneGroupOf 注入 key 零命中: ' + k);
+  });
+  check({}.polluted === undefined && Object.prototype.polluted === undefined, 'zoneGroupOf 不污染原型');
+}, 'zoneGroupOf 原型链注入');
+// zoneGroupOf 非法输入：非字符串/超长/数组/对象/null
+secTest(() => {
+  check(mh.zoneGroupOf(42) === null && mh.zoneGroupOf(null) === null && mh.zoneGroupOf(undefined) === null &&
+        mh.zoneGroupOf(['chest-mid-l']) === null && mh.zoneGroupOf({ a: 1 }) === null &&
+        mh.zoneGroupOf('x'.repeat(100000)) === null, 'zoneGroupOf 非法输入全部返回 null');
+}, 'zoneGroupOf 非法输入');
+// 聚合：target 词注入原型链 key / 非字符串元素 → 零命中计入 unmapped，不崩不污染
+secTest(() => {
+  const r = mh.aggregateZoneCountsByWeek([{ id: 'i1', ts: week, items: [
+    { exerciseId: 'x', target: ['__proto__', 'constructor', 'toString', 42, null, { a: 1 }], sets: [{ weight: 1, reps: 1 }] }
+  ]}], 12, null);
+  check(r.totalSets === 0 && r.hasData === false && r.unmappedCount === 6, 'target 注入词零命中并计数（unmapped=' + r.unmappedCount + '）');
+  check({}.polluted === undefined, '聚合不污染原型');
+}, 'target 注入词');
+// resolver 返回恶意对象（target 非数组 / 含注入键）→ 安全
+secTest(() => {
+  const evil = () => ({ target: { 0: '胸大肌', __proto__: ['胸大肌'] }, name: 'evil' });
+  const r = mh.aggregateZoneCountsByWeek([{ id: 'i2', ts: week, items: [{ exerciseId: 'evil', muscle: 'chest', sets: [{ weight: 1, reps: 1 }] }] }], 12, evil);
+  check(r.groupTotals['chest'] >= 1, 'resolver 恶意对象不崩（target 非数组 → 部位兜底）');
+  check({}.polluted === undefined, 'resolver 注入不污染原型');
+}, 'resolver 恶意对象');
+// 非法 ts / 脏 workout / 非数组 sets → 跳过或兜底，绝不崩溃
+secTest(() => {
+  const r = mh.aggregateZoneCountsByWeek([
+    { id: 'a', ts: 'abc', items: [{ exerciseId: 'bench', sets: [1, 2] }] },
+    { id: 'b', ts: Infinity, items: [{ exerciseId: 'bench', sets: [1, 2] }] },
+    { id: 'c', ts: -5, items: [{ exerciseId: 'bench', sets: [1, 2] }] },
+    { id: 'd', ts: { evil: true }, items: [{ exerciseId: 'bench', sets: [1, 2] }] },
+    { id: 'e', ts: week, items: null },
+    { id: 'f', ts: week, items: [{ evil: true }] },
+    { id: 'g', ts: week, items: [{ exerciseId: 'bench', sets: 'oops' }] },
+    { id: 'h', ts: week, items: [{ exerciseId: 'bench', sets: 5 }] }
+  ], 12, id => exercisesData.getExercise(id));
+  check(r.totalSets === 2, '非法 ts 跳过 / 非数组 sets 计 1 组（totalSets=' + r.totalSets + '）');
+}, '脏 workout 输入');
+// 混入 null / 缺字段的大量数据
+secTest(() => {
+  const dirty = [null, undefined, {}, { id: 1 }, { ts: week }, { ts: week, items: [null, undefined, {}] }];
+  const r = mh.aggregateZoneCountsByWeek(dirty, 12, null);
+  check(r.hasData === false && r.totalSets === 0, 'null/缺字段训练安全忽略');
+}, 'null 与缺字段');
+// MUSCLE_GROUPS 数据本身防篡改：分组 key/名称无原型链冲突
+secTest(() => {
+  let bad = 0;
+  mh.MUSCLE_GROUPS.forEach(g => {
+    if (Object.prototype.hasOwnProperty.call(Object.prototype, g.key)) bad++;
+  });
+  check(bad === 0, '分组 key 不与 Object.prototype 冲突（bad=' + bad + '）');
+}, '分组 key 原型冲突');
+
 console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
 process.exit(failed > 0 ? 1 : 0);

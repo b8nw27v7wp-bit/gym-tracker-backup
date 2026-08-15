@@ -304,23 +304,23 @@ wx.setStorageSync('gym_bodyweight', [
   { ts: 2000, weight: 'abc' }
 ]);
 store.ensureInit();
-check(wx.getStorageSync('gym_schema_version') === 4, '脏数据迁移后版本 v4');
+check(wx.getStorageSync('gym_schema_version') === 5, '脏数据迁移后版本 v5');
 check(Array.isArray(store.getWorkouts()), 'workouts 仍为数组');
 check(Array.isArray(store.getBodyweights()), 'bodyweight 仍为数组');
 check(Array.isArray(store.getCustomExercises()), 'customExercises 初始化');
 
-// 模拟 v2 → v4 迁移（无 customPlans/customExercises）
+// 模拟 v2 → v5 迁移（无 customPlans/customExercises/settings/measurements/goals）
 wx._store = {};
 wx.setStorageSync('gym_schema_version', 2);
 wx.setStorageSync('gym_workouts', [{ id: 'v2w', ts: 1, items: [] }]);
 store.ensureInit();
-check(wx.getStorageSync('gym_schema_version') === 4, 'v2→v4 迁移');
+check(wx.getStorageSync('gym_schema_version') === 5, 'v2→v5 迁移');
 check(Array.isArray(store.getCustomPlans()), 'customPlans 初始化');
 check(Array.isArray(store.getCustomExercises()), 'v2 老数据 customExercises 初始化');
 
 // 迁移后数据可正常导出
 const migExport = store.exportData();
-check(migExport.app === 'gym-tracker' && migExport.schemaVersion === 4, '迁移后导出正常');
+check(migExport.app === 'gym-tracker' && migExport.schemaVersion === 5, '迁移后导出正常');
 
 store.clearAll(); store.ensureInit();
 

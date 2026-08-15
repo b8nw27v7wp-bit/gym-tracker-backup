@@ -6,6 +6,7 @@ Component({
     exerciseName: { type: String, value: '' },
     muscleName: { type: String, value: '' },
     sets: { type: Array, value: [] },
+    unit: { type: String, value: 'kg' },
     lastPrefill: { type: String, value: '' } // "已带入上次记录 60kg×8"提示文案，空 = 不显示
   },
   methods: {

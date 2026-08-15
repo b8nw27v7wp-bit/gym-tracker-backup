@@ -633,11 +633,13 @@ console.log('9. 数据迁移与备份');
 // 全新安装
 global.wx._store = {};
 store.ensureInit();
-assert(wx.getStorageSync('gym_schema_version') === 4, '全新安装 schema v4');
+assert(wx.getStorageSync('gym_schema_version') === 5, '全新安装 schema v5');
 assert(Array.isArray(wx.getStorageSync('gym_workouts')), 'workouts 初始化');
 assert(Array.isArray(wx.getStorageSync('gym_bodyweight')), 'bodyweight 初始化');
 assert(Array.isArray(wx.getStorageSync('gym_custom_plans')), 'custom_plans 初始化');
 assert(Array.isArray(wx.getStorageSync('gym_custom_exercises')), 'custom_exercises 初始化（v4）');
+assert(Array.isArray(wx.getStorageSync('gym_measurements')), 'measurements 初始化（v5）');
+assert(wx.getStorageSync('gym_settings') && wx.getStorageSync('gym_settings').unit === 'kg', 'settings 初始化（v5）');
 
 // 老版本迁移：只有 v1 inited 标记 + 训练数据，无 bodyweight key、无 schema
 global.wx._store = {};
@@ -645,7 +647,7 @@ wx.setStorageSync('gym_inited_v1', true);
 wx.setStorageSync('gym_workouts', [{ id: 'old1', ts: Date.now(), items: [] }]);
 store.ensureInit();
 assert(Array.isArray(wx.getStorageSync('gym_bodyweight')), 'v1 迁移补 bodyweight key');
-assert(wx.getStorageSync('gym_schema_version') === 4, 'v1 迁移到 v4');
+assert(wx.getStorageSync('gym_schema_version') === 5, 'v1 迁移到 v5');
 assert(store.getWorkouts().length === 1, '迁移保留原训练数据');
 
 // v2 老数据迁移：有 workouts/bodyweight，无 custom_plans → 补空数组
@@ -655,7 +657,7 @@ wx.setStorageSync('gym_workouts', [{ id: 'v2w', ts: Date.now(), items: [] }]);
 wx.setStorageSync('gym_bodyweight', [{ ts: Date.now(), weight: 70 }]);
 store.ensureInit();
 assert(Array.isArray(wx.getStorageSync('gym_custom_plans')), 'v2 迁移补 custom_plans key');
-assert(wx.getStorageSync('gym_schema_version') === 4, 'v2 迁移到 v4');
+assert(wx.getStorageSync('gym_schema_version') === 5, 'v2 迁移到 v5');
 assert(store.getWorkouts().length === 1, 'v2 迁移保留训练数据');
 
 // v3 老数据迁移：有 workouts，无 custom_exercises → 补空数组，不覆盖现有数据
@@ -666,13 +668,27 @@ wx.setStorageSync('gym_custom_plans', [{ id: 'cp_keep', name: '保留计划', da
 store.ensureInit();
 assert(Array.isArray(wx.getStorageSync('gym_custom_exercises')) && wx.getStorageSync('gym_custom_exercises').length === 0, 'v3 迁移补 custom_exercises 为空数组');
 assert(store.getCustomPlans().length === 1 && store.getCustomPlans()[0].id === 'cp_keep', 'v3 迁移不覆盖现有数据');
-assert(wx.getStorageSync('gym_schema_version') === 4, 'v3 迁移到 v4');
+assert(wx.getStorageSync('gym_schema_version') === 5, 'v3 迁移到 v5');
+
+// v4 老数据迁移：有 workouts，无 settings/measurements/goals → 补默认值，不覆盖现有数据
+global.wx._store = {};
+wx.setStorageSync('gym_schema_version', 4);
+wx.setStorageSync('gym_workouts', [{ id: 'v4w', ts: Date.now(), items: [] }]);
+wx.setStorageSync('gym_custom_exercises', [{ id: 'ce_keep', name: '保留动作', target: ['胸大肌'] }]);
+store.ensureInit();
+assert(wx.getStorageSync('gym_settings') && wx.getStorageSync('gym_settings').unit === 'kg', 'v4 迁移补 settings 默认 kg');
+assert(Array.isArray(wx.getStorageSync('gym_measurements')) && wx.getStorageSync('gym_measurements').length === 0, 'v4 迁移补 measurements 为空数组');
+assert(store.getCustomExercises().length === 1, 'v4 迁移不覆盖现有数据');
+assert(wx.getStorageSync('gym_schema_version') === 5, 'v4 迁移到 v5');
 
 // 导出
 const exp = store.exportData();
-assert(exp.app === 'gym-tracker' && exp.schemaVersion === 4 && exp.workouts.length === 1, '导出结构完整（app/版本/数据）');
+assert(exp.app === 'gym-tracker' && exp.schemaVersion === 5 && exp.workouts.length === 1, '导出结构完整（app/版本/数据）');
 assert(Array.isArray(exp.customPlans), '导出含 customPlans 字段');
 assert(Array.isArray(exp.customExercises), '导出含 customExercises 字段');
+assert(Array.isArray(exp.measurements), '导出含 measurements 字段（v5）');
+assert(exp.settings && exp.settings.unit === 'kg', '导出含 settings 字段（v5）');
+assert(exp.goals !== undefined, '导出含 goals 字段（v5）');
 
 // 导入合法数据（含非法项过滤）
 const importObj = {
@@ -929,7 +945,7 @@ require('./pages/train/train.js');
 const trV28 = instantiate(pageCfg);
 trV28.onLoad({});
 // 上次记录标签装饰（v2.8.1 带日期）
-assert(trV28.data.exerciseList.some(x => x.id === 'bench' && x.lastText.indexOf('上次 ') === 0 && x.lastText.indexOf('60kg × 8') > 0), '动作卡显示上次记录标签（含日期，实际 ' + JSON.stringify(trV28.data.exerciseList.find(x => x.id === 'bench')) + '）');
+assert(trV28.data.exerciseList.some(x => x.id === 'bench' && x.lastText.indexOf('上次 ') === 0 && x.lastText.indexOf('60 kg × 8') > 0), '动作卡显示上次记录标签（含日期，实际 ' + JSON.stringify(trV28.data.exerciseList.find(x => x.id === 'bench')) + '）');
 // 添加动作预填上次记录
 trV28.onAddExercise({ currentTarget: { dataset: { id: 'bench' } } });
 assert(trV28.data.editing.sets[0].weight === '60' && trV28.data.editing.sets[0].reps === '8', '添加动作预填上次记录 60×8');
@@ -1559,25 +1575,32 @@ stTap.loadStats();
 assert(stTap.data.heatSelected && stTap.data.heatSelected.key === 'chest' &&
        stTap.data.heatSelected.sets === 6 && stTap.data.heatSelected.sessions === 2, '数据更新后选中信息条数字刷新（6 组/2 次训练）');
 
-// 13.7 训练页组间休息推荐联动
+// 13.7 训练页组间休息推荐联动 + 自动开始（v5）
 freshRequire('./pages/train/train.js');
 const trAdvice = instantiate(pageCfg);
-// 最后一组为热身组 → 推荐 60s
+// 最后一组为热身组 → 自动开始休息 60s
 trAdvice.data.editingIndex = 0;
 trAdvice.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [] }];
 trAdvice.data.editing = { exerciseId: 'bench', sets: [{ weight: '70', reps: '8', warmup: false }, { weight: '20', reps: '10', warmup: true }] };
 trAdvice.onDoneEdit();
-assert(trAdvice.data.restRecommendSecs === 60, '记录热身组后推荐 60s 并高亮（实际 ' + trAdvice.data.restRecommendSecs + '）');
-assert(trAdvice.data.restRecommendLabel.indexOf('热身组') >= 0, '推荐文案含热身组');
-// 最后一组为正式组 → 推荐 90s
+assert(trAdvice.data.restRunning === true && trAdvice.data.restRemaining === 60, '记录热身组后自动开始休息 60s（实际 ' + trAdvice.data.restRemaining + '）');
+trAdvice.stopRestTimer();
+// 最后一组为正式组 → 自动开始休息 90s
 trAdvice.data.editing = { exerciseId: 'bench', sets: [{ weight: '20', reps: '10', warmup: true }, { weight: '70', reps: '8', warmup: false }] };
 trAdvice.onDoneEdit();
-assert(trAdvice.data.restRecommendSecs === 90, '记录正式组后推荐 90s 并高亮（实际 ' + trAdvice.data.restRecommendSecs + '）');
-assert(trAdvice.data.restRecommendLabel.indexOf('正式组') >= 0, '推荐文案含正式组');
-// 全空组 → 无推荐
+assert(trAdvice.data.restRunning === true && trAdvice.data.restRemaining === 90, '记录正式组后自动开始休息 90s（实际 ' + trAdvice.data.restRemaining + '）');
+trAdvice.stopRestTimer();
+// 全空组 → 无推荐、不自动休息
 trAdvice.data.editing = { exerciseId: 'bench', sets: [{ weight: '', reps: '', warmup: false }] };
 trAdvice.onDoneEdit();
-assert(trAdvice.data.restRecommendSecs === 0, '未填写组不产生推荐');
+assert(trAdvice.data.restRunning === false && trAdvice.data.restRemaining === 0 && trAdvice.data.restRecommendSecs === 0, '未填写组不自动休息');
+// 设置关闭自动休息 → 只显示推荐，不自动开始
+store.saveSettings({ unit: 'kg', autoRest: false });
+trAdvice.data.editing = { exerciseId: 'bench', sets: [{ weight: '70', reps: '8', warmup: false }] };
+trAdvice.onDoneEdit();
+assert(trAdvice.data.restRunning === false && trAdvice.data.restRecommendSecs === 90, '关闭自动休息只显示推荐（实际 ' + trAdvice.data.restRecommendSecs + '）');
+assert(trAdvice.data.restRecommendLabel.indexOf('正式组') >= 0, '推荐文案含正式组');
+store.saveSettings({ unit: 'kg', autoRest: true });
 // 手动点其他秒数仍正常工作；开始休息后推荐清除
 trAdvice.data.restRecommendSecs = 90;
 trAdvice.data.restRecommendLabel = '正式组 · 建议休息 90s';
@@ -1585,5 +1608,200 @@ trAdvice.startRest(45);
 assert(trAdvice.data.restRunning === true && trAdvice.data.restRemaining === 45, '手动点其他秒数仍正常工作（45s）');
 assert(trAdvice.data.restRecommendSecs === 0, '开始休息后推荐清除');
 trAdvice.stopRestTimer();
+
+// ---------- 训练智能（v2.24 渐进超负荷/轮换提醒/减量检测/PR 预测） ----------
+console.log('14. 训练智能（v2.24）');
+const ti = require('./utils/training-intelligence');
+const mhDay2 = 86400000;
+
+// 14.1 会话索引
+const tiW = [
+  { id: 'a', ts: mhWeek - 6 * mhDay, items: [
+    { exerciseId: 'bench', sets: [{ weight: 60, reps: 10 }, { weight: 70, reps: 8, warmup: false }, { weight: 20, reps: 10, warmup: true }] },
+    { exerciseId: 'squat', sets: [{ weight: 100, reps: 5 }] }
+  ]},
+  { id: 'b', ts: mhWeek + 1000, items: [{ exerciseId: 'bench', sets: [{ weight: 62.5, reps: 8 }] }] }
+];
+const tiIdx = ti.indexSessions(tiW);
+assert(tiIdx['bench'].length === 2 && tiIdx['bench'][0].ts > tiIdx['bench'][1].ts, '会话索引按时间倒序');
+assert(tiIdx['bench'][1].sets.length === 2, '索引排除热身组（60×10 + 70×8，20×10 热身剔除）');
+assert(tiIdx['squat'].length === 1 && tiIdx['nope'] === undefined, '索引按动作分组');
+assert(Object.keys(ti.indexSessions(null)).length === 0 && Object.keys(ti.indexSessions([{ evil: true }])).length === 0, '索引脏数据安全');
+assert(ti.indexSessions([{ id: 'x', ts: 'abc', items: [{ exerciseId: 'bench', sets: [{ weight: 1, reps: 1 }] }] }])['bench'] === undefined, '非法 ts 会话被跳过');
+
+// 14.2 渐进超负荷建议
+const upIdx = ti.indexSessions([
+  { id: 'u1', ts: mhWeek - mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 10 }] }] },
+  { id: 'u2', ts: mhWeek, items: [{ exerciseId: 'bench', sets: [{ weight: 62.5, reps: 10 }] }] }
+]);
+const advUp = ti.overloadAdvice(upIdx, 'bench');
+assert(advUp && advUp.trend === 'up' && advUp.weight === 65 && advUp.delta === 2.5 && advUp.reps === 10, '重量进步 → 建议 +2.5kg（实际 ' + JSON.stringify(advUp) + '）');
+const flatIdx = ti.indexSessions([
+  { id: 'f1', ts: mhWeek - mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 10 }] }] },
+  { id: 'f2', ts: mhWeek, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 10 }] }] }
+]);
+const advFlat = ti.overloadAdvice(flatIdx, 'bench');
+assert(advFlat && advFlat.trend === 'flat' && advFlat.weight === 60 && advFlat.reps === 11, '持平 → 保持重量目标 +1 次');
+const downIdx = ti.indexSessions([
+  { id: 'd1', ts: mhWeek - mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 70, reps: 8 }] }] },
+  { id: 'd2', ts: mhWeek, items: [{ exerciseId: 'bench', sets: [{ weight: 62.5, reps: 8 }] }] }
+]);
+assert(ti.overloadAdvice(downIdx, 'bench').trend === 'down', '回落 → 恢复优先');
+const repsUpIdx = ti.indexSessions([
+  { id: 'r1', ts: mhWeek - mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 8 }] }] },
+  { id: 'r2', ts: mhWeek, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 10 }] }] }
+]);
+assert(ti.overloadAdvice(repsUpIdx, 'bench').trend === 'up', '同重量次数进步 → 也建议加重');
+const newIdx = ti.indexSessions([{ id: 'n1', ts: mhWeek, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 10 }] }] }]);
+const advNew = ti.overloadAdvice(newIdx, 'bench');
+assert(advNew && advNew.trend === 'new' && advNew.weight === 62.5 && advNew.delta === 2.5, '首次训练 → 按上次 +1 档');
+assert(ti.overloadAdvice(tiIdx, 'deadlift') === null && ti.overloadAdvice(null, 'bench') === null, '无历史返回 null');
+assert(ti.bumpWeight(30) === 32.5 && ti.bumpWeight(80) === 82.5 && ti.bumpWeight(150) === 155 && ti.bumpWeight(0) === 0, '递进步长 2.5/5/10（<100/+2.5，<200/+5）');
+assert(ti.overloadAdvice(ti.indexSessions([{ id: 'w', ts: mhWeek, items: [{ exerciseId: 'bench', sets: [{ weight: 0, reps: 0 }, { weight: 50, reps: 8, warmup: true }] }] }]), 'bench') === null, '全热身/无效组 → 无建议');
+
+// 14.3 动作轮换提醒
+const rotW = Array.from({ length: 9 }, (_, i) => ({
+  id: 'r' + i, ts: mhWeek - i * mhDay, items: [{ exerciseId: 'pullup', sets: [{ weight: 0, reps: 8 }] }]
+}));
+const rotIdx = ti.indexSessions(rotW);
+const rot = ti.rotationAdvice(rotIdx, 'pullup', [{ id: 'pullup', name: '引体' }, { id: 'lat-pulldown', name: '高位下拉' }, { id: 'bb-row', name: '杠铃划船' }], 8);
+assert(rot && rot.usage === 9 && rot.alternatives.length === 2 && rot.alternatives[0].id === 'lat-pulldown', '超阈值 → 推荐替代并排除自身');
+assert(ti.rotationAdvice(rotIdx, 'pullup', [{ id: 'lat-pulldown', name: '高位下拉' }], 8).usage === 9, '替代候选不足也返回 usage');
+assert(ti.rotationAdvice(tiIdx, 'bench', [], 8) === null, '低使用率 → 无提醒');
+assert(ti.rotationAdvice(tiIdx, 'bench', null, 1) === null, '无替代候选 → 无提醒');
+assert(ti.usageCount(rotIdx, 'pullup', 30 * mhDay) === 9, '30 天使用次数');
+const oldIdx = ti.indexSessions([{ id: 'o', ts: mhWeek - 60 * mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 8 }] }] }]);
+assert(ti.usageCount(oldIdx, 'bench', 30 * mhDay) === 0, '窗口外使用不计');
+
+// 14.4 减量周 / 冲 PR 检测（周窗口：-14 天 / -7 天 / 本周）
+const ddW = [
+  { id: 'w1', ts: mhWeek - 14 * mhDay + 1000, items: [{ exerciseId: 'bench', sets: [{ weight: 100, reps: 10 }] }] },
+  { id: 'w2', ts: mhWeek - 7 * mhDay + 1000, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 10 }] }] },
+  { id: 'w3', ts: mhWeek + 1000, items: [{ exerciseId: 'bench', sets: [{ weight: 40, reps: 10 }] }] }
+];
+const dd = ti.deloadAdvice(ddW);
+assert(dd && dd.trend === 'down' && dd.tip.indexOf('减量') >= 0, '容量连续下降 → 减量建议');
+const duW = [
+  { id: 'w1', ts: mhWeek - 14 * mhDay + 1000, items: [{ exerciseId: 'bench', sets: [{ weight: 40, reps: 10 }] }] },
+  { id: 'w2', ts: mhWeek - 7 * mhDay + 1000, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 10 }] }] },
+  { id: 'w3', ts: mhWeek + 1000, items: [{ exerciseId: 'bench', sets: [{ weight: 100, reps: 10 }] }] }
+];
+const du = ti.deloadAdvice(duW);
+assert(du && du.trend === 'up' && du.tip.indexOf('PR') >= 0, '容量连续上升 → 冲 PR 建议');
+assert(ti.deloadAdvice([{ id: 'x', ts: mhWeek, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 8 }] }] }]) === null, '样本不足（单周）→ 无提示');
+const dfW = [
+  { id: 'w1', ts: mhWeek - 14 * mhDay + 1000, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 10 }] }] },
+  { id: 'w2', ts: mhWeek - 7 * mhDay + 1000, items: [{ exerciseId: 'bench', sets: [{ weight: 70, reps: 10 }] }] },
+  { id: 'w3', ts: mhWeek + 1000, items: [{ exerciseId: 'bench', sets: [{ weight: 65, reps: 10 }] }] }
+];
+assert(ti.deloadAdvice(dfW) === null, '波动不大 → 无提示');
+assert(ti.deloadAdvice(null) === null, '空数据安全');
+
+// 14.5 PR 趋势预测（线性回归，≥3 点且上升）
+const predW = [
+  { id: 'p1', ts: mhWeek - 30 * mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 100, reps: 10 }] }] },
+  { id: 'p2', ts: mhWeek - 20 * mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 105, reps: 10 }] }] },
+  { id: 'p3', ts: mhWeek - 10 * mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 110, reps: 10 }] }] }
+];
+const pred = ti.predictPR(predW, 'bench');
+assert(pred && pred.current === 147 && pred.predicted > pred.current, '上升趋势 → 预测 2 周后更高（current=' + pred.current + ' pred=' + pred.predicted + '）');
+assert(ti.predictPR(predW, 'squat') === null, '无历史 → null');
+const pfW = [
+  { id: 'p1', ts: mhWeek - 30 * mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 100, reps: 10 }] }] },
+  { id: 'p2', ts: mhWeek - 20 * mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 100, reps: 10 }] }] },
+  { id: 'p3', ts: mhWeek - 10 * mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 100, reps: 10 }] }] }
+];
+assert(ti.predictPR(pfW, 'bench') === null, '平台期 → 不预测');
+assert(ti.predictPR(null, 'bench') === null, '空数据安全');
+
+// 14.6 页面联动冒烟：训练页选动作建议 + 统计页 deload/PR 预测/缓存命中
+// 训练页：decorateExerciseList 输出建议与轮换文案
+freshRequire('./pages/train/train.js');
+const trSmoke = instantiate(pageCfg);
+trSmoke.lastRecords = {};
+trSmoke.sessionsIndex = ti.indexSessions(rotW.concat([
+  { id: 's1', ts: mhWeek - mhDay, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 10 }] }] },
+  { id: 's2', ts: mhWeek, items: [{ exerciseId: 'bench', sets: [{ weight: 62.5, reps: 10 }] }] }
+]));
+const deco = trSmoke.decorateExerciseList([{ id: 'bench', name: '杠铃卧推', difficulty: 2 }, { id: 'squat', name: '杠铃深蹲', difficulty: 2 }]);
+const decoBench = deco.find(x => x.id === 'bench');
+assert(decoBench.suggestText.indexOf('建议：本次 65 kg') >= 0, '选动作列表渐进超负荷建议（实际 ' + decoBench.suggestText + '）');
+const decoPullup = trSmoke.decorateExerciseList([{ id: 'pullup', name: '引体向上', difficulty: 3 }])[0];
+assert(decoPullup.rotationText.indexOf('可换') >= 0, '选动作列表轮换提醒（实际 ' + decoPullup.rotationText + '）');
+const decoSquat = deco.find(x => x.id === 'squat');
+assert(decoSquat.suggestText === '' && decoSquat.rotationText === '', '无历史动作无建议');
+
+// 统计页：deload 提示 / PR 预测 / 缓存命中（场景独立，避免减量周数据污染 1RM 历史）
+store.clearAll();
+store.ensureInit();
+wx.createSelectorQuery = () => ({ select: () => ({ fields: () => ({ exec: cb => cb([]) }) }) });
+wx.getSystemInfoSync = () => ({ pixelRatio: 2 });
+freshRequire('./pages/stats/stats.js');
+wx._store.gym_workouts = ddW;
+const stDeload = instantiate(pageCfg);
+stDeload.loadStats();
+assert(stDeload.data.deloadTip.indexOf('减量') >= 0, '统计页减量周提示（实际 ' + stDeload.data.deloadTip + '）');
+wx._store.gym_workouts = predW;
+const stPr = instantiate(pageCfg);
+stPr.loadStats();
+const benchPr = stPr.data.prs.find(p => p.id === 'bench');
+assert(benchPr && benchPr.est1rm === 147, 'PR 卡最新 1RM 估算（实际 ' + (benchPr && benchPr.est1rm) + '）');
+assert(benchPr && benchPr.predText.indexOf('2 周后 1RM 预计') >= 0, '统计页 PR 预测文案（实际 ' + (benchPr && benchPr.predText) + '）');
+// 缓存命中：数据未变二次 loadStats 走缓存，结果一致
+stPr.loadStats();
+assert(stPr._statsCache !== undefined && stPr.data.heatRows.length === 14 &&
+       stPr.data.prs.find(p => p.id === 'bench').predText.indexOf('1RM 预计') >= 0, '缓存命中路径结果一致');
+// 数据变化 → 指纹失效重算
+wx._store.gym_workouts = predW.concat([{ id: 'extra', ts: mhWeek + 2000, items: [{ exerciseId: 'bench', sets: [{ weight: 60, reps: 8 }] }] }]);
+stPr.loadStats();
+assert(stPr.data.totalCount === 4, '数据变化后指纹失效重算（totalCount=4）');
+
+// ---------- 代码排查回归（v2.23.3 审计修复） ----------
+console.log('15. 代码排查回归（v2.23.3）');
+// 15.1 肌群平衡：肩部（key=shoulder）计入推类（原 bug：MUSCLE_PUSH 误写 shoulders 复数）
+const balShoulder = util.muscleBalance([
+  { id: 'b1', ts: mhWeek, items: [{ exerciseId: 'ohp', muscle: 'shoulder', sets: [{ weight: 40, reps: 8 }] }] }
+]);
+assert(balShoulder.push === 320 && balShoulder.other === 0, '肩部容量计入推类（push=' + balShoulder.push + ' other=' + balShoulder.other + '）');
+// 15.2 部位分布/平衡：热身组容量不计入（原 bug：itemVolume 含热身组）
+const musWarm = [
+  { id: 'm1', ts: mhWeek, items: [{ exerciseId: 'bench', muscle: 'chest', sets: [{ weight: 100, reps: 10, warmup: true }, { weight: 60, reps: 10 }] }] }
+];
+assert(util.volumeByMuscle(musWarm)['chest'] === 600, '部位分布排除热身组（600 而非 1600，实际 ' + util.volumeByMuscle(musWarm)['chest'] + '）');
+const balWarm = util.muscleBalance(musWarm);
+assert(balWarm.push === 600 && balWarm.total === 600, '平衡分析排除热身组');
+// 15.3 PR：热身组不计入最大重量/最佳单组（原 bug：90×10 热身会顶掉 80×8 的最佳单组）
+const prWarm = [
+  { id: 'p1', ts: mhWeek - mhDay, items: [{ exerciseId: 'bench', muscle: 'chest', sets: [{ weight: 90, reps: 10, warmup: true }, { weight: 80, reps: 8 }] }] }
+];
+const prFix = util.exercisePR('bench', prWarm);
+assert(prFix.maxWeight === 80 && prFix.bestSetVol === 640, 'PR 排除热身组（max=' + prFix.maxWeight + ' best=' + prFix.bestSetVol + '）');
+// 15.4 计划进度：跳练中间日 → nextDay 应为第一个未完成日（原 bug：按 doneIds.length 推断会指向已完成的日）
+const plan3 = { id: 'p', name: '三练', days: [{ id: 'd1', name: '练1' }, { id: 'd2', name: '练2' }, { id: 'd3', name: '练3' }] };
+const skipMid = util.weeklyPlanProgress([
+  { id: 'x1', ts: mhWeek + 1000, date: util.todayStr(), plan: { planId: 'p', dayId: 'd1' } },
+  { id: 'x2', ts: mhWeek + 2000, date: util.todayStr(), plan: { planId: 'p', dayId: 'd3' } }
+], plan3, mhWeek);
+assert(skipMid.doneCount === 2 && skipMid.nextDay && skipMid.nextDay.id === 'd2', '跳练中间日 → 下一日为 d2（实际 ' + (skipMid.nextDay && skipMid.nextDay.id) + '）');
+// 15.5 导入恢复语义：空数据备份也能清掉现有数据（原 bug：validX.length>0 判断导致空备份不覆盖）
+store.clearAll(); store.ensureInit();
+wx._store.gym_intake = [{ id: 'i1', ts: 1, date: '2026-01-01', name: '米饭', grams: 100, kcal: 116 }];
+wx._store.gym_custom_exercises = [{ id: 'custom_x', name: '旧动作', target: [] }];
+const emptyBackup = store.exportData();
+emptyBackup.intake = [];
+emptyBackup.customExercises = [];
+const impEmpty = store.importData(emptyBackup);
+assert(impEmpty.ok && store.getIntake().length === 0 && store.getCustomExercises().length === 0, '空 intake/自定义动作备份恢复为清空');
+// v2 老备份缺失字段仍不覆盖（回归：原测试语义保持）
+wx._store.gym_intake = [{ id: 'i2', ts: 2, date: '2026-01-02', name: '鸡蛋', grams: 50, kcal: 72 }];
+const impOld2 = store.importData({ app: 'gym-tracker', schemaVersion: 2, workouts: [], bodyweight: [] });
+assert(impOld2.ok && store.getIntake().length === 1, 'v2 老备份（无 intake 字段）不覆盖现有摄入');
+store.clearAll(); store.ensureInit();
+// 15.6 超级组死代码已移除（README 不再宣称，train 页无 superset 引用）
+const trainSrc = require('fs').readFileSync('./pages/train/train.js', 'utf8');
+assert(trainSrc.indexOf('onToggleSuperset') < 0 && trainSrc.indexOf('supersetGroup') < 0, '超级组死代码已移除');
+const trainWxml = require('fs').readFileSync('./pages/train/train.wxml', 'utf8');
+assert(trainWxml.indexOf('superset') < 0, 'train.wxml 无 superset 引用');
+
 
 

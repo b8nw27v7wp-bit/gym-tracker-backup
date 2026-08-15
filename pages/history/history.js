@@ -1,15 +1,18 @@
-// 历史记录页：按时间倒序列表，展开查看明细，可删除
+// 历史记录页：按时间倒序列表，展开查看明细，可编辑/删除
 var store = require('../../utils/store');
 var util = require('../../utils/util');
+var units = require('../../utils/units');
 
 Page({
   data: {
     list: [],
     showShare: false,
-    shareWorkoutId: ''
+    shareWorkoutId: '',
+    unitLabel: 'kg'
   },
 
   onShow: function () {
+    this.setData({ unitLabel: units.unitLabel() });
     this.loadList();
   },
 
@@ -24,15 +27,33 @@ Page({
     var workouts = store.getWorkouts();
     var list = workouts.map(function (w) {
       var calc = util.calcWorkout(w);
+      // 展示副本：重量换算为显示单位（存储始终为 kg）
+      var items = (w.items || []).map(function (item) {
+        return {
+          exerciseId: item.exerciseId,
+          exerciseName: item.exerciseName,
+          note: item.note || '',
+          sets: (item.sets || []).map(function (s) {
+            var hasW = s && s.weight !== undefined && s.weight !== null && s.weight !== '';
+            var hasR = s && s.reps !== undefined && s.reps !== null && s.reps !== '';
+            return {
+              weight: hasW ? units.displayWeight(s.weight) : '',
+              reps: hasR ? s.reps : '',
+              rpe: s && s.rpe,
+              warmup: !!(s && s.warmup)
+            };
+          })
+        };
+      });
       return {
         id: w.id,
         ts: w.ts,
         dateLabel: util.fmtDate(w.ts),
         timeLabel: util.fmtTime(w.ts),
-        volume: Math.round(calc.volume),
+        volume: Math.round(units.displayWeight(calc.volume)),
         sets: calc.sets,
         exerciseCount: (w.items || []).length,
-        items: w.items,
+        items: items,
         durationText: w.duration ? util.fmtDuration(w.duration) : '',
         note: w.note || '',
         expanded: false
@@ -48,6 +69,13 @@ Page({
 
   onGoData: function () {
     wx.navigateTo({ url: '/pages/data/data' });
+  },
+
+  // 编辑该历史训练：跳转训练页加载进草稿，保存时覆盖原记录
+  onEditWorkout: function (e) {
+    var id = e.currentTarget.dataset.id;
+    wx.setStorageSync('pending_edit_workout', id);
+    wx.switchTab({ url: '/pages/train/train' });
   },
 
   onDelete: function (e) {

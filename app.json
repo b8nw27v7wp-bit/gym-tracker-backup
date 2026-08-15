@@ -16,7 +16,9 @@
     "pages/privacy/privacy",
     "pages/profile/profile",
     "pages/export/export",
-    "pages/exercise-edit/exercise-edit"
+    "pages/exercise-edit/exercise-edit",
+    "pages/measurements/measurements",
+    "pages/goals/goals"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",

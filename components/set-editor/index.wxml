@@ -11,7 +11,7 @@
   <view class="set-head">
     <text class="set-col set-c-no">组</text>
     <text class="set-col set-c-warm">热</text>
-    <text class="set-col set-c-w">重量</text>
+    <text class="set-col set-c-w">重量({{unit}})</text>
     <text class="set-col set-c-x"></text>
     <text class="set-col set-c-r">次数</text>
     <text class="set-col set-c-rpe">RPE</text>

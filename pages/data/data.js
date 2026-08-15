@@ -7,6 +7,7 @@ Page({
     bodyweightCount: 0,
     intakeCount: 0,
     templateCount: 0,
+    measurementCount: 0,
     sizeBytes: 0,
     sizeText: '',
     schemaVersion: 0
@@ -21,12 +22,14 @@ Page({
     var bw = store.getBodyweights();
     var intake = store.getIntake();
     var templates = store.getWorkoutTemplates();
+    var measurements = store.getMeasurements();
     var size = store.dataSizeBytes();
     this.setData({
       workoutCount: workouts.length,
       bodyweightCount: bw.length,
       intakeCount: intake.length,
       templateCount: templates.length,
+      measurementCount: measurements.length,
       sizeBytes: size,
       sizeText: store.formatSize(size),
       schemaVersion: store.SCHEMA_VERSION
@@ -84,7 +87,10 @@ Page({
         if (preview.customPlans > 0) parts.push(preview.customPlans + ' 个自建计划');
         if (preview.intake > 0) parts.push(preview.intake + ' 条饮食记录');
         if (preview.workoutTemplates > 0) parts.push(preview.workoutTemplates + ' 个训练模板');
+        if (preview.measurements > 0) parts.push(preview.measurements + ' 条围度记录');
         if (preview.profile > 0) parts.push('身体资料');
+        if (preview.goals > 0) parts.push('训练目标');
+        if (preview.settings > 0) parts.push('应用设置');
 
         wx.showModal({
           title: '确认恢复备份？',
@@ -103,6 +109,7 @@ Page({
             if (result.customPlans > 0) resultParts.push(result.customPlans + ' 个自建计划');
             if (result.intake > 0) resultParts.push(result.intake + ' 条饮食记录');
             if (result.workoutTemplates > 0) resultParts.push(result.workoutTemplates + ' 个训练模板');
+            if (result.measurements > 0) resultParts.push(result.measurements + ' 条围度记录');
 
             wx.showModal({
               title: '恢复成功',

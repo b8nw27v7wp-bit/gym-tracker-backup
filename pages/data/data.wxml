@@ -11,6 +11,10 @@
       <text class="info-value">{{bodyweightCount}} 条</text>
     </view>
     <view class="info-row">
+      <text class="info-label">身体围度</text>
+      <text class="info-value">{{measurementCount}} 条</text>
+    </view>
+    <view class="info-row">
       <text class="info-label">占用空间</text>
       <text class="info-value">{{sizeText}}</text>
     </view>

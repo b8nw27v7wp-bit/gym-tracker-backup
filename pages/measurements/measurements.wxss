@@ -1,0 +1,159 @@
+.ms-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f3f4f6;
+}
+
+.ms-row:last-child {
+  border-bottom: none;
+}
+
+.ms-label {
+  font-size: 27rpx;
+  color: #1d1d1f;
+}
+
+.ms-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.ms-input {
+  width: 160rpx;
+  text-align: right;
+  font-size: 27rpx;
+  padding: 8rpx 16rpx;
+  background: #f7f7f8;
+  border-radius: 12rpx;
+}
+
+.ms-unit {
+  font-size: 23rpx;
+  color: #9ca3af;
+}
+
+.ms-tip {
+  font-size: 21rpx;
+  color: #9ca3af;
+  margin-top: 16rpx;
+}
+
+.ms-hint {
+  font-size: 21rpx;
+  color: #9ca3af;
+  margin-bottom: 12rpx;
+}
+
+.ms-trend-field {
+  margin-bottom: 24rpx;
+}
+
+.ms-trend-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+
+.ms-trend-name {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.ms-trend-val {
+  font-size: 23rpx;
+  color: #6b7280;
+}
+
+.ms-delta-up {
+  color: #10b981;
+}
+
+.ms-delta-down {
+  color: #ef4444;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8rpx;
+  height: 120rpx;
+}
+
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.bar-track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bar-fill {
+  width: 100%;
+  border-radius: 6rpx;
+}
+
+.ms-fill {
+  background: linear-gradient(180deg, #818cf8, #4f46e5);
+}
+
+.bar-label {
+  font-size: 18rpx;
+  color: #9ca3af;
+  margin-top: 6rpx;
+}
+
+.empty-soft {
+  padding: 32rpx 0;
+  text-align: center;
+  font-size: 24rpx;
+  color: #9ca3af;
+}
+
+.ms-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f3f4f6;
+}
+
+.ms-history-row:last-child {
+  border-bottom: none;
+}
+
+.ms-history-left {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+.ms-history-date {
+  font-size: 24rpx;
+  color: #1d1d1f;
+  font-weight: 500;
+}
+
+.ms-history-text {
+  font-size: 21rpx;
+  color: #6b7280;
+  margin-top: 4rpx;
+}
+
+.ms-history-del {
+  font-size: 23rpx;
+  color: #ef4444;
+  flex-shrink: 0;
+}

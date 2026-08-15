@@ -9,8 +9,11 @@ var KEY_WEEKLY_PLAN = 'gym_weekly_plan';   // 本周计划打卡设置 { planId,
 var KEY_PROFILE = 'gym_user_profile';      // 用户身体资料 { gender, age, heightCm, weightKg, activity }
 var KEY_INTAKE = 'gym_intake';             // 饮食记录 [{ id, ts, date, name, grams, kcal }]
 var KEY_CUSTOM_EXERCISES = 'gym_custom_exercises'; // 自定义动作 [{ id, name, target, secondary, equipment, difficulty, desc, tips, mistakes?, rest, source: 'custom' }]
+var KEY_SETTINGS = 'gym_settings';            // 应用设置 { unit: 'kg'|'lb', autoRest: bool }
+var KEY_MEASUREMENTS = 'gym_measurements';    // 身体围度记录 [{ ts, chest, waist, hips, armLeft, armRight, thighLeft, thighRight }]（cm）
+var KEY_GOALS = 'gym_goals';                  // 训练目标 { bodyweight: { target, start }, strength: [{ exerciseId, name, target }] }
 
-var SCHEMA_VERSION = 4;
+var SCHEMA_VERSION = 5;
 
 // 某 ts 所在周的周一 0 点（本地实现，避免依赖 util）
 function weekStartOf(ts) {
@@ -61,6 +64,16 @@ function migrate() {
     var ce = wx.getStorageSync(KEY_CUSTOM_EXERCISES);
     if (!ce) wx.setStorageSync(KEY_CUSTOM_EXERCISES, []);
     version = 4;
+  }
+  // v4 → v5：新增应用设置/身体围度/训练目标 key（缺省初始化，不覆盖现有数据）
+  if (version < 5) {
+    var st = wx.getStorageSync(KEY_SETTINGS);
+    if (!st) wx.setStorageSync(KEY_SETTINGS, { unit: 'kg', autoRest: true });
+    var ms = wx.getStorageSync(KEY_MEASUREMENTS);
+    if (!ms) wx.setStorageSync(KEY_MEASUREMENTS, []);
+    var gl = wx.getStorageSync(KEY_GOALS);
+    if (!gl) wx.setStorageSync(KEY_GOALS, null);
+    version = 5;
   }
   wx.setStorageSync(KEY_SCHEMA, version);
 }
@@ -299,7 +312,11 @@ function exportData() {
     waterIntake: wx.getStorageSync(KEY_WATER) || null,
     workoutTemplates: getWorkoutTemplates(),
     profile: getProfile(),
-    tabataSettings: getTabataSettings()
+    tabataSettings: getTabataSettings(),
+    // v5 新增导出
+    settings: getSettings(),
+    measurements: getMeasurements(),
+    goals: getGoals()
   };
 }
 
@@ -322,6 +339,9 @@ function previewImport(obj) {
   var validTemplates = Array.isArray(obj.workoutTemplates) ? obj.workoutTemplates.filter(function (t) {
     return t && t.id && t.name;
   }) : [];
+  var validMeasurements = Array.isArray(obj.measurements) ? obj.measurements.filter(function (m) {
+    return m && m.ts !== undefined && m.ts !== null;
+  }) : [];
   return {
     ok: true,
     workouts: valid.length,
@@ -332,7 +352,10 @@ function previewImport(obj) {
     waterIntake: obj.waterIntake ? 1 : 0,
     workoutTemplates: validTemplates.length,
     profile: obj.profile ? 1 : 0,
-    tabataSettings: obj.tabataSettings ? 1 : 0
+    tabataSettings: obj.tabataSettings ? 1 : 0,
+    measurements: validMeasurements.length,
+    goals: obj.goals ? 1 : 0,
+    settings: obj.settings ? 1 : 0
   };
 }
 
@@ -394,19 +417,27 @@ function importData(obj) {
   var validTemplates = Array.isArray(obj.workoutTemplates) ? obj.workoutTemplates.filter(function (t) {
     return t && t.id && t.name;
   }) : [];
+  var validMeasurements = Array.isArray(obj.measurements) ? obj.measurements.filter(function (m) {
+    return m && m.ts !== undefined && m.ts !== null;
+  }) : [];
   try {
     wx.setStorageSync(KEY_WORKOUTS, valid);
     wx.setStorageSync(KEY_BODYWEIGHT, validBw);
     wx.setStorageSync(KEY_CUSTOM_PLANS, validPlans);
     wx.setStorageSync(KEY_SCHEMA, obj.schemaVersion || SCHEMA_VERSION);
-    // v2.20.0 新增导入
-    if (validIntake.length > 0) wx.setStorageSync(KEY_INTAKE, validIntake);
-    if (obj.waterIntake && typeof obj.waterIntake === 'object') wx.setStorageSync(KEY_WATER, obj.waterIntake);
-    if (validTemplates.length > 0) wx.setStorageSync(KEY_WORKOUT_TEMPLATES, validTemplates);
-    if (obj.profile && typeof obj.profile === 'object') wx.setStorageSync(KEY_PROFILE, obj.profile);
-    if (obj.tabataSettings && typeof obj.tabataSettings === 'object') wx.setStorageSync(KEY_TABATA, obj.tabataSettings);
-    // v4 自定义动作
-    if (validCustomEx.length > 0) wx.setStorageSync(KEY_CUSTOM_EXERCISES, validCustomEx);
+    // v2.20.0 新增导入：字段"缺失"（v2 老备份）不覆盖；字段"存在"（含空数组/null）按备份原样恢复，
+    // 保证备份恢复语义 = 还原当时状态（空数据也要能清掉现有数据）
+    if (obj.intake !== undefined) wx.setStorageSync(KEY_INTAKE, validIntake);
+    if (obj.waterIntake !== undefined) wx.setStorageSync(KEY_WATER, obj.waterIntake);
+    if (obj.workoutTemplates !== undefined) wx.setStorageSync(KEY_WORKOUT_TEMPLATES, validTemplates);
+    if (obj.profile !== undefined) wx.setStorageSync(KEY_PROFILE, obj.profile);
+    if (obj.tabataSettings !== undefined) wx.setStorageSync(KEY_TABATA, obj.tabataSettings);
+    // v4 自定义动作：老备份缺失字段不覆盖；空数组恢复为空
+    if (obj.customExercises !== undefined) wx.setStorageSync(KEY_CUSTOM_EXERCISES, validCustomEx);
+    // v5 设置/围度/目标：老备份缺失字段不覆盖
+    if (obj.settings !== undefined) wx.setStorageSync(KEY_SETTINGS, obj.settings);
+    if (obj.measurements !== undefined) wx.setStorageSync(KEY_MEASUREMENTS, validMeasurements);
+    if (obj.goals !== undefined) wx.setStorageSync(KEY_GOALS, obj.goals);
   } catch (e) {
     return { ok: false, error: '数据过大，写入失败（超出存储上限）' };
   }
@@ -420,7 +451,10 @@ function importData(obj) {
     waterIntake: obj.waterIntake ? 1 : 0,
     workoutTemplates: validTemplates.length,
     profile: obj.profile ? 1 : 0,
-    tabataSettings: obj.tabataSettings ? 1 : 0
+    tabataSettings: obj.tabataSettings ? 1 : 0,
+    measurements: validMeasurements.length,
+    goals: obj.goals ? 1 : 0,
+    settings: obj.settings ? 1 : 0
   };
 }
 
@@ -431,6 +465,9 @@ function clearAll() {
   wx.setStorageSync(KEY_CUSTOM_PLANS, []);
   wx.setStorageSync(KEY_CUSTOM_EXERCISES, []);
   wx.setStorageSync(KEY_INTAKE, []);
+  wx.setStorageSync(KEY_MEASUREMENTS, []);
+  wx.setStorageSync(KEY_SETTINGS, { unit: 'kg', autoRest: true });
+  wx.setStorageSync(KEY_GOALS, null);
   clearWeeklyPlan();
   wx.removeStorageSync(KEY_PROFILE);
 }
@@ -447,9 +484,13 @@ function dataSizeBytes() {
   var profile = wx.getStorageSync(KEY_PROFILE) || {};
   var wxUser = wx.getStorageSync(KEY_WX_USER) || {};
   var tabata = wx.getStorageSync(KEY_TABATA) || {};
+  var settings = wx.getStorageSync(KEY_SETTINGS) || {};
+  var measurements = wx.getStorageSync(KEY_MEASUREMENTS) || [];
+  var goals = wx.getStorageSync(KEY_GOALS) || {};
   var s = JSON.stringify({
     w: workouts, b: bw, p: cp, e: ce, i: intake,
-    wt: water, t: templates, pr: profile, u: wxUser, tb: tabata
+    wt: water, t: templates, pr: profile, u: wxUser, tb: tabata,
+    st: settings, m: measurements, g: goals
   });
   return s ? s.length : 0;
 }
@@ -732,6 +773,104 @@ function saveTabataSettings(settings) {
   return safeSettings;
 }
 
+// ---------- 应用设置（v5） ----------
+// { unit: 'kg'|'lb'（重量显示单位）, autoRest: bool（组间休息自动开始） }
+function getSettings() {
+  var s = wx.getStorageSync(KEY_SETTINGS);
+  if (!s || typeof s !== 'object') return { unit: 'kg', autoRest: true };
+  return {
+    unit: s.unit === 'lb' ? 'lb' : 'kg',
+    autoRest: s.autoRest !== false
+  };
+}
+
+function saveSettings(settings) {
+  if (!settings || typeof settings !== 'object') return false;
+  var safe = {
+    unit: settings.unit === 'lb' ? 'lb' : 'kg',
+    autoRest: settings.autoRest !== false
+  };
+  try {
+    wx.setStorageSync(KEY_SETTINGS, safe);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ---------- 身体围度记录（v5） ----------
+// 记录结构 { ts, chest?, waist?, hips?, armLeft?, armRight?, thighLeft?, thighRight? }（cm）
+function getMeasurements() {
+  var list = wx.getStorageSync(KEY_MEASUREMENTS);
+  return Array.isArray(list) ? list : [];
+}
+
+function addMeasurement(record) {
+  if (!record || typeof record !== 'object') return null;
+  var safe = { ts: record.ts || Date.now() };
+  ['chest', 'waist', 'hips', 'armLeft', 'armRight', 'thighLeft', 'thighRight'].forEach(function (f) {
+    var v = util.toNum(record[f]);
+    if (v > 0) safe[f] = Math.round(v * 10) / 10;
+  });
+  var list = getMeasurements();
+  list.push(safe);
+  try {
+    wx.setStorageSync(KEY_MEASUREMENTS, list);
+    return safe;
+  } catch (e) {
+    return null;
+  }
+}
+
+function removeMeasurement(ts) {
+  var list = getMeasurements();
+  wx.setStorageSync(KEY_MEASUREMENTS, list.filter(function (m) { return m && m.ts !== ts; }));
+}
+
+// ---------- 训练目标（v5） ----------
+// { bodyweight: { target, start } | null, strength: [{ exerciseId, name, target }] }
+function getGoals() {
+  var g = wx.getStorageSync(KEY_GOALS);
+  if (!g || typeof g !== 'object') return null;
+  return {
+    bodyweight: (g.bodyweight && g.bodyweight.target) ? g.bodyweight : null,
+    strength: Array.isArray(g.strength) ? g.strength.filter(function (s) {
+      return s && s.exerciseId && s.target;
+    }) : []
+  };
+}
+
+function saveGoals(goals) {
+  if (!goals || typeof goals !== 'object') return false;
+  var safe = {
+    bodyweight: null,
+    strength: []
+  };
+  if (goals.bodyweight && goals.bodyweight.target) {
+    safe.bodyweight = {
+      target: Math.round(util.toNum(goals.bodyweight.target) * 10) / 10,
+      start: goals.bodyweight.start ? Math.round(util.toNum(goals.bodyweight.start) * 10) / 10 : 0
+    };
+  }
+  if (Array.isArray(goals.strength)) {
+    goals.strength.slice(0, 3).forEach(function (s) {
+      if (s && s.exerciseId && s.target) {
+        safe.strength.push({
+          exerciseId: String(s.exerciseId).slice(0, 60),
+          name: String(s.name || s.exerciseId).slice(0, 30),
+          target: Math.round(util.toNum(s.target) * 10) / 10
+        });
+      }
+    });
+  }
+  try {
+    wx.setStorageSync(KEY_GOALS, safe);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 module.exports = {
   SCHEMA_VERSION: SCHEMA_VERSION,
   migrate: migrate,
@@ -790,5 +929,15 @@ module.exports = {
   removeWorkoutTemplate: removeWorkoutTemplate,
   // Tabata 计时器
   getTabataSettings: getTabataSettings,
-  saveTabataSettings: saveTabataSettings
+  saveTabataSettings: saveTabataSettings,
+  // 应用设置（v5）
+  getSettings: getSettings,
+  saveSettings: saveSettings,
+  // 身体围度记录（v5）
+  getMeasurements: getMeasurements,
+  addMeasurement: addMeasurement,
+  removeMeasurement: removeMeasurement,
+  // 训练目标（v5）
+  getGoals: getGoals,
+  saveGoals: saveGoals
 };

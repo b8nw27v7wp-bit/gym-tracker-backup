@@ -1,4 +1,4 @@
-# 设计文档（Design）
+﻿# 设计文档（Design）
 
 版本：v2.21.0 | 更新：2026-08-13
 
@@ -120,6 +120,16 @@
 - 渲染：横向滚动网格（列=周，行=周一~周日），颜色 `#f3f4f6`（无）→ `#dbeafe → #93c5fd → #3b82f6 → #1d4ed8`（多），右上角展示窗口内训练天数
 - 纯函数实现（无 wx 依赖），node 可测
 
+### 4.4 部位热力图（v3.3，GitHub 风格肌群矩阵）
+
+- 定位：原"人体发力图"方向（v2.22-2.23 人体 canvas 绘制）视觉不达预期，v2.23.2 放弃，改为 GitHub 贡献图风格矩阵
+- 分组：`MUSCLE_GROUPS`（utils/muscle-heatmap.js）14 组覆盖全部 45 个 zone，无重复无遗漏——颈/斜方/肩/胸/肱二头/肱三头/前臂/腹/背/臀/股四头/腘绳/小腿/心肺
+- 聚合：`aggregateZoneCountsByWeek(workouts, 12, resolver)`——target 词 → zone（muscle-map MUSCLES 映射，未知词忽略计数 + 部位兜底）→ 组（`zoneGroupOf`）；**同组多 zone 去重**（左右块组数只计一次）、同次训练次数去重、>12 周排除、未来周防护
+- 分档：与日历热力图同色板同规则（蓝系 4 档，格子档位按 当周该组组数/窗口内单周最大组数）
+- 渲染：纯 WXML（无 canvas）——行=14 肌群、列=12 周（每 4 周一个标签），行尾近 12 周总组数；点击行 → 常驻信息条（组数/次数/占全身%），再点取消，选中行左侧 indigo 竖条高亮
+- 安全：zoneGroupOf/聚合对原型链 key（`__proto__` 等）零命中不污染，脏数据（非法 ts/null/非数组 sets）跳过不崩，专项脚本 verify-muscle-heatmap 覆盖注入与性能预算
+- 纯函数实现（无 wx 依赖），node 可测
+
 ### 4.4 动作关联知识（v2.2）
 
 - 数据：`data/exercises/index.js` 内 `MUSCLE_ARTICLES` 映射（部位 → 知识库文章 id 列表，每部位 2 篇）
@@ -153,6 +163,23 @@
 - Epley 公式：`1RM ≈ weight × (1 + reps/30)`，仅对 reps ≤ 20 有效，超出返回 0
 - est1RMHistory：按时间正序取每日最大估算值，热身组排除
 - 体重趋势：最新/累计变化量（最新-最早）/极值，柱状图取最近 8 次并按极值归一化
+
+### 4.9 训练智能（v2.23.3）
+
+纯函数模块 `utils/training-intelligence.js`（无 wx 依赖，node 可测）：
+
+- **indexSessions(workouts)**：按动作索引会话（一次构建多处复用），仅保留有效组（reps>0、非热身），自重动作（weight=0）保留用于计数；脏数据跳过
+- **overloadAdvice(sessionsIndex, id)**：渐进超负荷——取最近 2 次训练最高重量组（同重取多次数）；进步（重量↑ 或同重次数↑）→ 建议加重一档；持平 → 保持重量目标 +1 次；回落 → 保持重量恢复优先；首次 → 按上次 +1 档。步长：<100kg +2.5 / <200kg +5 / 大重量 +10
+- **rotationAdvice(sessionsIndex, id, alternatives, threshold=8)**：近 30 天使用次数 ≥ 阈值且存在替代候选时推荐 1-2 个（排除自身）
+- **deloadAdvice(workouts)**：近 3 周容量（weeklyVolume）连续下降 ≥20% → 减量建议；连续上升 ≥30% → 冲 PR 建议；任一周无训练不提示
+- **predictPR(workouts, id)**：1RM 历史线性回归（≥3 点、斜率>0 且增幅有意义），预测 14 天后 1RM
+- 展示位：训练页选动作列表（建议行绿色 / 轮换行琥珀色）、统计页容量卡（减量/冲 PR 提示条）、统计页 PR 卡（1RM 预测行）
+
+### 4.10 统计页性能（v2.23.3）
+
+- **数据指纹缓存**：`_dataFingerprint()` 基于训练（长度+首末 ts）/体重/摄入/自定义动作/资料生成指纹；指纹未变时 `loadStats` 直接复用上次计算结果（`_statsCache`），切 tab 回来零重算
+- **setData 两级拆分**：critical（简报/频率/体重/减量提示）先渲染，rest（图表/热力图/PR/分析）随后
+- 分析计算抽为 `computeAnalytics`，新鲜计算与缓存命中两条路径共用
 
 ## 5. UI 设计规范
 

@@ -110,6 +110,12 @@
   background: #fef2f2;
 }
 
+.edit-btn {
+  margin-top: 10rpx;
+  color: #4f46e5;
+  background: #eef2ff;
+}
+
 .share-row {
   display: flex;
   gap: 16rpx;
@@ -117,7 +123,15 @@
 }
 
 .share-btn {
-  flex: 1;
+  flex: 1.4;
+}
+
+.edit-btn {
+  flex: 0.7;
+}
+
+.danger-btn {
+  flex: 1.2;
 }
 
 /* 分享弹层 */

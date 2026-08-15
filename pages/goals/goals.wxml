@@ -1,0 +1,39 @@
+<view class="page">
+  <view class="card">
+    <view class="card-title">体重目标（kg）</view>
+    <view class="goal-row">
+      <text class="goal-label">目标体重</text>
+      <view class="goal-input-wrap">
+        <input class="goal-input" type="digit" value="{{bwTarget}}" data-field="bwTarget" bindinput="onBwInput" placeholder="如 65" />
+        <text class="goal-unit">kg</text>
+      </view>
+    </view>
+    <view class="goal-row">
+      <text class="goal-label">起始体重（可选）</text>
+      <view class="goal-input-wrap">
+        <input class="goal-input" type="digit" value="{{bwStart}}" data-field="bwStart" bindinput="onBwInput" placeholder="留空用当前体重" />
+        <text class="goal-unit">kg</text>
+      </view>
+    </view>
+    <view class="goal-tip">统计页将显示从起始体重到目标体重的进度条</view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">力量目标（最多 3 个）</view>
+    <view class="goal-tip" style="margin-bottom: 8rpx;">目标重量按该动作历史最大重量追踪</view>
+    <view wx:for="{{strength}}" wx:key="index" class="goal-row">
+      <picker class="goal-picker" range="{{exerciseOptions}}" range-key="name" data-index="{{index}}" bindchange="onStrengthExercise">
+        <view class="goal-picker-btn">
+          <text class="{{item.exerciseId ? '' : 'goal-picker-placeholder'}}">{{item.exerciseId ? strengthName(item.exerciseId) : '选择动作'}}</text>
+          <text class="goal-picker-arrow">▾</text>
+        </view>
+      </picker>
+      <view class="goal-input-wrap">
+        <input class="goal-input" type="digit" value="{{item.target}}" data-index="{{index}}" bindinput="onStrengthTarget" placeholder="目标 kg" />
+        <text class="goal-unit">kg</text>
+      </view>
+    </view>
+    <view class="btn-primary" style="margin-top: 20rpx;" bindtap="onSave">保存目标</view>
+    <view class="goal-tip">目标重量按 kg 填写（与记录单位无关）</view>
+  </view>
+</view>

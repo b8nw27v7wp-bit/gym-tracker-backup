@@ -1,0 +1,63 @@
+<view class="page">
+  <!-- 记录围度 -->
+  <view class="card">
+    <view class="card-title">记录围度（cm）</view>
+    <view class="ms-row" wx:for="{{fields}}" wx:key="key">
+      <text class="ms-label">{{item.name}}</text>
+      <view class="ms-input-wrap">
+        <input
+          class="ms-input"
+          type="digit"
+          value="{{item.value}}"
+          data-index="{{index}}"
+          bindinput="onInput"
+          placeholder="0"
+        />
+        <text class="ms-unit">cm</text>
+      </view>
+    </view>
+    <view class="btn-primary" style="margin-top: 20rpx;" bindtap="onAdd">保存围度</view>
+    <view class="ms-tip">至少填写一项 · 建议每周同一时间测量，晨起空腹最佳</view>
+  </view>
+
+  <!-- 围度趋势 -->
+  <view class="card" wx:if="{{count > 0}}">
+    <view class="card-title">围度趋势</view>
+    <view class="ms-hint">共 {{count}} 次记录 · 条 = 每次测量，高低按该部位自身范围</view>
+    <view wx:for="{{trendFields}}" wx:key="key" class="ms-trend-field">
+      <view class="ms-trend-head">
+        <text class="ms-trend-name">{{item.name}}</text>
+        <text class="ms-trend-val" wx:if="{{item.has}}">最新 {{item.latest}} cm <text class="{{item.delta >= 0 ? 'ms-delta-up' : 'ms-delta-down'}}">{{item.delta > 0 ? '+' : ''}}{{item.delta}}</text></text>
+        <text class="ms-trend-val" wx:else>暂无数据</text>
+      </view>
+      <view class="bars" wx:if="{{item.has}}">
+        <view class="bar-col" wx:for="{{item.bars}}" wx:for-item="b" wx:key="label">
+          <view class="bar-track">
+            <view class="bar-fill ms-fill" style="height: {{b.height}}%;"></view>
+          </view>
+          <text class="bar-label">{{b.label}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空态 -->
+  <view class="card" wx:if="{{count === 0}}">
+    <view class="card-title">围度趋势</view>
+    <view class="empty-soft">
+      <text>记录胸围、腰围、臂围、腿围，追踪体型变化</text>
+    </view>
+  </view>
+
+  <!-- 历史记录 -->
+  <view class="card" wx:if="{{history.length > 0}}">
+    <view class="card-title">历史记录</view>
+    <view wx:for="{{history}}" wx:key="ts" class="ms-history-row">
+      <view class="ms-history-left">
+        <text class="ms-history-date">{{item.label}}</text>
+        <text class="ms-history-text">{{item.text}}</text>
+      </view>
+      <text class="ms-history-del" data-ts="{{item.ts}}" bindtap="onDelete">删除</text>
+    </view>
+  </view>
+</view>
