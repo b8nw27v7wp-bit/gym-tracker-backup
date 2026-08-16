@@ -473,6 +473,7 @@ function clearAll() {
   wx.setStorageSync(KEY_GOALS, null);
   clearWeeklyPlan();
   wx.removeStorageSync(KEY_PROFILE);
+  wx.removeStorageSync(KEY_TAKEOFF); // 起飞🦌计时器（趣味数据随清空一并清除）
 }
 
 // 当前数据量估算（字节）
@@ -557,9 +558,70 @@ function isLoginValid() {
   return daysDiff < 30; // 30天内有效
 }
 
+// ---------- 起飞🦌计时器（昵称"李鑫"专属趣味功能，v2.27.2） ----------
+// 存储结构：{ totalCount 累计起飞次数, totalSec 累计飞行秒数, activeStart 当前飞行开始 ts（null=未飞行）, lastSec 上次单次飞行秒数, lastEnd 上次落地时间 }
+var KEY_TAKEOFF = 'gym_takeoff';
+
+// 读取起飞统计（脏数据兜底：缺字段/非法值一律回默认，绝不崩溃）
+function getTakeoffStats() {
+  var t = wx.getStorageSync(KEY_TAKEOFF);
+  if (!t || typeof t !== 'object') {
+    return { totalCount: 0, totalSec: 0, activeStart: null, lastSec: 0, lastEnd: 0 };
+  }
+  var num = function (v) { var n = Number(v); return isFinite(n) && n > 0 ? n : 0; };
+  return {
+    totalCount: Math.floor(num(t.totalCount)),
+    totalSec: Math.floor(num(t.totalSec)),
+    activeStart: num(t.activeStart) > 0 ? num(t.activeStart) : null,
+    lastSec: Math.floor(num(t.lastSec)),
+    lastEnd: Math.floor(num(t.lastEnd))
+  };
+}
+
+// 起飞：开始计时（已在飞行中则幂等返回 ok:false）
+function startTakeoff() {
+  var t = getTakeoffStats();
+  if (t.activeStart) return { ok: false, stats: t };
+  t.activeStart = Date.now();
+  try {
+    wx.setStorageSync(KEY_TAKEOFF, t);
+    return { ok: true, stats: getTakeoffStats() };
+  } catch (e) {
+    return { ok: false, stats: getTakeoffStats() };
+  }
+}
+
+// 落地：结束本次飞行，累计次数与时长（时长最小 1 秒）
+function stopTakeoff() {
+  var t = getTakeoffStats();
+  if (!t.activeStart) return { ok: false, sec: 0, stats: t };
+  var sec = Math.max(Math.round((Date.now() - t.activeStart) / 1000), 1);
+  t.totalCount += 1;
+  t.totalSec += sec;
+  t.lastSec = sec;
+  t.lastEnd = Date.now();
+  t.activeStart = null;
+  try {
+    wx.setStorageSync(KEY_TAKEOFF, t);
+    return { ok: true, sec: sec, stats: getTakeoffStats() };
+  } catch (e) {
+    return { ok: false, sec: 0, stats: t };
+  }
+}
+
+// 格式化秒数 → "3分25秒" / "1小时2分"；非法输入回 "0秒"
+function formatTakeoffSec(sec) {
+  var n = Math.max(Math.floor(Number(sec) || 0), 0);
+  var h = Math.floor(n / 3600);
+  var m = Math.floor((n % 3600) / 60);
+  var s = n % 60;
+  if (h > 0) return h + '小时' + m + '分';
+  if (m > 0) return m + '分' + s + '秒';
+  return s + '秒';
+}
+
 // 获取登录状态摘要
-function getLoginStatus() {
-  var wxUser = getWxUser();
+function getLoginStatus() {  var wxUser = getWxUser();
   return {
     isLoggedIn: !!wxUser,
     isValid: isLoginValid(),
@@ -927,6 +989,10 @@ module.exports = {
   clearWxUser: clearWxUser,
   isLoggedIn: isLoggedIn,
   isLoginValid: isLoginValid,
+  getTakeoffStats: getTakeoffStats,
+  startTakeoff: startTakeoff,
+  stopTakeoff: stopTakeoff,
+  formatTakeoffSec: formatTakeoffSec,
   getLoginStatus: getLoginStatus,
   // 自定义食物
   getCustomFoods: getCustomFoods,

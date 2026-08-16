@@ -86,6 +86,36 @@
     </view>
   </view>
 
+  <!-- 起飞🦌计时器（昵称"李鑫"专属，v2.27.2） -->
+  <view class="card takeoff-card" wx:if="{{showTakeoff}}">
+    <view class="takeoff-greeting" wx:if="{{takeoffBanner}}">{{takeoffBanner}}</view>
+    <view class="takeoff-head">
+      <text class="takeoff-title">🦌 起飞记录</text>
+      <text class="takeoff-badge">李鑫专属</text>
+    </view>
+    <view class="takeoff-stats">
+      <view class="takeoff-stat">
+        <text class="takeoff-num">{{takeoff.totalCount}}</text>
+        <text class="takeoff-label">起飞次数</text>
+      </view>
+      <view class="takeoff-stat">
+        <text class="takeoff-num takeoff-num-sm">{{takeoffTotalText}}</text>
+        <text class="takeoff-label">累计飞行</text>
+      </view>
+      <view class="takeoff-stat">
+        <text class="takeoff-num takeoff-num-sm">{{takeoffLastText}}</text>
+        <text class="takeoff-label">上次飞行</text>
+      </view>
+    </view>
+    <view class="takeoff-timer" wx:if="{{takeoff.activeStart}}">
+      <text class="takeoff-timer-label">飞行中</text>
+      <text class="takeoff-timer-text">{{takeoffText}}</text>
+    </view>
+    <view class="takeoff-btn {{takeoff.activeStart ? 'takeoff-btn-active' : ''}}" bindtap="onTakeoffTap">
+      {{takeoff.activeStart ? '🛬 落地' : '🛫 起飞'}}
+    </view>
+  </view>
+
   <!-- 应用设置（v5） -->
   <view class="card">
     <view class="card-title">设置</view>

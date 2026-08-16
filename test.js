@@ -1,4 +1,4 @@
-// 本地验证脚本：mock wx storage，跑通数据层逻辑
+﻿// 本地验证脚本：mock wx storage，跑通数据层逻辑
 // 用法: node test.js
 const path = require('path');
 
@@ -2344,6 +2344,130 @@ tpR.data.draft = [];
 tpR.onRepeatLast();
 const rItem = tpR.data.draft.find(function (x) { return x.exerciseId === 'pullup'; });
 assert(rItem && rItem.bodyweight === true && rItem.sets[0].weight === '' && rItem.sets[0].reps === '12', '重复上次：自重动作只带次数');
+store.clearAll(); store.ensureInit();
+store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
+
+// ---------- 21. 起飞🦌计时器（昵称"李鑫"专属，v2.27.2） ----------
+console.log('21. 起飞🦌计时器（李鑫专属）');
+// 21.1 初始状态兜底
+store.clearAll(); store.ensureInit();
+let tkStat = store.getTakeoffStats();
+assert(tkStat.totalCount === 0 && tkStat.totalSec === 0 && tkStat.activeStart === null && tkStat.lastSec === 0, '起飞统计初始为空');
+// 21.2 脏数据兜底（存储被写坏）
+wx._store['gym_takeoff'] = 'junk';
+assert(store.getTakeoffStats().totalCount === 0, '起飞统计脏数据（字符串）兜底');
+wx._store['gym_takeoff'] = { totalCount: 'abc', totalSec: null, activeStart: 'x', lastSec: -5, lastEnd: {} };
+tkStat = store.getTakeoffStats();
+assert(tkStat.totalCount === 0 && tkStat.totalSec === 0 && tkStat.activeStart === null && tkStat.lastSec === 0, '起飞统计脏数据（非法字段）兜底');
+// 21.3 起飞/落地计时
+wx._store['gym_takeoff'] = null;
+let tkStart = store.startTakeoff();
+assert(tkStart.ok === true && tkStart.stats.activeStart !== null, '起飞启动计时');
+const flyStart = tkStart.stats.activeStart;
+wx._store['gym_takeoff'].activeStart = flyStart - 65000; // 模拟已飞行 65 秒
+const tkStop = store.stopTakeoff();
+assert(tkStop.ok === true && tkStop.sec === 65 && tkStop.stats.totalCount === 1 && tkStop.stats.totalSec === 65, '落地累计次数与时长（65 秒）');
+assert(tkStop.stats.activeStart === null && tkStop.stats.lastSec === 65, '落地后飞行状态复位 + 记录上次时长');
+// 21.4 未起飞时落地幂等
+const tkStopIdle = store.stopTakeoff();
+assert(tkStopIdle.ok === false, '未起飞时落地幂等返回');
+// 21.5 飞行中重复起飞幂等
+wx._store['gym_takeoff'] = null;
+store.startTakeoff();
+const tkStart2 = store.startTakeoff();
+assert(tkStart2.ok === false, '飞行中重复起飞幂等返回');
+// 21.6 格式化函数边界
+assert(store.formatTakeoffSec(0) === '0秒' && store.formatTakeoffSec(59) === '59秒', '格式化 0/59 秒');
+assert(store.formatTakeoffSec(61) === '1分1秒' && store.formatTakeoffSec(3660) === '1小时1分', '格式化 61 秒/1 小时');
+assert(store.formatTakeoffSec('abc') === '0秒' && store.formatTakeoffSec(-5) === '0秒', '格式化非法输入兜底');
+// 21.7 页面层：李鑫专属可见性 + 起飞/落地交互
+store.clearAll(); store.ensureInit();
+store.setWxUser({ nickName: '李鑫', avatarUrl: '', loginTime: Date.now() });
+freshRequire('./pages/profile/profile.js');
+const ppLx = instantiate(pageCfg);
+ppLx.onLoad({});
+assert(ppLx.data.showTakeoff === true, '昵称=李鑫时显示起飞卡片');
+ppLx.onTakeoffTap();
+assert(ppLx.data.takeoff.activeStart !== null, '点击起飞启动计时（页面）');
+ppLx.onTakeoffTap();
+assert(ppLx.data.takeoff.activeStart === null && ppLx.data.takeoff.totalCount === 1, '点击落地完成一次飞行（页面）');
+// 非李鑫 / 未登录隐藏
+store.setWxUser({ nickName: '张三', avatarUrl: '', loginTime: Date.now() });
+ppLx.onShow();
+assert(ppLx.data.showTakeoff === false, '昵称≠李鑫隐藏起飞卡片');
+store.clearWxUser();
+ppLx.onShow();
+assert(ppLx.data.showTakeoff === false, '未登录隐藏起飞卡片');
+// 21.8 识别到李鑫跳出"撸撸撸🦌🦌🦌"提醒（v2.27.3）
+let takeoffToast = '';
+wx.showToast = function (o) { takeoffToast = (o && o.title) || ''; };
+store.clearAll(); store.ensureInit();
+store.setWxUser({ nickName: '李鑫', avatarUrl: '', loginTime: Date.now() });
+freshRequire('./pages/profile/profile.js');
+const ppLx2 = instantiate(pageCfg);
+takeoffToast = '';
+ppLx2.onLoad({});
+assert(takeoffToast.indexOf('撸撸撸') >= 0, '识别到李鑫首次进入跳出提醒（toast）');
+assert(ppLx2.data.takeoffBanner === '撸撸撸🦌🦌🦌', '专属横幅文案正确');
+assert(ppLx2.data.showTakeoff === true, '提醒场景下专属卡片可见');
+// onShow 不重复弹（避免 tab 切换刷屏）
+takeoffToast = '';
+ppLx2.onShow();
+assert(takeoffToast === '', 'onShow 不重复弹提醒（仅首次进入）');
+// 非李鑫不弹提醒 + 无横幅
+store.setWxUser({ nickName: '张三', avatarUrl: '', loginTime: Date.now() });
+freshRequire('./pages/profile/profile.js');
+const ppZ = instantiate(pageCfg);
+takeoffToast = '';
+ppZ.onLoad({});
+assert(takeoffToast === '' && ppZ.data.takeoffBanner === '' && ppZ.data.showTakeoff === false, '非李鑫不弹提醒且无横幅');
+// 昵称脏数据（含空白/超长）不误判为李鑫
+store.setWxUser({ nickName: '  李鑫  ', avatarUrl: '', loginTime: Date.now() });
+ppZ.onShow();
+assert(ppZ.data.showTakeoff === false, '带空格的昵称不误判为李鑫（严格匹配）');
+store.setWxUser({ nickName: '李鑫李鑫李鑫李鑫', avatarUrl: '', loginTime: Date.now() });
+ppZ.onShow();
+assert(ppZ.data.showTakeoff === false, '超长相似昵称不误判为李鑫');
+// 21.9 起飞功能安全与边界（v2.27.3）
+// 注入型昵称（XSS/原型键/emoji/超长）不误判为李鑫
+const INJECT_NICKS = ['<script>alert(1)</script>', '李鑫<script>', '__proto__', 'constructor', '😀🦌🦌', 'x'.repeat(50)];
+let injectOk = true;
+INJECT_NICKS.forEach(function (n) {
+  store.clearAll(); store.ensureInit();
+  store.setWxUser({ nickName: n, avatarUrl: '', loginTime: Date.now() });
+  const ppN = instantiate(pageCfg);
+  ppN.onLoad({});
+  if (ppN.data.showTakeoff) injectOk = false;
+});
+assert(injectOk, '注入型昵称（XSS/原型键/emoji/超长）不误判为李鑫');
+// 昵称脏数据（数字/null）不崩
+store.clearAll(); store.ensureInit();
+wx._store['gym_wx_user'] = { nickName: 12345, avatarUrl: '', loginTime: Date.now() };
+const ppDirty = instantiate(pageCfg);
+ppDirty.onLoad({});
+assert(ppDirty.data.showTakeoff === false, '昵称脏数据（数字）不崩且不误判');
+wx._store['gym_wx_user'] = null;
+const ppNull = instantiate(pageCfg);
+ppNull.onLoad({});
+assert(ppNull.data.showTakeoff === false, '用户信息 null 不崩');
+// gym_takeoff 原型链注入不污染
+wx._store['gym_takeoff'] = JSON.parse('{"totalCount":5,"__proto__":{"polluted":1}}');
+const tkSafe = store.getTakeoffStats();
+assert(tkSafe.totalCount === 5 && ({}).polluted === undefined && tkSafe.activeStart === null, 'gym_takeoff __proto__ 注入不污染原型');
+// 时长边界：1970 年起飞 → 落地秒数巨大但不崩；24 小时格式化
+wx._store['gym_takeoff'] = { totalCount: 0, totalSec: 0, activeStart: 1, lastSec: 0, lastEnd: 0 };
+const tkHuge = store.stopTakeoff();
+assert(tkHuge.ok === true && isFinite(tkHuge.sec) && tkHuge.sec > 0 && tkHuge.stats.totalSec > 0, '1970 年起飞落地（巨大时长）不崩');
+assert(store.formatTakeoffSec(86400) === '24小时0分', '格式化 86400 秒（24 小时）');
+// 起飞落地循环 100 次统计正确
+wx._store['gym_takeoff'] = null;
+for (let tki = 0; tki < 100; tki++) {
+  store.startTakeoff();
+  wx._store['gym_takeoff'].activeStart = Date.now() - 1000;
+  store.stopTakeoff();
+}
+const tkLoop = store.getTakeoffStats();
+assert(tkLoop.totalCount === 100 && tkLoop.totalSec === 100, '起飞落地循环 100 次统计正确（100 次/100 秒）');
 store.clearAll(); store.ensureInit();
 store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
 

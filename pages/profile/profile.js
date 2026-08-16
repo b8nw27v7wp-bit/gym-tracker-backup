@@ -2,6 +2,11 @@
 // 注意：wx.getUserProfile 已废弃（2021年4月），现使用 open-type="chooseAvatar" + type="nickname"
 var store = require('../../utils/store');
 
+// 起飞🦌计时器专属昵称（v2.27.2）：仅昵称为该值的用户显示"起飞记录"卡片
+var TAKEOFF_OWNER = '李鑫';
+// 识别到专属用户时的提醒文案（v2.27.3）
+var TAKEOFF_GREETING = '撸撸撸🦌🦌🦌';
+
 // 订阅消息模板 ID：在小程序后台（mp.weixin.qq.com → 订阅消息）申请"训练计划提醒"类目模板后填入
 // 未配置时 requestSubscribeMessage 会失败 → 自动降级为仅应用内提醒，不影响功能
 var TRAIN_REMINDER_TEMPLATE_ID = '';
@@ -15,28 +20,112 @@ Page({
     editNickName: '',       // 编辑中的昵称
     editAvatarUrl: '',      // 编辑中的头像
     settings: { unit: 'kg', autoRest: true }, // 应用设置
-    measurementCount: 0     // 围度记录数
+    measurementCount: 0,    // 围度记录数
+    showTakeoff: false,     // 起飞🦌专属卡片是否可见（昵称=李鑫）
+    takeoffBanner: '',      // 专属欢迎横幅文案（识别到李鑫时显示）
+    takeoff: { totalCount: 0, totalSec: 0, activeStart: null, lastSec: 0, lastEnd: 0 }, // 起飞统计
+    takeoffText: '0秒',     // 当前飞行已持续（未飞行时为空）
+    takeoffTotalText: '0秒', // 累计飞行时长
+    takeoffLastText: '--'    // 上次单次飞行时长
   },
 
   onLoad: function () {
-    this.loadUserData();
+    this.loadUserData(true); // 首次进入：识别到专属用户时跳出提醒
   },
 
   onShow: function () {
     this.loadUserData();
   },
 
+  onHide: function () {
+    this.stopTakeoffTick();
+  },
+
+  onUnload: function () {
+    this.stopTakeoffTick();
+  },
+
   // 加载用户数据
-  loadUserData: function () {
+  // firstShow=true 表示页面首次加载（触发"撸撸撸🦌🦌🦌"跳出提醒）
+  loadUserData: function (firstShow) {
     var wxUser = store.getWxUser();
     var profile = store.getProfile();
+    var isOwner = !!(wxUser && wxUser.nickName === TAKEOFF_OWNER);
     this.setData({
       wxUser: wxUser,
       profile: profile,
       isLoggedIn: !!wxUser,
       settings: store.getSettings(),
-      measurementCount: store.getMeasurements().length
+      measurementCount: store.getMeasurements().length,
+      showTakeoff: isOwner,
+      takeoffBanner: isOwner ? TAKEOFF_GREETING : ''
     });
+    // 专属卡片可见时刷新起飞状态（含跨会话飞行中的恢复）
+    if (isOwner) {
+      this.refreshTakeoff();
+      // 首次进入跳出专属提醒
+      if (firstShow) {
+        wx.showToast({ title: TAKEOFF_GREETING, icon: 'none' });
+      }
+    } else {
+      this.stopTakeoffTick();
+    }
+  },
+
+  // ---------- 起飞🦌计时器（李鑫专属，v2.27.2） ----------
+  // 刷新起飞统计展示；飞行中启动每秒刷新 tick
+  refreshTakeoff: function () {
+    var t = store.getTakeoffStats();
+    var text = '';
+    if (t.activeStart) {
+      text = store.formatTakeoffSec((Date.now() - t.activeStart) / 1000);
+      this.startTakeoffTick();
+    } else {
+      this.stopTakeoffTick();
+    }
+    this.setData({
+      takeoff: t,
+      takeoffText: text,
+      takeoffTotalText: store.formatTakeoffSec(t.totalSec),
+      takeoffLastText: t.lastSec > 0 ? store.formatTakeoffSec(t.lastSec) : '--'
+    });
+  },
+
+  startTakeoffTick: function () {
+    if (this._takeoffTimer) return;
+    var self = this;
+    this._takeoffTimer = setInterval(function () {
+      var t = store.getTakeoffStats();
+      if (!t.activeStart) { self.stopTakeoffTick(); return; }
+      self.setData({ takeoffText: store.formatTakeoffSec((Date.now() - t.activeStart) / 1000) });
+    }, 1000);
+  },
+
+  stopTakeoffTick: function () {
+    if (this._takeoffTimer) {
+      clearInterval(this._takeoffTimer);
+      this._takeoffTimer = null;
+    }
+  },
+
+  // 起飞/落地按钮
+  onTakeoffTap: function () {
+    var t = store.getTakeoffStats();
+    if (t.activeStart) {
+      var r = store.stopTakeoff();
+      if (r.ok) {
+        this.refreshTakeoff();
+        wx.showToast({ title: '🛬 落地！本次飞行 ' + store.formatTakeoffSec(r.sec), icon: 'none' });
+      }
+    } else {
+      var s = store.startTakeoff();
+      if (s.ok) {
+        this.refreshTakeoff();
+        wx.showToast({ title: '🛫 起飞！开始计时', icon: 'none' });
+      } else {
+        wx.showToast({ title: '起飞失败，请重试', icon: 'none' });
+      }
+    }
   },
 
   // ---------- 头像选择 ----------
@@ -79,9 +168,7 @@ Page({
       var wxUser = store.getWxUser();
       wxUser.nickName = nickName.trim();
       store.setWxUser(wxUser);
-      this.setData({
-        'wxUser.nickName': nickName.trim()
-      });
+      this.loadUserData(); // 刷新用户信息 + 起飞🦌专属卡片可见性
       wx.showToast({ title: '昵称已更新', icon: 'success' });
     }
   },
@@ -149,11 +236,7 @@ Page({
       success: function (res) {
         if (res.confirm) {
           store.clearWxUser();
-          self.setData({
-            wxUser: null,
-            isLoggedIn: false,
-            isEditing: false
-          });
+          self.loadUserData(); // 退出后隐藏起飞🦌专属卡片
           wx.showToast({ title: '已退出', icon: 'success' });
         }
       }
