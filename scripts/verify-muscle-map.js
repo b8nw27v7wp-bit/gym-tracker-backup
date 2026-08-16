@@ -35,7 +35,7 @@ let missing = 0;
 exercisesData.ALL.forEach(e => (e.target || []).concat(e.secondary || []).forEach(n => {
   if (!muscleMap.MUSCLES[n]) { missing++; console.log('   缺映射:', e.id, '→', n); }
 }));
-check(missing === 0, '173 动作肌群词全部有映射（missing=' + missing + '）');
+check(missing === 0, exercisesData.ALL.length + ' 动作肌群词全部有映射（missing=' + missing + '）');
 
 console.log('② 正向：卡片部位 ↔ 发力图（动作 target 块 ∩ 部位图块）');
 let noOverlap = [];

@@ -104,5 +104,69 @@ module.exports = [
     steps: ["快步爬楼，每次跨 1-2 级", "保持核心收紧，前脚掌发力", "到达楼层后乘电梯下楼休息，循环 10-15 分钟"],
     errors: ["扶着扶手借力", "一步跨太多级", "下楼跑动伤膝"],
     rest: '45-60 秒', tip: '电梯下楼只做上楼段，保护膝盖同时保证强度'
+  },
+  {
+    id: 'jump-rope', name: '跳绳', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'other', difficulty: 1,
+    target: ["心肺功能", "腓肠肌"], secondary: ["前臂", "核心"],
+    steps: ["双手握绳把，绳置于身后", "小臂转腕摇绳，前脚掌轻跳越过", "保持膝盖微屈，节奏均匀连续跳"],
+    errors: ["整臂大幅甩绳", "跳得过高", "落地过重"],
+    rest: '45-60 秒', tip: '单位时间燃脂之王：10 分钟跳绳 ≈ 30 分钟慢跑，居家有氧首选'
+  },
+  {
+    id: 'high-knees', name: '高抬腿', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["心肺功能", "髋屈肌"], secondary: ["股四头肌"],
+    steps: ["原地站立，交替快速提膝至髋部高度", "前脚掌轻快落地，手臂配合摆动", "持续 20-30 秒为一组"],
+    errors: ["身体后仰", "抬腿高度不足", "落地沉重"],
+    rest: '30-60 秒', tip: '热身与 HIIT 万金油，把膝盖抬高到胸口才有强度'
+  },
+  {
+    id: 'sprint-interval', name: '冲刺间歇跑', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ["心肺功能", "爆发力"], secondary: ["股四头肌", "腘绳肌"],
+    steps: ["慢跑热身后，全力冲刺 30-50 米", "慢走或慢跑恢复 60-90 秒", "重复 6-10 组"],
+    errors: ["起跑过猛拉伤", "组间休息不足", "冲刺时身体僵硬"],
+    rest: '60-90 秒', tip: '冲刺跑是效率最高的心肺与爆发力训练，地面要平整防滑'
+  },
+  {
+    id: 'incline-walk', name: '坡度快走', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'machine', difficulty: 1,
+    target: ["心肺功能", "臀大肌"], secondary: ["股四头肌", "腓肠肌"],
+    steps: ["跑步机坡度调至 8-15%，速度 4-6 km/h", "不扶扶手，挺胸快走 30-45 分钟", "结束时逐步降低坡度再停机"],
+    errors: ["全程扶扶手", "坡度太低没有强度", "身体后仰"],
+    rest: '按心率恢复', tip: '不扶扶手是灵魂：坡度越大臀部参与越多，膝盖冲击最小'
+  },
+  {
+    id: 'outdoor-jogging', name: '户外慢跑', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["心肺功能"], secondary: ["股四头肌", "核心"],
+    steps: ["跑前动态热身 5 分钟", "配速以能轻松交谈为准，持续 20-40 分钟", "跑后静态拉伸小腿与股四头肌"],
+    errors: ["配速过快", "落地过重（步幅过大）", "跑前不热身"],
+    rest: '按心率恢复', tip: '最大心率 60%-75% 的慢跑是有氧打底，先求时长再求配速'
+  },
+  {
+    id: 'outdoor-cycling', name: '户外骑行', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'other', difficulty: 1,
+    target: ["心肺功能", "股四头肌"], secondary: ["腘绳肌"],
+    steps: ["调节座椅高度至踩到底时膝盖微屈", "保持踏频 70-90 rpm，匀速骑行 30-60 分钟", "注意补水与佩戴头盔"],
+    errors: ["座椅过低伤膝", "踏频过慢硬踩", "下坡制动过度"],
+    rest: '按心率恢复', tip: '低冲击长时程有氧，对膝盖最友好的户外燃脂方式'
+  },
+  {
+    id: 'shuttle-run', name: '折返跑', muscle: 'cardio', type: 'compound', mechanic: 'other',
+    equipment: 'other', difficulty: 2,
+    target: ["心肺功能", "爆发力"], secondary: ["股四头肌", "臀大肌"],
+    steps: ["设置 10 米（或 20 米）折返标记", "全力跑到标记后急停转身，折返跑回起点", "连续往返 4-8 趟为一组"],
+    errors: ["转身刹不住", "急停时膝盖内扣", "趟间休息过长"],
+    rest: '60-90 秒', tip: '变速+变向的高强度间歇，模拟球类运动供能模式'
+  },
+  {
+    id: 'ski-erg', name: '滑雪测功仪', muscle: 'cardio', type: 'compound', mechanic: 'pull',
+    equipment: 'machine', difficulty: 1,
+    target: ["心肺功能", "背阔肌", "肱三头肌"], secondary: ["核心", "股四头肌"],
+    steps: ["站姿双手握把，屈髋屈膝蓄力", "双腿蹬伸同时手臂向下拉把", "回程伸展躯干与手臂，循环发力"],
+    errors: ["只用手臂拉", "站直不发力", "节奏混乱"],
+    rest: '按心率恢复', tip: '上肢主导的有氧机（划船机的立式版），半小时轻松燃脂'
   }
 ];

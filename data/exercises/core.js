@@ -144,5 +144,85 @@ module.exports = [
     steps: ["单手负重站立，另一手叉腰", "躯干向负重侧缓慢侧屈至最大幅度", "腹斜肌发力回到中立位"],
     errors: ["身体前倾或旋转", "用杠铃大重量甩动", "幅度不足"],
     rest: '45-60 秒', tip: '腹斜肌孤立动作，轻重量高次数，注意不要练成腰方肌'
+  },
+  {
+    id: 'decline-crunch', name: '下斜卷腹', muscle: 'core', type: 'isolate', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ["腹直肌上部"], secondary: ["腹直肌"],
+    steps: ["下斜凳固定双脚，仰卧双手放于胸前或耳侧", "腹肌发力卷起躯干至下背离开凳面", "顶端挤压停顿 1 秒，缓慢下放"],
+    errors: ["用手抱头拉扯", "腰部弹起借力", "只做半程"],
+    rest: '45-60 秒', tip: '下斜角度让上腹在拉伸位起卷，刺激比平躺卷腹更强'
+  },
+  {
+    id: 'reverse-crunch', name: '反向卷腹', muscle: 'core', type: 'isolate', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["腹直肌下部"], secondary: ["髋屈肌"],
+    steps: ["仰卧屈膝 90°，双手平放体侧", "骨盆后倾带动膝盖向胸部卷起（下背离地）", "顶端挤压下腹停顿，缓慢下放"],
+    errors: ["只抬腿不卷骨盆", "借惯性甩动", "腰部离地过高"],
+    rest: '45-60 秒', tip: '动作核心是"骨盆卷起"而非抬腿，下腹刺激的关键'
+  },
+  {
+    id: 'cable-woodchop', name: '绳索砍伐', muscle: 'core', type: 'compound', mechanic: 'other',
+    equipment: 'cable', difficulty: 2,
+    target: ["腹斜肌"], secondary: ["核心"],
+    steps: ["高位滑轮侧身站立，双手握柄于头顶侧", "收腹旋转躯干，将手柄斜向砍向对侧髋部", "控制还原，全程髋部固定"],
+    errors: ["髋部跟着旋转", "用手臂硬拉", "幅度过大失去控制"],
+    rest: '45-60 秒', tip: '旋转+抗旋转双模式，腹斜肌功能性训练的金牌动作'
+  },
+  {
+    id: 'pallof-press', name: '帕罗夫推', muscle: 'core', type: 'isolate', mechanic: 'other',
+    equipment: 'cable', difficulty: 1,
+    target: ["腹横肌"], secondary: ["腹斜肌"],
+    steps: ["侧对滑轮，双手握柄于胸前", "保持躯干不动，双臂向前推出", "停顿 1-2 秒感受对抗，缓慢收回"],
+    errors: ["躯干跟着旋转", "推得过远失控", "髋部晃动"],
+    rest: '45-60 秒', tip: '抗旋转训练之王：躯干纹丝不动才是对的，重量宁轻勿重'
+  },
+  {
+    id: 'farmer-carry', name: '农夫行走', muscle: 'core', type: 'compound', mechanic: 'other',
+    equipment: 'other', difficulty: 1,
+    target: ["核心"], secondary: ["竖脊肌", "前臂"],
+    steps: ["双手（或单侧）提起重物于体侧", "挺胸收腹，保持躯干笔直小步快走", "走 20-40 米为一组，两侧交替"],
+    errors: ["身体左右晃动", "驼背", "步幅过大"],
+    rest: '60-90 秒', tip: '抗侧屈+抗旋转+抓握力三合一，NSCA 公认的功能性核心训练'
+  },
+  {
+    id: 'bear-crawl', name: '熊爬', muscle: 'core', type: 'compound', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["核心"], secondary: ["三角肌", "股四头肌"],
+    steps: ["四点跪撑，膝盖离地约 5 厘米", "对侧手脚协调向前爬行，身体保持水平", "控制节奏爬 10-15 米后后退还原"],
+    errors: ["臀部翘高或塌腰", "膝盖拖地", "节奏混乱"],
+    rest: '45-60 秒', tip: '动态核心稳定+肩髋协调，热身与恢复日的好选择'
+  },
+  {
+    id: 'plank-reach', name: '平板摸肩', muscle: 'core', type: 'compound', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ["腹横肌"], secondary: ["核心"],
+    steps: ["标准平板支撑姿势", "保持髋部稳定，单手抬起轻触对侧肩膀", "放下后换另一侧，交替进行"],
+    errors: ["髋部左右摇摆", "塌腰", "摸肩时重心偏移"],
+    rest: '45-60 秒', tip: '在平板基础上加入抗旋转，核心稳定性进阶一步'
+  },
+  {
+    id: 'leg-lower', name: '仰卧降腿', muscle: 'core', type: 'isolate', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ["腹直肌下部", "髂腰肌"], secondary: ["核心"],
+    steps: ["仰卧双腿伸直垂直抬起，双手放体侧", "核心收紧，将双腿缓慢下放至接近地面（不下腰）", "停顿 1 秒后抬回起始位"],
+    errors: ["下放过快腰部拱起", "下放触地", "借助惯性"],
+    rest: '45-60 秒', tip: '离心控制比抬腿更难：下放越慢、腰部越贴地，下腹刺激越强'
+  },
+  {
+    id: 'side-crunch', name: '侧卷腹', muscle: 'core', type: 'isolate', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["腹斜肌"], secondary: ["腹直肌"],
+    steps: ["侧卧屈膝，下方手臂撑地（或上方手抱头）", "躯干侧向卷起，肩胛离地", "顶端停顿 1 秒，缓慢下放"],
+    errors: ["用头颈发力", "滚动到仰卧位", "借惯性甩动"],
+    rest: '45-60 秒', tip: '侧卷腹精准打击腹斜肌，比负重侧屈对腰椎更友好'
+  },
+  {
+    id: 'hollow-rock', name: '空心摇摆', muscle: 'core', type: 'compound', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ["腹直肌", "腹横肌"], secondary: ["髋屈肌"],
+    steps: ["仰卧收腹，腰部压地，双腿抬起、肩胛离地呈空心姿势", "保持空心姿势，身体前后小幅度摇摆", "每次摇摆利用核心发力控制"],
+    errors: ["腰部离地", "幅度过大失控", "脖子发力"],
+    rest: '30-60 秒', tip: '体操核心经典：摇摆越大越难，先把空心静止撑稳定再摇'
   }
 ];

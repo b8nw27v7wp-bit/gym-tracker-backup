@@ -274,5 +274,101 @@ module.exports = [
     steps: ['坐于腿举机，单脚前掌踩踏板下缘', '脚跟下放至拉伸位', '单脚发力推起至最高点停顿'],
     errors: ['膝盖完全锁死', '幅度过小', '左右失衡'],
     rest: '45-60 秒', tip: '单腿版纠正两侧小腿围度差异，行程拉满'
+  },
+  {
+    id: 'smith-squat', name: '史密斯深蹲', muscle: 'legs', type: 'compound', mechanic: 'push',
+    equipment: 'machine', difficulty: 1,
+    target: ["股四头肌", "臀大肌"], secondary: ["腘绳肌", "竖脊肌"],
+    steps: ["调整史密斯杠铃高度至锁骨位，肩扛杠铃", "双脚与肩同宽，脚尖略外展，下蹲至大腿平行或更低", "脚跟蹬地站起还原"],
+    errors: ["膝盖内扣", "蹲太浅", "脚跟离地"],
+    rest: '90-120 秒', tip: '固定轨迹深蹲对平衡要求低，新手学蹲与冲击大重量皆宜'
+  },
+  {
+    id: 'zercher-squat', name: '泽奇深蹲', muscle: 'legs', type: 'compound', mechanic: 'push',
+    equipment: 'barbell', difficulty: 3,
+    target: ["股四头肌"], secondary: ["竖脊肌", "核心", "臀大肌"],
+    steps: ["将杠铃架在肘弯处（臂弯抱杠）", "挺胸收腹下蹲至大腿平行或更低", "蹬地站起，全程杠铃贴胸腹"],
+    errors: ["杠铃滑落", "弓背", "手肘过度承压"],
+    rest: '90-120 秒', tip: '抱杠位置让重心更居中，核心参与度高，是深蹲的进阶变式'
+  },
+  {
+    id: 'single-leg-press', name: '单腿腿举', muscle: 'legs', type: 'compound', mechanic: 'push',
+    equipment: 'machine', difficulty: 1,
+    target: ["股四头肌"], secondary: ["臀大肌"],
+    steps: ["坐于腿举机，单脚踩踏板中下位置", "控制下放至膝盖接近胸口（下背贴垫）", "单腿蹬起至膝盖微屈，不完全锁死"],
+    errors: ["下放过深腰部离开垫子", "膝盖内扣", "顶端完全锁死"],
+    rest: '60-90 秒', tip: '单腿腿举纠正两侧力量差异，对下背压力比深蹲小'
+  },
+  {
+    id: 'step-down', name: '下台阶', muscle: 'legs', type: 'isolate', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["股四头肌"], secondary: ["臀大肌", "核心"],
+    steps: ["单脚站于台阶边缘，另一只脚悬空", "屈膝控制身体缓慢下降至悬空脚轻触地面", "发力回到起始位，全程膝盖对准脚尖"],
+    errors: ["下降过快砸地", "膝盖内扣", "借力蹬起"],
+    rest: '30-45 秒', tip: '离心控制的经典康复动作（NSCA 推荐），强化膝盖周围稳定肌群'
+  },
+  {
+    id: 'reverse-nordic', name: '反向北欧挺', muscle: 'legs', type: 'isolate', mechanic: 'other',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ["股四头肌"], secondary: ["髂腰肌"],
+    steps: ["跪姿，身体笔直，脚踝由他人或固定物压住", "保持躯干一条直线，身体向后缓慢倾倒", "股四头肌离心发力控制，触地前用手支撑"],
+    errors: ["臀部先向后坐", "身体弯曲", "下落失控"],
+    rest: '60-90 秒', tip: '与北欧挺（练腘绳）互补，专攻股四头肌离心力量与膝盖健康'
+  },
+  {
+    id: 'seated-leg-curl', name: '坐姿腿弯举', muscle: 'legs', type: 'isolate', mechanic: 'pull',
+    equipment: 'machine', difficulty: 1,
+    target: ["腘绳肌"], secondary: ["腓肠肌"],
+    steps: ["调整座椅使膝盖对准器械转轴，压腿垫抵住脚踝", "腘绳肌发力弯腿至最大幅度", "缓慢还原，保持张力"],
+    errors: ["髋部离开座椅借力", "还原过快", "踮脚代偿"],
+    rest: '45-60 秒', tip: '坐姿固定骨盆角度，比俯卧版更孤立腘绳肌（NSCA 分离骨盆效应）'
+  },
+  {
+    id: 'stiff-leg-deadlift', name: '直腿硬拉', muscle: 'legs', type: 'compound', mechanic: 'pull',
+    equipment: 'barbell', difficulty: 2,
+    target: ["腘绳肌", "臀大肌", "竖脊肌"], secondary: ["背阔肌"],
+    steps: ["直立握杠，膝关节近乎伸直（微屈不锁死）", "屈髋将杠沿腿部下滑至腘绳肌强烈拉伸", "伸髋夹臀站起还原"],
+    errors: ["膝盖锁死弯膝变硬拉", "弓背", "杠铃远离身体"],
+    rest: '90-120 秒', tip: '比罗马尼亚硬拉膝角更直，腘绳肌拉伸幅度更大，重量宜轻'
+  },
+  {
+    id: 'glute-ham-raise', name: '臀腿后伸器弯举', muscle: 'legs', type: 'isolate', mechanic: 'pull',
+    equipment: 'other', difficulty: 3,
+    target: ["腘绳肌", "臀大肌"], secondary: ["竖脊肌"],
+    steps: ["脚踝固定于后伸器，身体俯卧至膝盖处", "躯干保持笔直，臀部发力抬起上半身至水平", "控制下放，全程腘绳肌受力"],
+    errors: ["用腰部猛甩", "身体弯曲", "幅度不足"],
+    rest: '90-120 秒', tip: 'GHR 被誉为腘绳肌"动作之王"（NSCA 顶级腘绳训练），先从反向山羊挺身过渡'
+  },
+  {
+    id: 'hamstring-slider', name: '滑动腿弯举', muscle: 'legs', type: 'isolate', mechanic: 'pull',
+    equipment: 'other', difficulty: 2,
+    target: ["腘绳肌"], secondary: ["核心"],
+    steps: ["仰卧，脚跟踩滑片（或毛巾），臀部抬起呈桥状", "脚跟滑向身体方向，将臀部带回", "缓慢滑回伸直，全程臀部不落地"],
+    errors: ["臀部落地休息", "用脚蹬地借力", "幅度不足"],
+    rest: '45-60 秒', tip: '居家版腿弯举，滑片越滑越难，是北欧挺之外的居家腘绳首选'
+  },
+  {
+    id: 'lateral-lunge', name: '侧向弓步', muscle: 'legs', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["大腿内收肌群", "股四头肌"], secondary: ["臀中肌"],
+    steps: ["站立双脚并拢，向一侧迈出大步", "屈膝下蹲，另一条腿保持伸直，臀部向后坐", "蹬地回到起始位，换另一侧"],
+    errors: ["膝盖内扣", "幅度过小", "上身前倾过多"],
+    rest: '45-60 秒', tip: '侧向移动模式强化内收肌与臀中肌，是横向变向与膝盖稳定的基础'
+  },
+  {
+    id: 'squat-jump', name: '深蹲跳', muscle: 'legs', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ["股四头肌", "臀大肌"], secondary: ["腘绳肌", "核心", "心肺"],
+    steps: ["双脚与肩同宽站立，屈髋屈膝下蹲", "手臂向后摆，爆发起跳向上", "落地屈膝缓冲，立即衔接下一次"],
+    errors: ["落地膝盖内扣", "起跳前停顿过久", "落地过重"],
+    rest: '60-90 秒', tip: '下肢爆发力训练，落地缓冲是膝盖安全的关键'
+  },
+  {
+    id: 'band-calf-raise', name: '弹力带站姿提踵', muscle: 'legs', type: 'isolate', mechanic: 'other',
+    equipment: 'band', difficulty: 1,
+    target: ["腓肠肌"], secondary: ["比目鱼肌"],
+    steps: ["双脚踩弹力带中段，双手握两端于肩侧", "膝盖伸直，脚跟下放至拉伸位", "踮起至最高点停顿 2 秒后缓慢下放"],
+    errors: ["借助膝部弹动", "幅度过小", "身体前倾借力"],
+    rest: '45-60 秒', tip: '居家提踵方案：带子阻力全程递增，顶端张力最大'
   }
 ];

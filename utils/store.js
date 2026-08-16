@@ -134,8 +134,11 @@ function removeWorkout(id) {
   wx.setStorageSync(KEY_WORKOUTS, next);
 }
 
+// 训练记录 id：进程内自增序列防同毫秒碰撞（极端快速连存时 Date.now()+random 可能撞 id 导致覆盖）
+var _idSeq = 0;
 function genId() {
-  return 'w_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+  _idSeq = (_idSeq + 1) % 100000;
+  return 'w_' + Date.now() + '_' + _idSeq + '_' + Math.floor(Math.random() * 10000);
 }
 
 // ---------- 体重记录 ----------
@@ -629,6 +632,12 @@ function getCustomExercise(id) {
 function saveCustomExercise(ex) {
   // 边界：必须是有效对象且有 id 和 name
   if (!ex || typeof ex !== 'object' || !ex.id || !ex.name) {
+    return false;
+  }
+  // 安全：id 必须是安全字符（__proto__/constructor 等原型链 key 拒绝，防污染）
+  var idStr = String(ex.id);
+  if (!/^[A-Za-z0-9_-]{1,60}$/.test(idStr) ||
+      idStr === '__proto__' || idStr === 'constructor' || idStr === 'prototype') {
     return false;
   }
   // 边界：target 必须是数组（肌群词非法时置空，防御页面漏校验）

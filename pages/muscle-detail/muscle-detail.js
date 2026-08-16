@@ -1,5 +1,5 @@
 // 部位训练页：按具体肌肉发力分区展示某部位的训练动作
-// 入口：动作库页"部位训练指南"；?key=chest 指定部位，页内可切换全部 10 个部位
+// 入口：动作库页"部位训练指南"；?key=chest 指定部位，页内可切换全部 9 个部位
 var exercisesData = require('../../data/exercises/index');
 var muscleMap = require('../../data/muscle-map');
 

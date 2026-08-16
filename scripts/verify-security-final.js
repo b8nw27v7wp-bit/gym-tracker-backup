@@ -452,8 +452,8 @@ console.log('\n========================================');
 console.log('8. 知识库完整性');
 console.log('========================================');
 
-check(knowledge.ALL.length === 30, '知识库30篇文章');
-check(knowledge.CATEGORIES.length === 5, '5个分类');
+  check(knowledge.ALL.length === 43, '知识库43篇文章');
+check(knowledge.CATEGORIES.length === 6, '6个分类');
 var artIds = new Set();
 var artDup = 0;
 knowledge.ALL.forEach(a => { if (artIds.has(a.id)) artDup++; artIds.add(a.id); });
@@ -480,7 +480,7 @@ console.log('\n========================================');
 console.log('10. 动作库完整性');
 console.log('========================================');
 
-check(exercisesData.ALL.length === 189, '动作库189个动作');
+  check(exercisesData.ALL.length === 278, '动作库278个动作');
 check(exercisesData.MUSCLES.length === 9, '9个部位（小腿已并入腿）');
 var exIds = new Set();
 var exDup = 0;

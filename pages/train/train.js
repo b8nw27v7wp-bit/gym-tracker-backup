@@ -408,9 +408,9 @@ Page({
     });
   },
 
-  // 训练页内搜索（跨部位，内置 + 自定义合并）
+  // 训练页内搜索（跨部位，内置 + 自定义合并）；长度/类型防御（WXML maxlength 可被绕过）
   onSearchInput: function (e) {
-    var kw = e.detail.value.trim();
+    var kw = String(e.detail.value || '').slice(0, 30).trim();
     this.setData({ searchKeyword: kw });
     if (kw) {
       this.setData({

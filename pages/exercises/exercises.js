@@ -70,7 +70,7 @@ Page({
 
   onShareAppMessage: function () {
     return {
-      title: '铁馆日志 · 173 个动作的健身动作库',
+      title: '铁馆日志 · 278 个动作的健身动作库',
       path: '/pages/exercises/exercises'
     };
   },

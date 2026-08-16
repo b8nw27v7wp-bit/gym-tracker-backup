@@ -176,5 +176,85 @@ module.exports = [
     steps: ["高位滑轮单手握把，肘部贴紧体侧", "前臂下压至手臂完全伸直", "顶端挤压三头停顿，缓慢还原"],
     errors: ["肘部外张", "身体前倾借力", "下压轨迹内偏"],
     rest: '45-60 秒', tip: '单臂便于集中注意力，纠正两侧三头力量不平衡'
+  },
+  {
+    id: 'bayesian-curl', name: '绳索低位弯举', muscle: 'arms', type: 'isolate', mechanic: 'pull',
+    equipment: 'cable', difficulty: 2,
+    target: ["肱二头肌"], secondary: ["肱肌"],
+    steps: ["低位滑轮单手握把，肘部后移微抬（上臂略前倾）", "保持上臂位置固定，前臂弯举至最大收缩", "缓慢还原至手臂伸直，全程张力不断"],
+    errors: ["肘部前移变成普通弯举", "身体后仰借力", "还原过快"],
+    rest: '45-60 秒', tip: '低位角度让二头长头始终处于拉伸位，是目前公认的二头肌增长最佳变式之一'
+  },
+  {
+    id: 'drag-curl', name: '拖拽弯举', muscle: 'arms', type: 'isolate', mechanic: 'pull',
+    equipment: 'barbell', difficulty: 1,
+    target: ["肱二头肌"], secondary: ["肱肌"],
+    steps: ["持杠站立，肘部向后移，杠铃贴近身体上拉", "沿身体表面将杠拖向胸口（肘部持续后移）", "顶端停顿 1 秒，沿原路缓慢下放"],
+    errors: ["杠铃远离身体", "借助摆荡", "耸肩"],
+    rest: '45-60 秒', tip: '杠铃贴身上行的轨迹避开了肩前束代偿，二头收缩更充分'
+  },
+  {
+    id: 'zottman-curl', name: '佐特曼弯举', muscle: 'arms', type: 'isolate', mechanic: 'pull',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ["肱二头肌", "前臂"], secondary: ["肱肌"],
+    steps: ["持哑铃做标准弯举至顶端", "顶端旋转手腕使掌心朝下", "保持旋前姿势缓慢下放，再旋回掌心向上"],
+    errors: ["旋转时机错误", "下放过快", "肘部大幅前移"],
+    rest: '45-60 秒', tip: '离心阶段旋前额外刺激肱桡肌与前臂，一动作双收益'
+  },
+  {
+    id: 'one-arm-cable-curl', name: '单臂绳索弯举', muscle: 'arms', type: 'isolate', mechanic: 'pull',
+    equipment: 'cable', difficulty: 1,
+    target: ["肱二头肌"], secondary: ["肱肌"],
+    steps: ["低位滑轮单手握把，站姿或坐姿", "上臂固定贴体，前臂向上弯举至最大收缩", "顶端挤压 1 秒，缓慢还原"],
+    errors: ["肘部外张", "身体摆动借力", "只做半程"],
+    rest: '45-60 秒', tip: '绳索恒定张力+单侧专注，二头训练黄金组合'
+  },
+  {
+    id: 'bicep-curl-machine', name: '器械弯举', muscle: 'arms', type: 'isolate', mechanic: 'pull',
+    equipment: 'machine', difficulty: 1,
+    target: ["肱二头肌"], secondary: ["肱肌"],
+    steps: ["调整座椅，上臂抵靠垫板，双手握把", "前臂向上弯举至最大收缩", "缓慢还原至手臂接近伸直"],
+    errors: ["靠垫位置过高", "借力拉起", "还原不彻底"],
+    rest: '45-60 秒', tip: '固定轨迹杜绝借力，新手感受二头孤立收缩的首选'
+  },
+  {
+    id: 'band-curl', name: '弹力带弯举', muscle: 'arms', type: 'isolate', mechanic: 'pull',
+    equipment: 'band', difficulty: 1,
+    target: ["肱二头肌"], secondary: ["肱肌"],
+    steps: ["双脚踩弹力带中段，双手握两端", "上臂固定，前臂弯举至最大收缩", "缓慢还原，全程对抗阻力"],
+    errors: ["借身体后仰", "只做半程", "弹力带松脱"],
+    rest: '45-60 秒', tip: '弹力带顶端张力最大，居家二头训练首选'
+  },
+  {
+    id: 'close-grip-pushup', name: '窄距俯卧撑', muscle: 'arms', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["肱三头肌"], secondary: ["胸大肌", "三角肌前束"],
+    steps: ["双手与肩同宽或略窄撑地，身体呈直线", "屈肘（肘部贴近身体）下放至胸部接近手背", "三头发力推起还原"],
+    errors: ["肘部外展变成宽距俯卧撑", "塌腰", "只做半程"],
+    rest: '45-60 秒', tip: '窄距+肘贴体=三头主导，自重练三头最基础的动作'
+  },
+  {
+    id: 'single-arm-overhead-ext', name: '单臂颈后臂屈伸', muscle: 'arms', type: 'isolate', mechanic: 'push',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ["肱三头肌长头"], secondary: ["肱三头肌"],
+    steps: ["坐姿单手举哑铃过头，上臂贴耳", "屈肘将哑铃下放至颈后，感受长头拉伸", "三头发力伸直手臂还原"],
+    errors: ["肘部外张", "借腰部摆动", "哑铃下放过深"],
+    rest: '45-60 秒', tip: '过头位重点拉长三头长头（占三头体积最大），单侧更易控制'
+  },
+  {
+    id: 'band-kickback', name: '弹力带臂屈伸', muscle: 'arms', type: 'isolate', mechanic: 'push',
+    equipment: 'band', difficulty: 1,
+    target: ["肱三头肌"], secondary: ["肱三头肌长头"],
+    steps: ["弹力带踩于脚下，俯身屈髋，上臂贴体夹紧", "前臂向后伸直对抗阻力，顶端挤压三头", "缓慢还原"],
+    errors: ["上臂晃动", "借摆荡甩直", "耸肩"],
+    rest: '45-60 秒', tip: '居家三头孤立动作，顶端停顿感受长头收缩'
+  },
+  {
+    id: 'single-arm-reverse-pushdown', name: '单臂反握下压', muscle: 'arms', type: 'isolate', mechanic: 'push',
+    equipment: 'cable', difficulty: 1,
+    target: ["肱三头肌"], secondary: ["前臂"],
+    steps: ["高位滑轮反握（掌心向上）单手握把", "肘部贴紧体侧，前臂下压至完全伸直", "顶端挤压停顿，缓慢还原"],
+    errors: ["肘部外张", "身体前倾借力", "只做半程"],
+    rest: '45-60 秒', tip: '反握角度强化三头内侧头，同时捎带前臂'
   }
 ];

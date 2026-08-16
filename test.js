@@ -24,7 +24,7 @@ function assert(cond, name) {
 
 // ---------- 动作库 v2 ----------
 console.log('1. 动作库（v2 专业版）');
-assert(exercisesData.ALL.length === 189, '共 ' + exercisesData.ALL.length + ' 个动作');
+assert(exercisesData.ALL.length === 278, '共 ' + exercisesData.ALL.length + ' 个动作');
 assert(exercisesData.MUSCLES.length === 9, '9 个部位（小腿已并入腿）');
 // id 唯一
 const ids = new Set();
@@ -54,10 +54,18 @@ let noArticle = 0;
 exercisesData.MUSCLES.forEach(m => {
   if (!exercisesData.muscleInfo(m.key).articleIds || exercisesData.muscleInfo(m.key).articleIds.length === 0) noArticle++;
 });
-assert(noArticle === 0, '10 个部位都有关联知识文章');
+assert(noArticle === 0, '9 个部位都有关联知识文章');
 const chestArts = chest.articleIds;
 assert(chestArts.indexOf('volume-intensity') >= 0, '胸部关联训练原理文章');
 assert(knowledge.getArticle(chestArts[0]) !== null, '关联文章 id 在知识库中真实存在');
+// articleIds 全量守门（v2.27）：9 部位关联阅读 id 必须全部存在，杜绝坏引用
+let badArtRef = 0;
+exercisesData.MUSCLES.forEach(m => {
+  (exercisesData.muscleInfo(m.key).articleIds || []).forEach(aid => {
+    if (!knowledge.getArticle(aid)) { badArtRef++; console.log('  坏关联:', m.key, aid); }
+  });
+});
+assert(badArtRef === 0, '9 部位关联阅读 id 全部有效（badRef=' + badArtRef + '）');
 // 新扩充动作抽查
 assert(exercisesData.getExercise('landmine-press') && exercisesData.getExercise('nordic-curl') &&
        exercisesData.getExercise('swimming') && exercisesData.getExercise('handstand-pushup'), 'v2.2 新动作已入库');
@@ -67,6 +75,16 @@ assert(exercisesData.getExercise('squat').name === '杠铃深蹲', 'getExercise 
 assert(exercisesData.difficultyText(2) === '进阶', '难度文案');
 assert(exercisesData.typeText('compound') === '复合', '类型文案');
 assert(exercisesData.equipmentText('barbell') === '杠铃', '器械文案');
+// v2.26.9 动作库扩充抽查（89 个新动作的代表性样本）
+const NEW_EX = ['neutral-grip-db-press', 'incline-machine-press', 'neutral-grip-pullup', 'trap-bar-deadlift',
+  'zercher-squat', 'reverse-nordic', 'glute-ham-raise', 'band-calf-raise', 'hip-thrust-machine', 'clamshell',
+  'pike-pushup', 'external-rotation', 'waiters-carry', 'bayesian-curl', 'close-grip-pushup',
+  'pallof-press', 'farmer-carry', 'hollow-rock', 'jump-rope', 'ski-erg', 'pull-buoy', 'treading-water'];
+let newExBad = 0;
+NEW_EX.forEach(id => { if (!exercisesData.getExercise(id)) { newExBad++; console.log('  缺失:', id); } });
+assert(newExBad === 0, 'v2.26.9 新增动作代表性样本全部入库（' + NEW_EX.length + ' 个）');
+assert(exercisesData.getExercise('superman').equipment === 'bodyweight' && exercisesData.getExercise('squat-jump').equipment === 'bodyweight', '新增自重动作 equipment 正确');
+assert(exercisesData.getExercise('glute-ham-raise').difficulty === 3 && exercisesData.getExercise('band-assisted-pullup').difficulty === 1, '新增动作难度分级合理');
 
 // 前臂模块移除（v2.4）：部位不在列表、动作不在库、历史记录兜底名保留
 assert(exercisesData.MUSCLES.every(function (m) { return m.key !== 'forearms'; }), '前臂部位已从模块移除');
@@ -86,7 +104,7 @@ assert(exercisesData.muscleGroups('calves').length === 0, 'calves 无训练指�
 
 // 游泳板块（v2.4 新增独立部位）
 const swims = exercisesData.exercisesByMuscle('swimming');
-assert(swims.length === 7, '游泳板块 7 个动作（实际 ' + swims.length + '）');
+assert(swims.length === 12, '游泳板块 12 个动作（实际 ' + swims.length + '）');
 assert(exercisesData.getExercise('freestyle') && exercisesData.getExercise('butterfly') &&
        exercisesData.getExercise('kick-drill') && exercisesData.getExercise('water-jogging'), '游泳细分动作已入库');
 let swimIncomplete = 0;
@@ -104,7 +122,7 @@ const SECONDARY_TERMS = new Set([
   '三角肌', '三角肌前束', '三角肌后束', '冈下肌', '前臂', '大圆肌', '大腿内收肌', '心肺',
   '斜方肌上部', '斜方肌中部', '斜方肌下部', '核心', '比目鱼肌', '竖脊肌', '股四头肌', '腓肠肌',
   '肱三头肌', '肱三头肌长头', '肱二头肌', '肱肌', '背阔肌', '胸大肌', '胸大肌下部',
-  '腘绳肌', '腰方肌', '腹斜肌', '腹横肌', '腹直肌', '臀大肌', '菱形肌', '髂腰肌', '髋屈肌'
+  '腘绳肌', '腰方肌', '腹斜肌', '腹横肌', '腹直肌', '臀大肌', '臀中肌', '菱形肌', '髂腰肌', '髋屈肌'
 ]);
 const secBadTerms = [];
 exercisesData.ALL.forEach(e => (e.secondary || []).forEach(s => {
@@ -190,14 +208,14 @@ exercisesData.MUSCLES.forEach(m => {
     });
   });
 });
-assert(recBad === 0, '31 个分区全部带训练处方 rec');
+assert(recBad === 0, '29 个分区全部带训练处方 rec');
 assert(orderBad === 0, '分区顺序号连续正确');
 assert(exMetaBad === 0, '动作行类型/器械文案完整');
 // 全部动作都被分区覆盖
 const coveredIds = {};
 exercisesData.MUSCLES.forEach(m => exercisesData.muscleGroups(m.key).forEach(g => g.exercises.forEach(e => { coveredIds[e.id] = true; })));
 const uncovered = exercisesData.ALL.filter(e => !coveredIds[e.id]);
-assert(uncovered.length === 0, '181 个动作全部归入肌肉分区');
+assert(uncovered.length === 0, exercisesData.ALL.length + ' 个动作全部归入肌肉分区');
 assert(exercisesData.muscleGroups('nonexistent').length === 0, '未知部位分区为空');
 
 // 搜索
@@ -255,8 +273,8 @@ assert(hiitDraft.length === 5 && hiitDraft[0].exerciseId === 'burpee', 'HIIT 日
 
 // ---------- 知识库 ----------
 console.log('3. 知识库');
-assert(knowledge.ALL.length === 30, '共 ' + knowledge.ALL.length + ' 篇文章');
-assert(knowledge.CATEGORIES.length === 5, '5 个分类');
+assert(knowledge.ALL.length === 43, '共 ' + knowledge.ALL.length + ' 篇文章');
+assert(knowledge.CATEGORIES.length === 6, '6 个分类');
 const kIds = new Set();
 knowledge.ALL.forEach(a => { if (kIds.has(a.id)) dup++; kIds.add(a.id); });
 assert(kIds.size === knowledge.ALL.length, '文章 id 无重复');
@@ -272,6 +290,17 @@ assert(kIncomplete === 0, '全部文章章节结构有效');
 const glossary = knowledge.getArticle('glossary');
 assert(glossary && glossary.sections.length >= 4, '术语表 4+ 节');
 assert(knowledge.categoryName('plans') === '分化计划', '分类名映射');
+// v2.27 NSCA/ACE 知识库扩充抽查
+const NEW_ART = ['energy-systems', 'muscle-contraction', 'neuromuscular-adaptation', 'periodization',
+  'program-parameters', 'plyometrics', 'speed-agility', 'core-stability', 'ace-ift-model',
+  'fitness-testing', 'heart-rate-zones', 'health-screening', 'behavior-change'];
+let newArtBad = 0;
+NEW_ART.forEach(id => { if (!knowledge.getArticle(id)) { newArtBad++; console.log('  缺失:', id); } });
+assert(newArtBad === 0, 'v2.27 新增 13 篇文章全部入库');
+assert(knowledge.CATEGORIES.some(c => c.key === 'performance' && c.name === '运动表现'), '新增「运动表现」分类');
+assert(knowledge.ALL.filter(a => a.category === 'performance').length === 6, '运动表现分类 6 篇文章（实际 ' + knowledge.ALL.filter(a => a.category === 'performance').length + '）');
+assert(knowledge.getArticle('energy-systems').category === 'performance' && knowledge.getArticle('health-screening').category === 'recovery' && knowledge.getArticle('ace-ift-model').category === 'principles', '新增文章分类归属正确');
+assert(knowledge.getArticle('periodization').sections.length >= 4 && knowledge.getArticle('ace-ift-model').sections.length >= 4, '新增文章章节完整');
 
 // ---------- 构造测试数据 ----------
 console.log('4. 训练数据计算');
@@ -782,7 +811,7 @@ assert(exPage.data.ex && exPage.data.ex.name === '杠铃卧推', '动作详情�
 assert(exPage.data.muscle && exPage.data.muscle.name === '胸', '部位知识加载（胸部训练知识）');
 assert(exPage.data.muscle.tips.length >= 3, '部位要点 ≥3 条');
 assert(exPage.data.muscle.recommended.length >= 3, '同部位推荐动作 ≥3 个');
-assert(exPage.data.articles.length === 2 && exPage.data.articles[0].id === 'volume-intensity', '关联阅读 2 篇（训练原理）');
+assert(exPage.data.articles.length === 4 && exPage.data.articles[0].id === 'volume-intensity', '关联阅读 4 篇（训练原理）');
 assert(exPage.data.articles.every(a => a.title && a.summary && a.catName), '关联文章标题/摘要/分类完整');
 
 // 推荐动作跳转
@@ -795,12 +824,28 @@ assert(navLog[navLog.length - 1] === 'nav:/pages/knowledge-detail/knowledge-deta
 // 其他部位动作的关联知识（抽查腿部，v2.26.7 小腿并入后 3 篇）
 const legsPage = instantiate(pageCfg);
 legsPage.onLoad({ id: 'squat' });
-assert(legsPage.data.muscle.name === '腿' && legsPage.data.articles.length === 3, '深蹲关联腿部知识');
+assert(legsPage.data.muscle.name === '腿' && legsPage.data.articles.length === 5, '深蹲关联腿部知识');
 
 // 不存在的动作 → toast + 返回
 const badPage = instantiate(pageCfg);
 badPage.onLoad({ id: 'nope' });
 assert(badPage.data.ex === null, '不存在动作显示空态');
+
+// 知识详情页冒烟（v2.27 补全：含新增 NSCA/ACE 文章）
+// 注意：require 页面模块会覆盖 pageCfg，必须放在本节所有动作详情断言之后
+require('./pages/knowledge-detail/knowledge-detail.js');
+const kdPage = instantiate(pageCfg);
+kdPage.onLoad({ id: 'periodization' });
+assert(kdPage.data.article && kdPage.data.article.id === 'periodization' && kdPage.data.article.sections.length >= 3, '知识详情渲染新增文章（周期化）');
+assert(kdPage.data.article.catName === '运动表现', '新增文章分类文案正确');
+const kdShare = kdPage.onShareAppMessage();
+assert(kdShare && kdShare.path === '/pages/knowledge-detail/knowledge-detail?id=periodization', '知识详情分享路径');
+kdPage.onLoad({ id: 'glossary' });
+assert(kdPage.data.article && kdPage.data.article.catName === '术语表', '知识详情渲染术语表');
+// 空态用独立实例（onLoad 空态分支不重置 article，复用实例会残留上一篇文章）
+const kdBad = instantiate(pageCfg);
+kdBad.onLoad({ id: 'nonexistent-art' });
+assert(kdBad.data.article === null, '不存在文章空态');
 
 // 直达详情页无返回栈兜底（BUG 修复）：navigateBack fail → 切回动作库 tab
 let fallbackChecked = false;
@@ -2258,7 +2303,8 @@ store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
 console.log('20. 自重动作仅次数（引体向上/俯卧撑等）');
 // 20.1 训练页添加引体向上：bodyweight 标记 + 只预填次数
 store.clearAll(); store.ensureInit();
-store.saveWorkout({ id: 'w_pull', ts: Date.now(), date: todayStr19(), duration: 40, items: [{ exerciseId: 'pullup', exerciseName: '引体向上', muscle: 'back', bodyweight: true, sets: [{ weight: 0, reps: 10 }] }] });
+// w_pull 用"昨天"的时间戳：避免系统时钟回拨（NTP 校准）导致本小节新保存的记录排不到 [0]
+store.saveWorkout({ id: 'w_pull', ts: Date.now() - 86400000, date: todayStr19(), duration: 40, items: [{ exerciseId: 'pullup', exerciseName: '引体向上', muscle: 'back', bodyweight: true, sets: [{ weight: 0, reps: 10 }] }] });
 const tpP = trainPageV26();
 tpP.lastRecords = util.lastRecordsMap(store.getWorkouts());
 tpP.addExerciseById('pullup');
@@ -2274,8 +2320,8 @@ assert(tpP.data.draft[0].sets[0].weight === '' && tpP.data.draft[0].sets[0].reps
 // 20.3 保存：weight 存 0 + bodyweight 冗余标记
 tpP.sessionStartTs = Date.now();
 tpP.onSave();
-const savedPull = store.getWorkouts()[0];
-assert(savedPull.items[0].bodyweight === true && savedPull.items[0].sets[0].weight === 0 && savedPull.items[0].sets[0].reps === 12, '自重训练保存 weight=0 + bodyweight 标记');
+const savedPull = store.getWorkouts().find(function (w) { return w.items[0] && w.items[0].exerciseId === 'pullup'; });
+assert(savedPull && savedPull.items[0].bodyweight === true && savedPull.items[0].sets[0].weight === 0 && savedPull.items[0].sets[0].reps === 12, '自重训练保存 weight=0 + bodyweight 标记');
 assert(util.calcWorkout(savedPull).volume === 0, '自重动作容量 0（统计口径不变）');
 // 20.4 非自重动作不受影响
 tpP.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '60', reps: '8' }] }];
@@ -2289,6 +2335,8 @@ hP.loadList();
 const hPull = hP.data.list.find(function (x) { return x.id === savedPull.id; });
 assert(hPull && hPull.items[0].bodyweight === true && hPull.items[0].sets[0].weight === '', '历史页自重动作不显示重量');
 // 20.6 重复上次：自重动作不预填重量
+// 先移除 20.4 的 bench 记录（ws 按 ts 倒序，bench 与 pullup 可能同毫秒保存导致排序竞争 → [0] 不确定）
+store.removeWorkout(savedBench.id);
 freshRequire('./pages/train/train.js');
 const tpR = instantiate(pageCfg);
 tpR.sessionStartTs = Date.now();

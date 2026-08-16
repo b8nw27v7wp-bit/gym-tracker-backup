@@ -48,7 +48,7 @@ gym-tracker/
 │   ├── export  exercise-edit                        # v2.22/v2.23 子页
 │   └── measurements  goals                          # v2.24/v5 子页
 ├── doc/                            项目文档（建构规划见 doc/architecture.md §1-§10，索引见 §9）
-└── test.js                         数据层单测（673 项断言）
+└── test.js                         数据层单测（687 项断言）
 ```
 
 ## 3. 开发规范

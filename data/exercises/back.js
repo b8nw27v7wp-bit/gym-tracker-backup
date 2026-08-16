@@ -248,5 +248,101 @@ module.exports = [
     steps: ["俯卧撑撑姿，双手持哑铃", "保持身体稳定，单臂将哑铃拉向髋部", "放下后换另一侧，交替进行"],
     errors: ["髋部旋转晃动", "哑铃拉向胸口", "身体塌腰"],
     rest: '60-90 秒', tip: '划船与核心稳定二合一，重量宁轻勿重'
+  },
+  {
+    id: 'neutral-grip-pullup', name: '中立握引体', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ["背阔肌"], secondary: ["肱二头肌", "大圆肌"],
+    steps: ["双手对握中立握把（掌心相对，间距与肩同宽）", "肩胛下沉后收，背阔发力将身体拉起至下巴过杠", "控制下放至手臂伸直，肩胛保持稳定"],
+    errors: ["借助摆动荡起", "只拉半程", "耸肩耸肩借力"],
+    rest: '90-120 秒', tip: '中立握比正握更省前臂、比反握更少二头代偿，是很多人能拉的第一个引体'
+  },
+  {
+    id: 'band-assisted-pullup', name: '弹力带辅助引体', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'band', difficulty: 1,
+    target: ["背阔肌"], secondary: ["肱二头肌", "大圆肌"],
+    steps: ["弹力带一端挂杠，单脚（或膝）踩在带子另一端", "握杠悬挂，背阔发力向上拉起", "下放时带子提供部分支撑，控制离心"],
+    errors: ["弹力带阻力过大动作太轻松", "借助摆动", "下放完全松劲"],
+    rest: '90-120 秒', tip: '带子越粗辅助越大，随力量进步逐级换细带，向标准引体过渡'
+  },
+  {
+    id: 'scapular-pullup', name: '肩胛引体', muscle: 'back', type: 'isolate', mechanic: 'pull',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["斜方肌下部"], secondary: ["背阔肌"],
+    steps: ["正握单杠完全悬挂，肩胛自然上提", "保持手臂伸直，仅用肩胛下沉后收把身体微微拉起", "顶端停顿 2 秒后缓慢还原"],
+    errors: ["屈肘把身体拉上去", "身体摆动借力", "耸肩耸肩代替下沉"],
+    rest: '45-60 秒', tip: '引体前最该练的预备动作：激活背阔与下斜方，学会"沉肩发力"'
+  },
+  {
+    id: 'one-arm-seated-row', name: '单臂绳索划船', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'cable', difficulty: 1,
+    target: ["背阔肌"], secondary: ["菱形肌", "肱二头肌"],
+    steps: ["坐姿单手握柄，对侧脚踩实地面", "挺胸收腹，把柄拉向身体侧面（肘贴体侧）", "顶峰肩胛后缩停顿 1 秒，缓慢还原"],
+    errors: ["身体旋转借力", "耸肩", "还原时被拉向前倾"],
+    rest: '60-90 秒', tip: '单侧划船行程更大，能清晰感受背阔肌单侧的收缩'
+  },
+  {
+    id: 'landmine-row', name: '地雷管划船', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'other', difficulty: 2,
+    target: ["背阔肌", "菱形肌"], secondary: ["竖脊肌", "肱二头肌"],
+    steps: ["杠铃一端抵地，另一端装片，跨立于杠前", "屈髋俯身，双手握杠铃套筒处", "将杠拉向腹部，肘部贴近身体向后收"],
+    errors: ["弓背", "拉向胸口变成耸肩", "用腰甩动借力"],
+    rest: '60-90 秒', tip: '地雷管的角度对下背友好，比传统划船更不容易弓腰'
+  },
+  {
+    id: 'band-row', name: '弹力带划船', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'band', difficulty: 1,
+    target: ["菱形肌", "背阔肌"], secondary: ["肱二头肌", "三角肌后束"],
+    steps: ["弹力带固定于与胸同高的锚点，坐姿或站姿握两端", "挺胸，肘部向后拉带动肩胛后缩", "顶峰停顿 1 秒，缓慢还原"],
+    errors: ["耸肩", "身体前后晃动借力", "只用手臂拉"],
+    rest: '45-60 秒', tip: '居家练上背厚度的基础动作，带子张力恒定更安全'
+  },
+  {
+    id: 'smith-row', name: '史密斯划船', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'machine', difficulty: 1,
+    target: ["背阔肌", "菱形肌"], secondary: ["肱二头肌", "三角肌后束"],
+    steps: ["史密斯杠铃调至大腿中段高度，俯身握杠（握距与肩同宽）", "挺直下背，将杠拉向腹部下沿", "缓慢下放至手臂伸直，保持躯干角度不变"],
+    errors: ["身体随惯性直立", "弓背", "杠铃沿轨道拉向胸口"],
+    rest: '60-90 秒', tip: '固定轨道自动帮你稳定轨迹，适合新手学习划船模式'
+  },
+  {
+    id: 'trap-bar-deadlift', name: '六角杠铃硬拉', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'other', difficulty: 1,
+    target: ["竖脊肌", "臀大肌", "腘绳肌"], secondary: ["股四头肌", "斜方肌上部"],
+    steps: ["站入六角杠中央，双脚与髋同宽", "屈髋屈膝握住两侧把手，挺直背部", "腿部蹬地同时伸髋将杠拉起，顶端站直"],
+    errors: ["弓背", "杠铃离身体太远", "顶端过度后仰"],
+    rest: '90-120 秒', tip: '六角杠让重心更居中，腰部剪切力小于传统硬拉，是新手学硬拉的首选'
+  },
+  {
+    id: 'superman', name: '超人式', muscle: 'back', type: 'isolate', mechanic: 'pull',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["竖脊肌"], secondary: ["臀大肌", "腰方肌"],
+    steps: ["俯卧于垫上，双臂向前伸直", "同时抬起双臂与双腿，让躯干呈弓形", "顶端停顿 2 秒后缓慢放下"],
+    errors: ["抬头过高颈部发力", "靠惯性甩起", "只抬上半身"],
+    rest: '30-45 秒', tip: '无器械强化竖脊肌，久坐人群日常保养下背的经典动作'
+  },
+  {
+    id: 'bird-dog', name: '鸟狗式', muscle: 'back', type: 'isolate', mechanic: 'pull',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["竖脊肌"], secondary: ["核心", "臀大肌"],
+    steps: ["四点跪撑，双手在肩正下方、膝在髋正下方", "同时伸直对侧手臂与腿，保持躯干水平", "停顿 2 秒后缓慢收回，换另一侧"],
+    errors: ["腰部塌陷或弓起", "手脚伸得过高晃动", "换边过快"],
+    rest: '30-45 秒', tip: '训练脊柱中立位控制与核心协同，下背痛康复期的安全首选'
+  },
+  {
+    id: 'db-shrug', name: '哑铃耸肩', muscle: 'back', type: 'isolate', mechanic: 'pull',
+    equipment: 'dumbbell', difficulty: 1,
+    target: ["斜方肌上部"], secondary: ["菱形肌"],
+    steps: ["双手持哑铃自然站立，肩胛放松下沉", "斜方肌发力耸肩至最高点，停顿 1 秒", "缓慢下放还原"],
+    errors: ["耸肩耸肩代替斜方发力", "用惯性甩动", "手臂弯曲借力"],
+    rest: '45-60 秒', tip: '耸肩到顶停顿，配合缓慢下放，斜方上部刺激最到位'
+  },
+  {
+    id: 'straight-arm-band-pulldown', name: '弹力带直臂下压', muscle: 'back', type: 'isolate', mechanic: 'pull',
+    equipment: 'band', difficulty: 1,
+    target: ["背阔肌"], secondary: ["肱三头肌"],
+    steps: ["弹力带固定于高处，双臂伸直握带", "保持手臂伸直，背阔发力将带下压至大腿前侧", "缓慢还原至手臂与地面平行"],
+    errors: ["屈肘变成三头下压", "弓背", "耸肩耸肩借力"],
+    rest: '45-60 秒', tip: '直臂下压专注背阔肌收缩，居家也能精准练到"拉背"的感觉'
   }
 ];

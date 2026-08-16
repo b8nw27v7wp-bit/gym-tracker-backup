@@ -152,5 +152,85 @@ module.exports = [
     steps: ["靠墙倒立，双手撑地与墙保持距离", "屈肘将头顶缓慢接近地面", "肩部发力推起至手臂伸直"],
     errors: ["腰部过度反弓", "头顶直接砸地", "肘部外展过大"],
     rest: '90-120 秒', tip: '肩部王牌自重动作，进阶可做半程或加负重背心'
+  },
+  {
+    id: 'smith-ohp', name: '史密斯推举', muscle: 'shoulder', type: 'compound', mechanic: 'push',
+    equipment: 'machine', difficulty: 1,
+    target: ["三角肌前束", "三角肌中束"], secondary: ["肱三头肌", "斜方肌上部"],
+    steps: ["坐于史密斯机下，杠铃对准锁骨上方", "双手握杠略宽于肩，向上推起至手臂伸直", "缓慢下放至下巴高度"],
+    errors: ["下放过低肩峰撞击", "腰部过度反弓", "握距过窄"],
+    rest: '60-90 秒', tip: '固定轨迹推举安全可靠，肩部不适者比自由杠铃更友好'
+  },
+  {
+    id: 'single-arm-ohp', name: '单臂哑铃推举', muscle: 'shoulder', type: 'compound', mechanic: 'push',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ["三角肌前束"], secondary: ["肱三头肌", "核心"],
+    steps: ["坐姿或站姿，单手持哑铃于肩侧", "将哑铃垂直推起至手臂伸直", "控制下放还原，换另一侧"],
+    errors: ["身体侧倾借力", "下放过低", "腰部反弓"],
+    rest: '60-90 秒', tip: '单侧推举调动核心抗侧屈，同时纠正两侧肩部力量差异'
+  },
+  {
+    id: 'z-press', name: '坐地推举', muscle: 'shoulder', type: 'compound', mechanic: 'push',
+    equipment: 'barbell', difficulty: 3,
+    target: ["三角肌前束"], secondary: ["肱三头肌", "核心"],
+    steps: ["坐于地面双腿伸直，杠铃置于肩前", "保持躯干完全直立，向上推起杠铃", "控制下放，全程核心收紧"],
+    errors: ["身体后仰借力", "弓背", "重量过大导致塌腰"],
+    rest: '90-120 秒', tip: '坐地消除腿部借力，对核心与肩部稳定要求极高，重量要轻'
+  },
+  {
+    id: 'pike-pushup', name: '派克俯卧撑', muscle: 'shoulder', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ["三角肌前束"], secondary: ["肱三头肌", "斜方肌上部"],
+    steps: ["俯卧撑姿势，臀部抬高呈倒 V 形（派克姿势）", "屈肘让头顶接近地面（肘部略外展）", "肩部发力推起还原"],
+    errors: ["臀部塌下变成俯卧撑", "头顶砸地", "肘部过度外展"],
+    rest: '60-90 秒', tip: '自重推肩经典：脚垫高或头点地进阶，肩部活动度不足者控制深度'
+  },
+  {
+    id: 'band-lateral-raise', name: '弹力带侧平举', muscle: 'shoulder', type: 'isolate', mechanic: 'other',
+    equipment: 'band', difficulty: 1,
+    target: ["三角肌中束"], secondary: ["斜方肌上部"],
+    steps: ["双脚踩弹力带中段，双手握两端垂于体侧", "肘微屈，将双臂向两侧抬起至与肩同高", "顶端停顿 1 秒，缓慢下放"],
+    errors: ["耸肩耸肩借力", "用惯性甩起", "抬起过高（超过肩高）"],
+    rest: '45-60 秒', tip: '弹力带顶端阻力最大，正好强化中束最短缩位'
+  },
+  {
+    id: 'lean-away-lateral', name: '单侧倾斜侧平举', muscle: 'shoulder', type: 'isolate', mechanic: 'other',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ["三角肌中束"], secondary: ["斜方肌中部"],
+    steps: ["单手扶固定物，身体向对侧倾斜", "另一手持哑铃，将手臂向侧上方抬起至肩高", "顶端停顿 1 秒，缓慢下放"],
+    errors: ["身体借力摆动", "耸肩", "幅度不足"],
+    rest: '45-60 秒', tip: '倾斜角度让中束在无借力状态下做功，中束孤立刺激最强的变式'
+  },
+  {
+    id: 'external-rotation', name: '弹力带肩外旋', muscle: 'shoulder', type: 'isolate', mechanic: 'other',
+    equipment: 'band', difficulty: 1,
+    target: ["冈下肌"], secondary: ["三角肌后束"],
+    steps: ["弹力带固定于肘部高度，肘贴体侧屈 90°", "前臂向外旋转，带动肩外旋至最大幅度", "缓慢还原，保持肘部不动"],
+    errors: ["肘部离开身体", "借身体旋转", "阻力过大"],
+    rest: '30-45 秒', tip: '强化肩袖（冈下肌/小圆肌），预防肩峰撞击的必做小动作'
+  },
+  {
+    id: 'reverse-pec-deck', name: '反向蝴蝶机', muscle: 'shoulder', type: 'isolate', mechanic: 'pull',
+    equipment: 'machine', difficulty: 1,
+    target: ["三角肌后束"], secondary: ["菱形肌"],
+    steps: ["面向靠垫坐好，双臂前伸握两侧把手", "肘微屈，将双臂向后打开至与肩平齐", "顶峰肩胛后缩停顿 1 秒，缓慢还原"],
+    errors: ["借力摆动", "耸肩", "手臂完全伸直"],
+    rest: '45-60 秒', tip: '固定轨迹让后束训练零门槛，是"后束永远练不够"人群的救星'
+  },
+  {
+    id: 'band-pull-apart', name: '弹力带后拉', muscle: 'shoulder', type: 'isolate', mechanic: 'pull',
+    equipment: 'band', difficulty: 1,
+    target: ["三角肌后束", "菱形肌"], secondary: ["斜方肌中部"],
+    steps: ["双手与肩同宽握弹力带于胸前，手臂伸直", "肩胛后缩，将带向两侧拉至胸口打开", "顶端停顿 1 秒，缓慢还原"],
+    errors: ["屈肘变成划船", "耸肩", "幅度过小"],
+    rest: '30-45 秒', tip: '对抗圆肩体态的金牌动作，办公族每天 3 组立竿见影'
+  },
+  {
+    id: 'waiters-carry', name: '农夫过头行走', muscle: 'shoulder', type: 'compound', mechanic: 'other',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ["三角肌"], secondary: ["核心", "前臂"],
+    steps: ["单臂或双臂举哑铃过头，手臂伸直", "保持哑铃稳定不晃动，小步向前行走", "走 20-30 米为一组，全程核心收紧"],
+    errors: ["手臂晃动", "身体向一侧倾斜", "耸肩"],
+    rest: '60-90 秒', tip: '过头行走对肩袖稳定与核心抗侧屈要求极高，轻重量即可收获巨大'
   }
 ];

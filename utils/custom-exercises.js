@@ -105,8 +105,11 @@ function validRest(v) {
 // 生成规范化的自定义动作对象（含默认值兜底）
 function buildCustomExercise(input) {
   var data = input && typeof input === 'object' ? input : {};
+  // id 防御：仅接受 custom_ 前缀合法格式（编辑/导入传原 id），__proto__ 等非法 id 回退生成新 id
+  var id = (typeof data.id === 'string' && /^custom_[A-Za-z0-9_-]{1,40}$/.test(data.id))
+    ? data.id : 'custom_' + Date.now();
   return {
-    id: data.id || 'custom_' + Date.now(),
+    id: id,
     name: safeStr(data.name).trim().slice(0, 30),
     target: sanitizeTarget(data.target),
     secondary: sanitizeTarget(data.secondary),

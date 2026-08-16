@@ -14,20 +14,22 @@ function isLb() {
   return unitLabel() === 'lb';
 }
 
-// kg → 显示单位数值（四舍五入一位小数）
+// kg → 显示单位数值（四舍五入一位小数；计算溢出归 0，防御 1e308 级输入）
 function displayWeight(kg, unit) {
   var n = Number(kg);
   if (!isFinite(n) || n < 0) n = 0;
   var f = (unit || unitLabel()) === 'lb' ? LB_PER_KG : 1;
-  return Math.round(n * f * 10) / 10;
+  var r = Math.round(n * f * 10) / 10;
+  return isFinite(r) ? r : 0;
 }
 
-// 显示单位数值 → kg（输入换算，存储统一 kg）
+// 显示单位数值 → kg（输入换算，存储统一 kg；计算溢出归 0）
 function storedWeight(display, unit) {
   var n = Number(display);
   if (!isFinite(n) || n < 0) n = 0;
   var f = (unit || unitLabel()) === 'lb' ? LB_PER_KG : 1;
-  return Math.round(n / f * 10) / 10;
+  var r = Math.round(n / f * 10) / 10;
+  return isFinite(r) ? r : 0;
 }
 
 // 显示文案："60 kg" / "132.3 lb"；无效值返回 ''（供"上次记录/建议"等标签）

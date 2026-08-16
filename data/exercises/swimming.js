@@ -57,5 +57,45 @@ module.exports = [
     steps: ['水深至胸口，身体直立', '原地跑步动作，双臂自然摆动', '保持呼吸节奏，持续 15-30 分钟'],
     errors: ['动作幅度过小', '身体前倾过度', '没有保持核心收紧'],
     rest: '按心率恢复', tip: '水中慢跑对关节零冲击，适合恢复日或体重较大人群的有氧'
+  },
+  {
+    id: 'pull-buoy', name: '夹板自由泳划手', muscle: 'swimming', type: 'compound', mechanic: 'pull',
+    equipment: 'other', difficulty: 2,
+    target: ["背阔肌", "心肺功能"], secondary: ["肱三头肌"],
+    steps: ["双腿夹浮板，只用手臂划水", "高肘抱水，前臂垂直向后推水", "保持身体流线，换气节奏稳定"],
+    errors: ["腿夹不紧浮板晃动", "拖肘划水", "身体左右扭动"],
+    rest: '30-60 秒', tip: '夹板隔离打腿，专项强化上肢划水力量与背阔肌参与感'
+  },
+  {
+    id: 'single-arm-freestyle', name: '单臂自由泳', muscle: 'swimming', type: 'compound', mechanic: 'pull',
+    equipment: 'other', difficulty: 2,
+    target: ["背阔肌"], secondary: ["核心", "三角肌"],
+    steps: ["一侧手臂贴体不动（或持板），单臂连续划水", "另一侧配合转体换气", "游 25 米后换另一侧"],
+    errors: ["转体不足", "划水路线过短", "换气抬头过高"],
+    rest: '30-60 秒', tip: '单臂训练放大划水技术细节，纠正不对称发力最有效的分解练习'
+  },
+  {
+    id: 'treading-water', name: '踩水', muscle: 'swimming', type: 'compound', mechanic: 'other',
+    equipment: 'other', difficulty: 2,
+    target: ["心肺功能", "股四头肌"], secondary: ["核心"],
+    steps: ["深水区直立，双手水面划圆维持平衡", "双腿交替或同时做蹬夹水动作", "头部保持在水面以上，均匀呼吸"],
+    errors: ["身体后仰", "只用上肢硬撑", "呼吸急促"],
+    rest: '30-60 秒', tip: '踩水是保命技能也是全身心肺训练：30 秒全力踩水强度极高'
+  },
+  {
+    id: 'dolphin-kick', name: '波浪打腿', muscle: 'swimming', type: 'compound', mechanic: 'other',
+    equipment: 'other', difficulty: 2,
+    target: ["核心", "股四头肌"], secondary: ["背阔肌", "心肺"],
+    steps: ["水中俯卧流线姿势，双臂前伸", "胸部下压、髋部带动双腿做波浪式打腿", "小幅快频持续打腿 25 米"],
+    errors: ["只弯膝盖打腿", "腰部僵硬", "幅度过大"],
+    rest: '45-60 秒', tip: '蝶泳腿是核心躯干链训练：波浪来自胸髋联动，不是膝盖'
+  },
+  {
+    id: 'breaststroke-kick', name: '蛙泳蹬腿', muscle: 'swimming', type: 'compound', mechanic: 'other',
+    equipment: 'other', difficulty: 1,
+    target: ["股四头肌", "大腿内收肌群"], secondary: ["核心"],
+    steps: ["双手扶板俯卧，只做蛙泳腿部动作", "收腿翻脚（脚跟贴近臀部）", "向外蹬夹水，滑行后再收腿"],
+    errors: ["膝盖过宽", "翻脚不足蹬水打滑", "收腿时弓背"],
+    rest: '30-60 秒', tip: '蛙泳蹬腿是全身腿部+核心的组合发力，分解练习效果立竿见影'
   }
 ];

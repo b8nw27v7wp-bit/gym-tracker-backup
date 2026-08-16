@@ -240,5 +240,101 @@ module.exports = [
     steps: ["双手虎口相对呈菱形撑于胸下", "身体呈直线，屈肘下放至胸部接近手背", "推起还原，全程收紧核心"],
     errors: ["双手间距过大变成窄距俯卧撑", "塌腰", "手肘外展"],
     rest: '60-90 秒', tip: '窄支撑面让三头和胸内侧受力最大，进阶动作'
+  },
+  {
+    id: 'neutral-grip-db-press', name: '中立握哑铃卧推', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ["胸大肌中部"], secondary: ["肱三头肌", "三角肌前束"],
+    steps: ["仰卧持哑铃于胸侧，掌心相对（中立握）", "哑铃沿垂直轨迹下放至胸两侧", "胸部发力推起至手臂伸直，顶端两铃靠拢不碰撞"],
+    errors: ["掌心转向变成普通卧推", "下放过深肩关节不适", "两侧轨迹不一致"],
+    rest: '60-90 秒', tip: '中立握对肩关节最友好（肱骨内旋角度小），肩痛人群推胸首选'
+  },
+  {
+    id: 'single-arm-db-press', name: '单臂哑铃卧推', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ["胸大肌中部"], secondary: ["肱三头肌", "核心"],
+    steps: ["仰卧单手举哑铃于胸上方，另一手扶腰或平放", "单侧下放至胸侧，感受胸肌拉伸", "胸部发力推起，顶端停顿 1 秒"],
+    errors: ["身体向一侧扭转借力", "下放速度过快", "另一侧肩膀离开凳面"],
+    rest: '60-90 秒', tip: '单侧训练逼出核心稳定，纠正左右胸肌力量不平衡'
+  },
+  {
+    id: 'pushup-plus', name: '肩胛前伸俯卧撑', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["胸大肌"], secondary: ["核心", "肱三头肌"],
+    steps: ["标准俯卧撑支撑姿势（手略宽于肩）", "撑起时继续向前推，让肩胛骨完全前伸（背部拱起）", "保持 1 秒后下放还原，重复全程"],
+    errors: ["肩胛前伸幅度不足变成普通俯卧撑", "塌腰", "耸肩耸肩借力"],
+    rest: '45-60 秒', tip: '顶端多做的肩胛前伸强化前锯肌，是预防肩痛和提升俯卧撑表现的关键'
+  },
+  {
+    id: 'explosive-pushup', name: '拍手俯卧撑', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 3,
+    target: ["胸大肌", "肱三头肌"], secondary: ["核心", "三角肌前束"],
+    steps: ["标准俯卧撑姿势，屈肘下放至胸部贴近地面", "爆发推起让双手离地，空中快速拍手一次", "双手落地缓冲，控制下放进入下一次"],
+    errors: ["起跳高度不足拍不到手", "落地塌腰", "急于求成动作变形"],
+    rest: '90-120 秒', tip: '爆发力俯卧撑：拍手高度越高对胸肌爆发力要求越高，能力不足可先拍地'
+  },
+  {
+    id: 'incline-machine-press', name: '上斜器械推胸', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'machine', difficulty: 1,
+    target: ["胸大肌上部"], secondary: ["三角肌前束", "肱三头肌"],
+    steps: ["调节座椅与握把高度，使握把对准锁骨下缘", "背贴靠垫，向前上方推起", "缓慢还原至胸部有拉伸感"],
+    errors: ["座椅过高变成平板推", "肩膀离垫耸肩", "还原过快失去张力"],
+    rest: '60-90 秒', tip: '固定轨迹+上斜角度，新手练上胸最安全的选择'
+  },
+  {
+    id: 'smith-incline-press', name: '史密斯上斜卧推', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'machine', difficulty: 1,
+    target: ["胸大肌上部"], secondary: ["三角肌前束", "肱三头肌"],
+    steps: ["凳背调至 30°-45°，杠铃下放点对准上胸", "沿固定轨道下放至上胸位置", "沿斜上方推起至手臂伸直"],
+    errors: ["凳背角度过大变成推肩", "轨道与身体不匹配手腕受压", "腰部过度反弓"],
+    rest: '60-90 秒', tip: '史密斯轨迹稳定，适合无人保护时冲击上胸重量'
+  },
+  {
+    id: 'smith-decline-press', name: '史密斯下斜卧推', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'machine', difficulty: 2,
+    target: ["胸大肌下部"], secondary: ["肱三头肌"],
+    steps: ["下斜凳固定双脚，杠铃下放点对准下胸", "沿轨道下放至下胸，肘部约 45°", "推起至手臂伸直"],
+    errors: ["头部过低头晕", "握距过窄三头代偿", "下放过深肩部不适"],
+    rest: '60-90 秒', tip: '固定轨迹比自由杠铃更容易控制，下胸专项进阶选择'
+  },
+  {
+    id: 'band-bench-press', name: '弹力带卧推', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'band', difficulty: 1,
+    target: ["胸大肌中部"], secondary: ["肱三头肌", "三角肌前束"],
+    steps: ["弹力带从背下绕过，两端握于手中躺好", "推起时对抗弹力带阻力至手臂伸直", "缓慢下放控制离心"],
+    errors: ["弹力带中途滑脱", "推起速度过快弹震", "顶端耸肩"],
+    rest: '60-90 秒', tip: '弹力带阻力随拉伸加大，顶端锁定的三头力量提升明显'
+  },
+  {
+    id: 'squeeze-press', name: '哑铃挤压推胸', muscle: 'chest', type: 'isolate', mechanic: 'push',
+    equipment: 'dumbbell', difficulty: 1,
+    target: ["胸大肌中部", "胸大肌外侧"], secondary: ["肱三头肌"],
+    steps: ["仰卧双手合掌夹住哑铃于胸前（哑铃内端相贴）", "全程用力夹紧哑铃向前推起", "顶端挤压胸肌 1-2 秒，缓慢收回"],
+    errors: ["哑铃松开不夹紧", "推成普通卧推", "耸肩借力"],
+    rest: '45-60 秒', tip: '持续夹紧让胸缝（内侧）刺激加倍，斯万推的哑铃版'
+  },
+  {
+    id: 'single-arm-cable-press', name: '单臂绳索推胸', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'cable', difficulty: 1,
+    target: ["胸大肌中部"], secondary: ["核心", "肱三头肌"],
+    steps: ["背对龙门架单手握柄，同侧腿后撤弓步", "掌心向前，向前推至手臂伸直", "控制还原，感受胸肌拉伸"],
+    errors: ["身体旋转借力", "推到底耸肩", "核心松弛"],
+    rest: '60-90 秒', tip: '站姿单侧推胸同时训练核心抗旋转，居家与健身房通用'
+  },
+  {
+    id: 'single-arm-fly', name: '单臂哑铃飞鸟', muscle: 'chest', type: 'isolate', mechanic: 'push',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ["胸大肌中部"], secondary: ["三角肌前束"],
+    steps: ["仰卧单手举哑铃于胸上方，另一手扶凳", "肘微屈固定角度，向一侧展开至胸部有拉伸", "胸部发力沿弧线合拢至胸前"],
+    errors: ["手肘角度变化变成卧推", "下放过深拉伤胸肩", "身体向一侧滚动"],
+    rest: '45-60 秒', tip: '单侧飞鸟更容易专注单侧胸肌的拉伸与收缩感'
+  },
+  {
+    id: 'band-fly', name: '弹力带夹胸', muscle: 'chest', type: 'isolate', mechanic: 'push',
+    equipment: 'band', difficulty: 1,
+    target: ["胸大肌中部"], secondary: ["肱三头肌", "三角肌前束"],
+    steps: ["弹力带绕于身后固定，双手握两端于体侧", "手肘微屈，向前向内夹紧至胸前", "缓慢还原至胸部有拉伸感"],
+    errors: ["手臂伸直变成推", "弹力带突然弹回", "耸肩"],
+    rest: '45-60 秒', tip: '居家夹胸神器，拉得越开顶端阻力越大'
   }
 ];
