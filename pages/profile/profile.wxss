@@ -1,4 +1,4 @@
-﻿.page {
+.page {
   padding: 20rpx;
   background: #f7f7f8;
   min-height: 100vh;

@@ -1,4 +1,4 @@
-﻿// 本地验证脚本：mock wx storage，跑通数据层逻辑
+// 本地验证脚本：mock wx storage，跑通数据层逻辑
 // 用法: node test.js
 const path = require('path');
 
