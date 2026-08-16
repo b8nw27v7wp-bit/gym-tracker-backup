@@ -2596,6 +2596,92 @@ assert(kdRel.data.related.length > 0, '文章关联推荐动作（学完就练�
 navLog.length = 0;
 kdRel.onGoTrain({ currentTarget: { dataset: { id: kdRel.data.related[0].id } } });
 assert(wx._store['pending_exercise'] === kdRel.data.related[0].id && navLog[navLog.length - 1] === 'tab:/pages/train/train', '去记录携带预选动作跳训练页');
+// 23.8 v2.28.1 边界与安全（代码排查后补充）
+// 23.8.1 快速加组越界 index / 空 sets 动作
+store.clearAll(); store.ensureInit();
+freshRequire('./pages/train/train.js');
+const bqp = instantiate(pageCfg);
+bqp.onLoad({});
+bqp.onShow();
+bqp.addExerciseById('bench');
+const lenBefore = bqp.data.draft[0].sets.length;
+bqp.onQuickAddSet({ currentTarget: { dataset: { index: -1 } } });
+bqp.onQuickAddSet({ currentTarget: { dataset: { index: 99 } } });
+assert(bqp.data.draft[0].sets.length === lenBefore, '快速加组越界 index 不崩且不变更');
+bqp.data.draft[0].sets = [];
+bqp.onQuickAddSet({ currentTarget: { dataset: { index: 0 } } });
+assert(bqp.data.draft[0].sets.length === 1 && bqp.data.draft[0].sets[0].reps === '', '空 sets 动作快速加组补 1 个空组不崩');
+// 23.8.2 快速删组越界 set
+bqp.onQuickRemoveSet({ currentTarget: { dataset: { index: 0, set: 9 } } });
+assert(bqp.data.draft[0].sets.length === 1, '快速删组越界 set 不崩');
+// 23.8.3 buildSummary 脏数据防御：null 组 / 对象 weight / 全热身组
+bqp.data.draft = [{
+  exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', bodyweight: false,
+  sets: [null, { weight: { toString: 'x' }, reps: 8, warmup: false }, { weight: 60, reps: 8, warmup: true }, { weight: '', reps: 10, warmup: false }]
+}];
+const bs1 = bqp.buildSummary({ duration: 30, items: bqp.data.draft });
+assert(bs1.sets === 2 && bs1.volumeText === '10 kg', 'buildSummary 脏数据（null/对象/热身）防御且自重组按次数');
+assert(bs1.exercises === 1 && bs1.durationText === '30分钟', '总结动作数/时长正确');
+// 23.8.4 buildSummary 全热身组 → 容量 0
+bqp.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 60, reps: 8, warmup: true }] }];
+const bs2 = bqp.buildSummary({ duration: 0, items: bqp.data.draft });
+assert(bs2.sets === 0 && bs2.volumeText === '0 kg' && bs2.durationText === '未计时', '全热身组总结容量 0 / 未计时');
+// 23.8.5 重复保存：第二次对比第一次容量
+store.clearAll(); store.ensureInit();
+freshRequire('./pages/train/train.js');
+const bqp2 = instantiate(pageCfg);
+bqp2.onLoad({});
+bqp2.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '60', reps: '8' }] }];
+bqp2.sessionStartTs = Date.now();
+bqp2.onSave();
+assert(bqp2.data.summary.prevText === '', '首次保存无上次对比');
+bqp2.onCloseSummary();
+bqp2.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '70', reps: '8' }] }];
+bqp2.sessionStartTs = Date.now();
+bqp2.onSave();
+assert(bqp2.data.summary.prevText === '480 kg' && bqp2.data.summary.deltaText.indexOf('+') > 0, '二次保存对比上次容量（480kg，+16%）');
+// 23.8.10 同毫秒连续保存：总结对比仍指向真正上次（按 id 排除本次，不依赖排序）
+bqp2.onCloseSummary();
+bqp2.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '70', reps: '8' }] }];
+bqp2.sessionStartTs = Date.now();
+bqp2.onSave();
+assert(bqp2.data.summary.prevText === '560 kg', '同毫秒第三次保存对比上次（560kg，按 id 定位）');
+// 23.8.6 pending_muscle_key 非法/注入值 → 训练页兜底不崩
+wx._store['pending_muscle_key'] = '__proto__';
+freshRequire('./pages/train/train.js');
+const bqp3 = instantiate(pageCfg);
+bqp3.onLoad({});
+bqp3.onShow();
+assert(bqp3.data.currentMuscle === '__proto__' && wx._store['pending_muscle_key'] === undefined, 'pending_muscle_key 注入值消费不崩（名称兜底）');
+wx._store['pending_muscle_key'] = 'not-a-muscle';
+bqp3.onShow();
+assert(bqp3.data.currentMuscle === 'not-a-muscle', '非法部位 key 消费不崩');
+// 23.8.7 onGoTrain 无 id / 注入 id → 不崩
+freshRequire('./pages/knowledge-detail/knowledge-detail.js');
+const kdB = instantiate(pageCfg);
+kdB.onLoad({ id: 'warm-up-guide' });
+kdB.onGoTrain({ currentTarget: { dataset: {} } });
+assert(wx._store['pending_exercise'] === undefined, 'onGoTrain 无 id 不写入');
+kdB.onGoTrain({ currentTarget: { dataset: { id: '__proto__' } } });
+assert(wx._store['pending_exercise'] === '__proto__', 'onGoTrain 注入 id 写入后由训练页兜底');
+// 训练页消费注入动作 id → findExercise 查不到不崩
+wx._store['pending_exercise'] = '__proto__';
+freshRequire('./pages/train/train.js');
+const bqp4 = instantiate(pageCfg);
+bqp4.onLoad({});
+bqp4.onShow();
+assert(bqp4.data.draft.length === 0, '注入动作 id 消费后查不到不崩');
+// 23.8.8 知识详情无关联部位文章 → related 空
+freshRequire('./pages/knowledge-detail/knowledge-detail.js');
+const kdN = instantiate(pageCfg);
+kdN.onLoad({ id: 'nutrition-myths' });
+assert(kdN.data.related.length === 0, '无关联部位文章 related 为空');
+// 23.8.9 统计页全部正常 → lowSites 空（无"去练"入口）
+store.clearAll(); store.ensureInit();
+freshRequire('./pages/stats/stats.js');
+const spOk = instantiate(pageCfg);
+spOk.onShow();
+assert((!spOk.data.recovery || spOk.data.recovery.lowSites.length === 0), '无欠练部位时 lowSites 为空（或无恢复数据）');
 store.clearAll(); store.ensureInit();
 store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
 

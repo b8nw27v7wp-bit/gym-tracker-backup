@@ -363,7 +363,7 @@
 
   <!-- 练后总结浮层（v2.28.1 正反馈瞬间） -->
   <view class="mask" wx:if="{{summaryShow}}" bindtap="onCloseSummary">
-    <view class="summary-card" catchtap="">
+    <view class="summary-card" catchtap="noop">
       <view class="summary-title">🎉 本次训练完成</view>
       <view class="summary-grid">
         <view class="summary-cell">

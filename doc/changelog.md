@@ -2,6 +2,16 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.28.2（2026-08-16）— v2.28.1 代码排查/边界/安全加固
+
+- **fix(train)**: 练后总结对比对象按 `workout.id` 精确定位——同毫秒连续保存（测试/极端场景）时 `getWorkouts()[0]` 排序不确定会对比到本次自身，现排除本次后取 ts 最大记录
+- **fix(train)**: buildSummary 复用 `util.setVolume`（消除口径重复，自重/负重与统计完全一致）+ null 组脏数据防御（`!s` 前置检查）+ 动作数取实际落库数（空组动作被过滤后不虚报）
+- **fix(ui)**: summary 浮层 `catchtap=""` → `catchtap="noop"`（与项目事件规范/stats chart-panel 一致，verify-interaction 守门）
+- **fix(security)**: stats 欠练映射 `GROUP_TO_SITE` 补 hasOwnProperty 防御（r.key 为 `__proto__` 等原型链键不误映射）
+- **test**: 主套件新增 23.8 节（11 项边界+安全）：加组/删组越界、空 sets 加组、buildSummary null 组/对象 weight/全热身、重复保存对比、同毫秒三次保存对比、pending_muscle_key 注入值消费兜底、onGoTrain 无 id/注入 id、无关联文章 related 空、无欠练 lowSites 空；743→759
+- **docs**: README/architecture/testing/dev-guide 测试计数同步（合计 1601→1617）；changelog 记录
+- 回归：test.js 759 项（3 连跑）+ 16 个专项脚本全绿
+
 ## v2.28.1（2026-08-16）— 体验闭环优化：记录流减摩擦 / 练后总结 / 欠练直达 / 学完就练
 
 - **feat(train)**: 记录流减摩擦——动作列表内联组摘要：每组显示重量×次数（点击进编辑层），「＋ 加一组」一键复制上一组（日常同重量多组不用再进弹层），组尾 × 快速删组（至少保留一组）；全部操作同步草稿持久化

@@ -722,7 +722,9 @@ Page({
 
   // ---------- 练后总结（v2.28.1 正反馈瞬间） ----------
   // 保存后组装：本次容量/组数/动作/时长 + 对比上次训练 + 新 PR 数 + 鼓励文案
-  buildSummary: function (mins) {
+  // 传入已构造的 workout（保存前调用方先 saveWorkout 再调本函数）；按 id 排除本次，
+  // 避免同毫秒连续保存时 getWorkouts()[0] 排序不确定导致对比对象错乱
+  buildSummary: function (workout) {
     var self = this;
     var draft = this.data.draft;
     var volume = 0;
@@ -731,11 +733,10 @@ Page({
     draft.forEach(function (item) {
       var itemMax = 0;
       (item.sets || []).forEach(function (s) {
-        if (s.warmup) return;
+        if (!s || s.warmup) return; // 脏数据/null 组防御
+        volume += util.setVolume(s); // 与统计口径一致（负重=重量×次数；自重=次数）
         var w = util.toNum(s && s.weight);
         var r = util.toNum(s && s.reps);
-        if (w > 0) volume += w * r;
-        else if (r > 0 && (s.weight === 0 || s.weight === '' || s.weight === undefined || s.weight === null)) volume += r;
         if (w > itemMax) itemMax = w;
         if (r > 0) sets += 1;
       });
@@ -745,9 +746,15 @@ Page({
         if (rec && rec.weight > 0 && itemMax > rec.weight) prCount += 1;
       }
     }, this);
-    // 对比上次训练（保存后 [0]=本次，[1]=上次）
+    // 对比上次训练：排除本次 id 后取 ts 最大的记录（同毫秒保存也不串位）
     var ws = store.getWorkouts();
-    var prevVolume = ws.length > 1 ? util.calcWorkout(ws[1]).volume : 0;
+    var prevWorkout = null;
+    (ws || []).forEach(function (w) {
+      if (!w || (workout && w.id === workout.id)) return;
+      if (!prevWorkout || (w.ts || 0) >= (prevWorkout.ts || 0)) prevWorkout = w;
+    });
+    var prevVolume = prevWorkout ? util.calcWorkout(prevWorkout).volume : 0;
+    var mins = workout && workout.duration ? workout.duration : 0;
     var deltaClass = 'delta-flat';
     var deltaText = '';
     var motto = '记录是最好的进步方式，继续保持！';
@@ -772,7 +779,7 @@ Page({
     return {
       volumeText: units.volumeText(volume),
       sets: sets,
-      exercises: draft.length,
+      exercises: workout && workout.items ? workout.items.length : draft.length,
       durationText: (mins > 0) ? util.fmtDuration(mins) : '未计时',
       prevText: prevVolume > 0 ? units.volumeText(prevVolume) : '',
       deltaClass: deltaClass,
@@ -786,6 +793,9 @@ Page({
   onCloseSummary: function () {
     this.setData({ summaryShow: false, summary: null });
   },
+
+  // 阻止浮层卡片点击冒泡到遮罩（与项目 catchtap 规范一致）
+  noop: function () {},
 
   // ---------- 汇总 ----------
   refreshDraftMeta: function () {
@@ -910,8 +920,8 @@ Page({
       if (mins > 0) workout.duration = mins; // 未计时/不足 1 分钟：不写时长字段
       store.saveWorkout(workout);
       store.clearDraft(); // 草稿已保存，清除自动草稿
-      // 练后总结（正反馈）：基于保存前草稿 + 保存后的历史对比
-      self.setData({ summaryShow: true, summary: self.buildSummary(mins) });
+      // 练后总结（正反馈）：基于保存前草稿 + 保存后的历史对比（按 workout.id 排除本次）
+      self.setData({ summaryShow: true, summary: self.buildSummary(workout) });
       self.stopRestTimer(); // 训练结束，停止休息倒计时（内部处理自动恢复/清除）
       self.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '', planInfo: null, restCustomSecs: '', restRecommendSecs: 0, restRecommendLabel: '', editWorkoutId: '' });
       self.refreshDraftMeta();

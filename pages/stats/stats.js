@@ -353,8 +353,10 @@ Page({
     };
     var lowSites = [];
     (recovery.rows || []).forEach(function (r) {
-      if (r.status === 'low' && GROUP_TO_SITE[r.key] && lowSites.indexOf(GROUP_TO_SITE[r.key]) < 0) {
-        lowSites.push(GROUP_TO_SITE[r.key]);
+      // hasOwnProperty 防御：r.key 若为 __proto__/constructor 等原型链键不误映射
+      if (r.status === 'low' && Object.prototype.hasOwnProperty.call(GROUP_TO_SITE, r.key)) {
+        var site = GROUP_TO_SITE[r.key];
+        if (lowSites.indexOf(site) < 0) lowSites.push(site);
       }
     });
     recovery.lowSites = lowSites;
