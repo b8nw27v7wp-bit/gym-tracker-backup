@@ -480,8 +480,8 @@ console.log('\n========================================');
 console.log('10. 动作库完整性');
 console.log('========================================');
 
-check(exercisesData.ALL.length === 173, '动作库173个动作');
-check(exercisesData.MUSCLES.length === 10, '10个部位');
+check(exercisesData.ALL.length === 189, '动作库189个动作');
+check(exercisesData.MUSCLES.length === 9, '9个部位（小腿已并入腿）');
 var exIds = new Set();
 var exDup = 0;
 exercisesData.ALL.forEach(e => { if (exIds.has(e.id)) exDup++; exIds.add(e.id); });

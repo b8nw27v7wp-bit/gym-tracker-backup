@@ -27,17 +27,18 @@ Page({
     var workouts = store.getWorkouts();
     var list = workouts.map(function (w) {
       var calc = util.calcWorkout(w);
-      // 展示副本：重量换算为显示单位（存储始终为 kg）
+      // 展示副本：重量换算为显示单位（存储始终为 kg）；自重动作只显示次数
       var items = (w.items || []).map(function (item) {
         return {
           exerciseId: item.exerciseId,
           exerciseName: item.exerciseName,
           note: item.note || '',
+          bodyweight: !!item.bodyweight,
           sets: (item.sets || []).map(function (s) {
             var hasW = s && s.weight !== undefined && s.weight !== null && s.weight !== '';
             var hasR = s && s.reps !== undefined && s.reps !== null && s.reps !== '';
             return {
-              weight: hasW ? units.displayWeight(s.weight) : '',
+              weight: (item.bodyweight || !hasW) ? '' : units.displayWeight(s.weight),
               reps: hasR ? s.reps : '',
               rpe: s && s.rpe,
               warmup: !!(s && s.warmup)

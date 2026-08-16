@@ -184,5 +184,69 @@ module.exports = [
     steps: ["杠铃一端固定于地雷架，侧身单臂握杠", "躯干接近平行地面，握杠手自然下垂", "单臂将杠铃拉向髋部，肘部贴身", "顶端挤压背阔肌后缓慢下放"],
     errors: ["身体旋转借力", "拉向胸口而非髋部", "下放不完全"],
     rest: '90-120 秒', tip: '单臂杠铃轨迹比哑铃更稳定，适合上大重量练背阔'
+  },
+  {
+    id: 'wide-grip-pullup', name: '宽握引体', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'bodyweight', difficulty: 3,
+    target: ['背阔肌'], secondary: ["肱二头肌", "大圆肌"],
+    steps: ["双手宽于肩握杠，身体悬垂", "背阔肌发力将胸部拉向横杠", "顶端下巴过杠后缓慢下放至手臂伸直"],
+    errors: ["用手臂硬拉而非背阔发力", "摆动借力", "下放过快失去张力"],
+    rest: '90-120 秒', tip: '握距越宽越偏背阔外沿，对肩关节活动度要求更高'
+  },
+  {
+    id: 'weighted-pullup', name: '负重引体', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'other', difficulty: 3,
+    target: ['背阔肌'], secondary: ["肱二头肌", "斜方肌下部"],
+    steps: ["腰间挂负重链或双脚夹哑铃，双手略宽于肩握杠", "背阔肌发力拉起至下巴过杠", "缓慢下放至手臂伸直"],
+    errors: ["负重过重动作变形", "摆动借力", "半程训练"],
+    rest: '120-180 秒', tip: '自重引体轻松超过 10 次后的进阶方案，优先保证全程'
+  },
+  {
+    id: 'muscle-up', name: '双立臂', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'bodyweight', difficulty: 3,
+    target: ['背阔肌', '肱三头肌'], secondary: ["胸大肌", "腹直肌"],
+    steps: ["宽握引体向上拉起至胸部接近横杠", "顺势翻腕将身体支撑到杠上（撑起阶段）", "双臂伸直支撑后缓慢下放回到悬垂"],
+    errors: ["引体阶段靠摆动借力", "翻腕时机过晚卡在杠下", "撑起阶段耸肩"],
+    rest: '120-180 秒', tip: '引体与双杠臂屈伸的进阶复合动作，先分别练熟再组合'
+  },
+  {
+    id: 'pendlay-row', name: '潘德雷划船', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'barbell', difficulty: 3,
+    target: ['背阔肌', '斜方肌中部', '菱形肌'], secondary: ["竖脊肌", "肱二头肌"],
+    steps: ["躯干与地面平行，杠铃置于地面，肩胛在杠铃正上方", "爆发力将杠铃拉向腹部，胸骨略抬起", "顶端不保持停顿，直接放回地面"],
+    errors: ["腰部拱起", "用腿蹬地借力", "拉向胸口而非腹部"],
+    rest: '90-120 秒', tip: '每下都从地面重新起杠，爆发力划船之王'
+  },
+  {
+    id: 'supinated-lat-pulldown', name: '反握高位下拉', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'cable', difficulty: 1,
+    target: ['背阔肌'], secondary: ["肱二头肌", "菱形肌"],
+    steps: ["反握（掌心朝向自己）握杆，握距与肩同宽", "背阔肌发力将杆拉至上胸", "顶端挤压后缓慢还原"],
+    errors: ["用手臂下拉而非背阔", "身体后仰过大借力", "还原过快"],
+    rest: '60-90 秒', tip: '反握角度二头参与更多，背阔下部刺激明显，新手友好'
+  },
+  {
+    id: 'incline-row-machine', name: '器械划船', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'machine', difficulty: 1,
+    target: ['背阔肌', '菱形肌'], secondary: ["肱二头肌", "斜方肌中部"],
+    steps: ["胸部贴住靠垫，双手握把", "肩胛后缩将把手拉向身体", "顶端停顿 1 秒后缓慢还原"],
+    errors: ["耸肩代偿", "靠腰腹猛拉", "行程过短"],
+    rest: '60-90 秒', tip: '有靠垫固定躯干，新手练背找感觉首选'
+  },
+  {
+    id: 'band-lat-pulldown', name: '弹力带下拉', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'band', difficulty: 1,
+    target: ['背阔肌'], secondary: ["肱二头肌"],
+    steps: ["弹力带固定于高处，双膝跪地握带两端", "背阔肌发力将带拉向身体两侧", "缓慢还原至手臂伸直"],
+    errors: ["用手臂硬拉", "身体后仰借力", "还原过快"],
+    rest: '45-60 秒', tip: '居家练背阔的方案，选阻力适中的带子做全程'
+  },
+  {
+    id: 'renegade-row', name: '雷尼盖划船', muscle: 'back', type: 'compound', mechanic: 'pull',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ['背阔肌', '菱形肌'], secondary: ["腹直肌", "核心"],
+    steps: ["俯卧撑撑姿，双手持哑铃", "保持身体稳定，单臂将哑铃拉向髋部", "放下后换另一侧，交替进行"],
+    errors: ["髋部旋转晃动", "哑铃拉向胸口", "身体塌腰"],
+    rest: '60-90 秒', tip: '划船与核心稳定二合一，重量宁轻勿重'
   }
 ];

@@ -2,6 +2,36 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.26.8（2026-08-15）— 背部动作扩充 + 自重动作"仅次数"计数
+
+### 背部动作扩充（23→31，动作库 181→189）
+- **feat(data)**: 新增 8 个背部动作——宽握引体（背阔外沿）、负重引体（other 器械，保留重量模式）、双立臂（引体接撑复合）、潘德雷划船（爆发力划船）、反握高位下拉、器械划船（新手）、弹力带下拉（居家）、雷尼盖划船（背+核心）；全部含目标/辅助肌群、要领、错误、休息与要点，并归入背部训练指南分区
+- **feat(muscle-map)**: back SITE_MUSCLES secondary 补肱三头肌（双立臂撑起阶段，部位发力图完备性）
+
+### 自重动作"仅次数"计数（v2.26.8 引体向上计数方式）
+- **feat(train)**: `equipment === 'bodyweight'` 的动作（引体向上/俯卧撑/双杠/宽握引体等）组编辑器隐藏重量输入、显示"自重"标签，只记次数（几个/几次）——负重训练者可用自定义动作或负重引体（other 器械）保留重量模式
+- **feat(save)**: 自重动作保存 weight 固定 0 + 冗余 `bodyweight` 标记（历史显示不依赖动作库）；容量/统计口径不变（自重容量 0）
+- **feat(ui)**: 动作卡"上次记录"、组编辑器预填提示、历史记录明细均按"次数"显示（"上次 8月11日 · 10 次"/"10 次"）；复制上次/编辑历史/计划填充/模板加载自动识别自重动作
+- **fix(validation)**: 自重动作保存时忽略重量字段（误填的重量自动清空）；空组判断按次数为准
+- **test**: 新增第 20 节（8 项）：bodyweight 标记/只预填次数/编辑清空重量/保存 weight=0+标记/非自重不受影响/历史显示/重复上次；全量 673 项 + 专项全绿
+- **docs**: README/requirements/review-kit/testing/content-guidelines/release-checklist/architecture 动作数 181→189 同步
+
+## v2.26.7（2026-08-15）— 小腿并入腿模块
+
+- **refactor(data)**: 小腿（calves）独立部位并入腿（legs）模块——12 个小腿动作（站姿/坐姿/单腿提踵、腿举机提踵、台阶提踵、胫骨前肌提踵等）muscle 改 `legs`，内容合并进 legs.js（34 动作），删除 calves.js；动作库 10 部位 → **9 部位**
+- **feat(legs)**: 腿部位知识补小腿要点；部位训练指南 legs 新增"小腿（腓肠肌/比目鱼肌）"分区（12 个动作）；MUSCLE_ARTICLES 小腿关联文章并入腿（3 篇）
+- **feat(muscle-map)**: SITE_MUSCLES 移除 calves，小腿肌群词（腓肠肌/胫骨前肌/比目鱼肌/心肺）并入 legs——自定义动作 deriveMuscleFromTarget 小腿词 → legs，腿发力图含小腿块
+- **fix(legacy)**: LEGACY_MUSCLES 新增 calves 兜底（旧训练记录 muscle='calves' 统计页仍显示"小腿"）；muscleBalance 旧小腿记录归腿类
+- **test**: 部位数 10→9、分区数 31→29、腿部关联文章 2→3、周报测试动作显式带 target（与真实保存一致）；新增"小腿并入"守门断言；全量 660 项 + 专项全绿
+- **docs**: README/requirements/architecture/design/dev-guide/content-guidelines/testing 部位数同步；changelog 记录
+
+## v2.26.6（2026-08-15）— 胸部动作扩充 8 个
+
+- **feat(data)**: 胸部动作 22→30（动作库 173→181）——新增反握杠铃卧推（上胸）、上斜哑铃飞鸟（上胸）、下斜俯卧撑（上胸）、高位绳索夹胸（下胸）、哑铃地板卧推（中胸）、跪姿俯卧撑（中胸，新手）、站姿绳索推胸（中胸+核心）、钻石俯卧撑（胸内侧+三头）；全部含目标/辅助肌群、要领、常见错误、休息建议与训练要点
+- **feat(muscle-groups)**: 8 个新动作全部归入胸部训练指南分区（上胸 3 / 中胸 3 / 下胸 1 / 夹胸 1），分区 id 引用零失效
+- **test**: 主套件动作数断言 173→181、分区覆盖断言同步；全量回归 660 项 + 专项全绿
+- **docs**: README/requirements/review-kit/testing/content-guidelines/release-checklist/architecture 动作数 173→181 同步
+
 ## v2.26.5（2026-08-15）— 热力图着色 + 昵称框修复
 
 - **fix(css)**: 部位训练热力图格子永远灰色——`.heat-l0~l4` 颜色类定义早于 `.gh-cell`，同特异性后声明胜出被覆盖；改组合选择器 `.gh-cell.heat-lX` 提特异性（BUG-012，详见 bug-log.md）

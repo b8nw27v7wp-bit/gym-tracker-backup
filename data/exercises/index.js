@@ -1,6 +1,7 @@
-// 动作库索引：合并 10 个部位模块 + 部位知识
-// muscle 部位: chest 胸 / back 背 / legs 腿 / glutes 臀 / shoulder 肩 / arms 手臂 / core 核心 / calves 小腿 / cardio 有氧 / swimming 游泳
-// 注：前臂（forearms）模块已移除（v2.4 用户要求）；历史训练记录中 muscle='forearms' 的统计显示由 LEGACY_MUSCLES 兜底
+// 动作库索引：合并 9 个部位模块 + 部位知识
+// muscle 部位: chest 胸 / back 背 / legs 腿（含小腿）/ glutes 臀 / shoulder 肩 / arms 手臂 / core 核心 / cardio 有氧 / swimming 游泳
+// 注：前臂（forearms）模块已移除（v2.4）；小腿（calves）已并入腿模块（v2.26.7）；
+// 历史训练记录中 muscle='forearms'/'calves' 的统计显示由 LEGACY_MUSCLES 兜底
 var chest = require('./chest');
 var back = require('./back');
 var legs = require('./legs');
@@ -8,11 +9,10 @@ var glutes = require('./glutes');
 var shoulders = require('./shoulders');
 var arms = require('./arms');
 var core = require('./core');
-var calves = require('./calves');
 var cardio = require('./cardio');
 var swimming = require('./swimming');
 
-var ALL = chest.concat(back, legs, glutes, shoulders, arms, core, calves, cardio, swimming);
+var ALL = chest.concat(back, legs, glutes, shoulders, arms, core, cardio, swimming);
 
 // 部位定义 + 训练知识
 var MUSCLES = [
@@ -31,8 +31,8 @@ var MUSCLES = [
   {
     key: 'legs', name: '腿', icon: '🦵', freq: '每周 2 次',
     desc: '全身最大肌群，刺激激素分泌帮助全身增肌',
-    tips: ['深蹲/硬拉是核心，放在训练最前面', '股四头和腘绳肌要平衡发展，避免膝盖问题', '练腿后 24-48 小时酸痛属正常，可轻量活动促进恢复'],
-    recommended: ['squat', 'deadlift', 'leg-press', 'rdl', 'lunge']
+    tips: ['深蹲/硬拉是核心，放在训练最前面', '股四头和腘绳肌要平衡发展，避免膝盖问题', '练腿后 24-48 小时酸痛属正常，可轻量活动促进恢复', '小腿并入本部位：站姿提踵练腓肠肌，坐姿练比目鱼肌，吃容量'],
+    recommended: ['squat', 'deadlift', 'leg-press', 'rdl', 'lunge', 'standing-calf', 'seated-calf']
   },
   {
     key: 'glutes', name: '臀', icon: '🍑', freq: '每周 2-3 次',
@@ -57,12 +57,6 @@ var MUSCLES = [
     desc: '腹横肌等深层肌群可每日轻度训练',
     tips: ['平板类练稳定，卷腹类练腹肌，转体类练侧腹', '深蹲硬拉时核心已经在参与，别过度叠加', '下腹薄弱者优先悬垂举腿和仰卧举腿'],
     recommended: ['plank', 'hanging-leg-raise', 'cable-crunch', 'russian-twist', 'dead-bug']
-  },
-  {
-    key: 'calves', name: '小腿', icon: '🦶', freq: '每周 2-3 次',
-    desc: '耐力型肌群，耐受高频高量',
-    tips: ['小腿吃容量，每组 12-20 次效果更好', '底端拉伸+顶端停顿是提踵的灵魂', '站姿练腓肠肌（大），坐姿练比目鱼肌（深）'],
-    recommended: ['standing-calf', 'seated-calf', 'calf-press', 'single-leg-calf']
   },
   {
     key: 'cardio', name: '有氧', icon: '🏃', freq: '每周 2-4 次',
@@ -91,9 +85,10 @@ function getExercise(id) {
   return null;
 }
 
-// 已移除部位的历史记录兜底（统计页部位分布显示用，无动作数据）
+// 已移除/合并部位的历史记录兜底（统计页部位分布显示用，无动作数据）
 var LEGACY_MUSCLES = {
-  forearms: { name: '前臂', icon: '' }
+  forearms: { name: '前臂', icon: '' },
+  calves: { name: '小腿', icon: '🦶' }
 };
 
 function muscleInfo(key) {
@@ -118,12 +113,11 @@ function muscleInfo(key) {
 var MUSCLE_ARTICLES = {
   chest: ['volume-intensity', 'progressive-overload'],
   back: ['volume-intensity', 'rest-interval'],
-  legs: ['progressive-overload', 'tracking-guide'],
+  legs: ['progressive-overload', 'tracking-guide', 'rest-interval'],
   glutes: ['frequency-guide', 'progressive-overload'],
   shoulder: ['rm-rir-rpe', 'rest-interval'],
   arms: ['rm-rir-rpe', 'volume-intensity'],
   core: ['frequency-guide', 'rm-rir-rpe'],
-  calves: ['tracking-guide', 'rest-interval'],
   cardio: ['fat-loss', 'tracking-guide'],
   swimming: ['fat-loss', 'tracking-guide']
 };
@@ -132,21 +126,22 @@ var MUSCLE_ARTICLES = {
 // groups: [{ name 分区名, tips 分区训练要点, exercises: [动作 id] }]；动作 id 必须真实存在于 ALL
 var MUSCLE_GROUPS = {
   chest: [
-    { name: '上胸（锁骨部）', rec: '每周 1-2 次 · 3-4 组 × 8-12 次', tips: ['上斜 30-45° 优先刺激上胸', '上胸薄弱者把上斜动作放在训练首位'], exercises: ['incline-bench', 'incline-db', 'incline-pushup', 'incline-cable-fly', 'landmine-press'] },
-    { name: '中胸（胸骨部）', rec: '每周 2 次 · 4-6 组 × 6-10 次', tips: ['平板推类主打，杠铃优先加重', '推胸时肩胛后缩下沉，肘部 45° 左右'], exercises: ['bench', 'db-bench', 'pushup', 'chest-press-machine', 'smith-bench', 'svend-press', 'floor-press', 'band-pushup'] },
-    { name: '下胸（肋骨部）', rec: '每周 1-2 次 · 3 组 × 8-12 次', tips: ['双杠臂屈伸是下胸最佳复合动作', '身体前倾角度越大越偏下胸'], exercises: ['decline-press', 'decline-db-press', 'dips', 'low-cable-fly', 'wide-pushup'] },
-    { name: '胸缝与夹胸', rec: '训练末尾 · 2-3 组 × 12-15 次', tips: ['夹胸类孤立动作放最后收尾', '顶峰收缩停顿 1-2 秒，不要耸肩'], exercises: ['pec-deck', 'cable-fly', 'cable-crossover', 'db-fly'] }
+    { name: '上胸（锁骨部）', rec: '每周 1-2 次 · 3-4 组 × 8-12 次', tips: ['上斜 30-45° 优先刺激上胸', '上胸薄弱者把上斜动作放在训练首位'], exercises: ['incline-bench', 'incline-db', 'incline-pushup', 'incline-cable-fly', 'landmine-press', 'reverse-grip-bench', 'incline-db-fly', 'decline-pushup'] },
+    { name: '中胸（胸骨部）', rec: '每周 2 次 · 4-6 组 × 6-10 次', tips: ['平板推类主打，杠铃优先加重', '推胸时肩胛后缩下沉，肘部 45° 左右'], exercises: ['bench', 'db-bench', 'pushup', 'chest-press-machine', 'smith-bench', 'svend-press', 'floor-press', 'band-pushup', 'db-floor-press', 'knee-pushup', 'standing-cable-press'] },
+    { name: '下胸（肋骨部）', rec: '每周 1-2 次 · 3 组 × 8-12 次', tips: ['双杠臂屈伸是下胸最佳复合动作', '身体前倾角度越大越偏下胸'], exercises: ['decline-press', 'decline-db-press', 'dips', 'low-cable-fly', 'wide-pushup', 'high-cable-fly'] },
+    { name: '胸缝与夹胸', rec: '训练末尾 · 2-3 组 × 12-15 次', tips: ['夹胸类孤立动作放最后收尾', '顶峰收缩停顿 1-2 秒，不要耸肩'], exercises: ['pec-deck', 'cable-fly', 'cable-crossover', 'db-fly', 'diamond-pushup'] }
   ],
   back: [
-    { name: '背阔肌（宽度）', rec: '每周 2 次 · 4-5 组 × 6-10 次', tips: ['下拉/引体类练宽度，握距越宽越练外沿', '背阔肌发力靠肘部下拉，不是用手拽'], exercises: ['pullup', 'chinup', 'lat-pulldown', 'single-arm-pulldown', 'close-grip-pulldown', 'straight-arm', 'pullover', 'lat-prayer'] },
-    { name: '上背（厚度）', rec: '每周 2 次 · 3-4 组 × 8-12 次', tips: ['划船类练厚度，肩胛后缩发力不要用腰代偿', '划船时肘部贴身体向后拉，别往外飘'], exercises: ['bb-row', 'db-row', 'seated-row', 't-bar-row', 'chest-supported-row', 'reverse-grip-row', 'seal-row', 'wide-seated-row', 'meadow-row'] },
+    { name: '背阔肌（宽度）', rec: '每周 2 次 · 4-5 组 × 6-10 次', tips: ['下拉/引体类练宽度，握距越宽越练外沿', '背阔肌发力靠肘部下拉，不是用手拽'], exercises: ['pullup', 'chinup', 'lat-pulldown', 'single-arm-pulldown', 'close-grip-pulldown', 'straight-arm', 'pullover', 'lat-prayer', 'wide-grip-pullup', 'weighted-pullup', 'muscle-up', 'supinated-lat-pulldown', 'band-lat-pulldown'] },
+    { name: '上背（厚度）', rec: '每周 2 次 · 3-4 组 × 8-12 次', tips: ['划船类练厚度，肩胛后缩发力不要用腰代偿', '划船时肘部贴身体向后拉，别往外飘'], exercises: ['bb-row', 'db-row', 'seated-row', 't-bar-row', 'chest-supported-row', 'reverse-grip-row', 'seal-row', 'wide-seated-row', 'meadow-row', 'pendlay-row', 'incline-row-machine', 'renegade-row'] },
     { name: '下背（竖脊肌）', rec: '每周 1-2 次 · 3 组 × 5-8 次', tips: ['髋铰链模式主导，保持脊柱中立', '硬拉类动作优先保证姿势再加重'], exercises: ['deadlift', 'rack-pull', 'back-extension'] },
     { name: '肩胛稳定', rec: '小重量高次数 · 2-3 组 × 15-20 次', tips: ['打磨肩胛控制，预防圆肩', '耸肩到顶停顿 1 秒，缓慢下放'], exercises: ['shrug', 'face-pull-back', 'inverted-row'] }
   ],
   legs: [
     { name: '股四头肌', rec: '每周 1-2 次 · 4-6 组 × 6-12 次', tips: ['膝主导动作（蹲/腿举/腿屈伸）练四头', '深蹲到底时膝盖对准脚尖方向'], exercises: ['squat', 'front-squat', 'goblet-squat', 'leg-press', 'hack-squat', 'leg-ext', 'sissy-squat', 'box-squat', 'sumo-squat', 'wall-sit'] },
     { name: '腘绳肌', rec: '每周 1-2 次 · 3-4 组 × 8-12 次', tips: ['髋主导（硬拉类）与膝屈（腿弯举）结合', '罗马尼亚硬拉先推髋，弯腿只是辅助'], exercises: ['leg-curl', 'rdl', 'good-morning', 'nordic-curl', 'sumo-deadlift'] },
-    { name: '单腿与内收', rec: '辅助日 · 3 组 × 8-12 次', tips: ['单腿动作纠偏双侧不平衡', '内收机补大腿内侧，动作放慢控制'], exercises: ['lunge', 'bulgarian-split', 'walking-lunge', 'step-up', 'pistol-squat', 'reverse-lunge', 'adductor-machine'] }
+    { name: '单腿与内收', rec: '辅助日 · 3 组 × 8-12 次', tips: ['单腿动作纠偏双侧不平衡', '内收机补大腿内侧，动作放慢控制'], exercises: ['lunge', 'bulgarian-split', 'walking-lunge', 'step-up', 'pistol-squat', 'reverse-lunge', 'adductor-machine'] },
+    { name: '小腿（腓肠肌/比目鱼肌）', rec: '每周 2-3 次 · 4 组 × 12-20 次', tips: ['小腿吃容量，每组 12-20 次效果更好', '底端充分拉伸再发力，顶端停顿 2 秒', '站姿练腓肠肌（大），坐姿练比目鱼肌（深）'], exercises: ['standing-calf', 'donkey-calf', 'single-leg-calf', 'step-calf-raise', 'weighted-step-calf', 'smith-calf', 'jump-rope-calf', 'seated-calf', 'single-seated-calf', 'calf-press', 'calf-press-single', 'tibialis-raise'] }
   ],
   glutes: [
     { name: '臀大肌（髋伸）', rec: '每周 2-3 次 · 4-5 组 × 8-12 次', tips: ['髋伸动作是臀部增长核心，顶端停顿夹臀', '臀推时下巴微收，肋骨不要外翻'], exercises: ['hip-thrust', 'glute-bridge', 'barbell-hip-hinge', 'weighted-glute-bridge', 'single-leg-hip-thrust', 'hip-extension-machine', 'cable-pull-through'] },
@@ -167,11 +162,6 @@ var MUSCLE_GROUPS = {
     { name: '下腹（抬腿）', rec: '每周 2-3 次 · 3 组 × 10-15 次', tips: ['骨盆后倾抬腿练下腹，腰部贴地', '抬腿时膝盖微屈，下放慢一点'], exercises: ['hanging-leg-raise', 'leg-raise-floor', 'captain-chair', 'windshield-wiper', 'flutter-kick'] },
     { name: '侧腹与旋转', rec: '每周 2 次 · 3 组 × 10-12 次/侧', tips: ['抗旋转与转体练腹斜肌', '转体动作骨盆稳定，只转胸椎'], exercises: ['russian-twist', 'side-bend', 'cable-rotation', 'side-plank'] },
     { name: '深层稳定', rec: '可每日 · 2-3 组 × 30-60 秒', tips: ['静力支撑练腹横肌，配合呼吸', '平板支撑塌腰就停，质量优先于时长'], exercises: ['plank', 'dead-bug', 'hollow-hold', 'mountain-climber'] }
-  ],
-  calves: [
-    { name: '腓肠肌（站姿）', rec: '每周 2-3 次 · 4 组 × 12-20 次', tips: ['站姿提踵练腓肠肌，膝伸直顶端停顿', '底端充分拉伸再发力，幅度做满'], exercises: ['standing-calf', 'donkey-calf', 'single-leg-calf', 'step-calf-raise', 'weighted-step-calf', 'smith-calf', 'jump-rope-calf'] },
-    { name: '比目鱼肌（坐姿）', rec: '每周 2-3 次 · 3-4 组 × 12-20 次', tips: ['坐姿屈膝提踵练深层比目鱼肌', '比目鱼肌耐力强，可以高次数冲击'], exercises: ['seated-calf', 'single-seated-calf', 'calf-press', 'calf-press-single'] },
-    { name: '胫骨前肌', rec: '每周 2 次 · 2-3 组 × 15-20 次', tips: ['胫骨前肌容易被忽略，预防小腿失衡', '勾脚尖训练放训练末尾即可'], exercises: ['tibialis-raise'] }
   ],
   cardio: [
     { name: '匀速耐力', rec: '每周 2-4 次 · 30-60 分钟', tips: ['中低强度持续 30 分钟以上，燃脂打底', '能边运动边说话的心率是燃脂区'], exercises: ['treadmill', 'bike', 'elliptical', 'rowing', 'stair-climber'] },

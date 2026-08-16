@@ -244,3 +244,9 @@
 .btn-ghost:active {
   opacity: 0.85;
 }
+
+/* v2.26.8：自重动作（无重量输入） */
+.set-bodyweight {
+  font-size: 23rpx;
+  color: #9ca3af;
+}

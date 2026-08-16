@@ -24,7 +24,7 @@
             wx:for-item="s"
             wx:for-index="si"
             class="detail-set {{s.warmup ? 'detail-set-warm' : ''}}"
-          >{{s.warmup ? '热身 ' : ''}}{{s.weight}}{{unitLabel}}×{{s.reps}}{{s.rpe ? ' @RPE' + s.rpe : ''}}</text>
+          >{{s.warmup ? '热身 ' : ''}}{{ex.bodyweight ? s.reps + ' 次' : s.weight + unitLabel + '×' + s.reps}}{{s.rpe ? ' @RPE' + s.rpe : ''}}</text>
         </view>
       </view>
       <view class="share-row">

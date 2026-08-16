@@ -11,7 +11,7 @@
   <view class="set-head">
     <text class="set-col set-c-no">组</text>
     <text class="set-col set-c-warm">热</text>
-    <text class="set-col set-c-w">重量({{unit}})</text>
+    <text class="set-col set-c-w">{{bodyweight ? '自重' : '重量(' + unit + ')'}}</text>
     <text class="set-col set-c-x"></text>
     <text class="set-col set-c-r">次数</text>
     <text class="set-col set-c-rpe">RPE</text>
@@ -25,6 +25,7 @@
       bindtap="onToggleWarmup"
     >{{item.warmup ? 'W' : '·'}}</view>
     <input
+      wx:if="{{!bodyweight}}"
       class="set-col set-c-w set-input"
       type="digit"
       value="{{item.weight}}"
@@ -32,6 +33,7 @@
       bindinput="onWeightInput"
       placeholder="0"
     />
+    <text wx:else class="set-col set-c-w set-bodyweight">自重</text>
     <text class="set-col set-c-x set-x">×</text>
     <input
       class="set-col set-c-r set-input"

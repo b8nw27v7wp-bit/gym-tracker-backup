@@ -137,13 +137,12 @@ var MUSCLES = {
 // { primary: 该部位主肌群（深蓝）, secondary: 协同肌群（浅蓝）}
 var SITE_MUSCLES = {
   chest:    { primary: ['胸大肌'], secondary: ['肱三头肌', '三角肌前束'] },
-  back:     { primary: ['背阔肌', '斜方肌', '菱形肌'], secondary: ['竖脊肌', '臀大肌', '腘绳肌', '肱二头肌', '三角肌后束', '大圆肌'] },
-  legs:     { primary: ['股四头肌', '腘绳肌', '大腿内收肌'], secondary: ['臀大肌', '竖脊肌'] },
+  back:     { primary: ['背阔肌', '斜方肌', '菱形肌'], secondary: ['竖脊肌', '臀大肌', '腘绳肌', '肱二头肌', '三角肌后束', '大圆肌', '肱三头肌'] },
+  legs:     { primary: ['股四头肌', '腘绳肌', '大腿内收肌', '腓肠肌', '胫骨前肌', '比目鱼肌'], secondary: ['臀大肌', '竖脊肌', '心肺'] },
   glutes:   { primary: ['臀大肌'], secondary: ['腘绳肌', '臀中肌'] },
   shoulder: { primary: ['三角肌'], secondary: ['斜方肌上部', '斜方肌中下部', '斜方肌下部', '斜方肌', '肱三头肌'] },
   arms:     { primary: ['肱二头肌', '肱三头肌', '前臂'], secondary: [] },
   core:     { primary: ['腹直肌', '腹斜肌'], secondary: ['腹横肌', '髋屈肌', '竖脊肌', '臀中肌'] },
-  calves:   { primary: ['腓肠肌', '胫骨前肌'], secondary: ['比目鱼肌', '心肺'] },
   cardio:   { primary: ['心肺'], secondary: ['心肺功能', '背部', '股四头肌', '臀部', '全身', '爆发力', '三角肌'] },
   swimming: { primary: ['心肺', '背阔肌'], secondary: ['心肺功能', '全身', '腿部', '肱三头肌', '胸大肌', '股四头肌', '核心', '髋屈肌', '三角肌'] }
 };

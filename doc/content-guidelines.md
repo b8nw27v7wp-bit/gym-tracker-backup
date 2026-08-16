@@ -1,4 +1,4 @@
-# 内容数据规范（Content Guidelines）
+﻿# 内容数据规范（Content Guidelines）
 
 版本：v2.21.0 | 更新：2026-08-13
 
@@ -17,7 +17,7 @@ data/exercises/
 ├── shoulders.js  肩（19 动作）
 ├── arms.js       手臂（22 动作）
 ├── core.js       核心（18 动作）
-├── calves.js     小腿（12 动作）
+（小腿已并入 legs.js，v2.26.7）
 ├── cardio.js     有氧（13 动作）
 ├── swimming.js   游泳（7 动作）
 └── index.js      合并 + 部位知识 + 查询/搜索
@@ -29,7 +29,7 @@ data/exercises/
 |-----|-----|------|---------|
 | id | ✅ | 小写连字符 | 全局唯一，语义化（如 lat-pulldown），一旦发布不轻易改名 |
 | name | ✅ | 中文名 | 使用健身圈通用叫法，同名动作加修饰词（上斜/窄距/坐姿） |
-| muscle | ✅ | 10 个部位 key | 见 1.3 |
+| muscle | ✅ | 9 个部位 key | 见 1.3 |
 | type | ✅ | compound / isolate | 复合=多关节，孤立=单关节 |
 | mechanic | ✅ | push/pull/squat/hinge/lunge/carry/core/other | 力学模式，未来可用于计划编排 |
 | equipment | ✅ | barbell/dumbbell/machine/cable/bodyweight/kettlebell/band/plate/other | 器材枚举 |
@@ -43,7 +43,7 @@ data/exercises/
 
 ### 1.3 部位枚举（10 个）
 
-`chest` 胸 / `back` 背 / `legs` 腿 / `glutes` 臀 / `shoulder` 肩 / `arms` 手臂 / `core` 核心 / `calves` 小腿 / `cardio` 有氧 / `swimming` 游泳
+`chest` 胸 / `back` 背 / `legs` 腿 / `glutes` 臀 / `shoulder` 肩 / `arms` 手臂 / `core` 核心 / `cardio` 有氧 / `swimming` 游泳
 
 > 注意：肩部位 key 是单数 `shoulder`（历史遗留），新增部位不要仿照，用复数形式。
 
@@ -110,7 +110,7 @@ data/knowledge/
 
 | 指标 | 当前 | 容量规划 |
 |-----|-----|---------|
-| 动作数 | 173 | ≤ 500（单动作 ~700B，500 动作 < 400KB） |
+| 动作数 | 189 | ≤ 500（单动作 ~700B，500 动作 < 400KB） |
 | 计划数 | 5 套（17 训练日） | ≤ 20 套 |
 | 文章数 | 30 | ≤ 50 |
 | 包体积 | < 120KB | 主包 2MB 上限内无压力 |

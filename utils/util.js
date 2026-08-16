@@ -568,11 +568,11 @@ function densityTrend(workouts, limit) {
 // 推：胸、肩、三头
 // 拉：背、二头
 // 腿：腿、臀、核心
-// 注：热身组不计入（与容量统计口径一致）
+// 注：热身组不计入（与容量统计口径一致）；旧记录 muscle='calves'（小腿已并入腿，v2.26.7）归腿类
 var MUSCLE_PUSH = ['chest', 'shoulder']; // 部位 key 为单数 shoulder（data/exercises）
 var MUSCLE_PULL = ['back'];
-var MUSCLE_LEGS = ['legs', 'glutes'];
-var MUSCLE_OTHER = ['core', 'calves', 'swimming', 'cardio', 'arms'];
+var MUSCLE_LEGS = ['legs', 'glutes', 'calves'];
+var MUSCLE_OTHER = ['core', 'swimming', 'cardio', 'arms'];
 
 function muscleBalance(workouts) {
   var push = 0, pull = 0, legs = 0, other = 0;

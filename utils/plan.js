@@ -57,6 +57,8 @@ function buildDraftFromPlan(planId, dayId, customPlans) {
       exerciseId: ex.id,
       exerciseName: ex.name || '未知动作',
       muscle: ex.muscle || 'other',
+      // v2.26.8：自重动作（引体/俯卧撑等）标记，训练页只记次数不记重量
+      bodyweight: ex.equipment === 'bodyweight',
       sets: sets
     };
     if (it.note) item.note = String(it.note).slice(0, 200); // 限制 note 长度

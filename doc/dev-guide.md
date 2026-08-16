@@ -48,7 +48,7 @@ gym-tracker/
 │   ├── export  exercise-edit                        # v2.22/v2.23 子页
 │   └── measurements  goals                          # v2.24/v5 子页
 ├── doc/                            项目文档（建构规划见 doc/architecture.md §1-§10，索引见 §9）
-└── test.js                         数据层单测（660 项断言）
+└── test.js                         数据层单测（673 项断言）
 ```
 
 ## 3. 开发规范
@@ -99,7 +99,7 @@ gym-tracker/
 2. 校验约束：
    - `id` 全局唯一（test.js 自动检查）
    - `steps` ≥ 2 条，`errors` ≥ 2 条，`target` ≥ 1 个
-   - `difficulty` ∈ {1,2,3}，`muscle` ∈ 10 个部位 key
+   - `difficulty` ∈ {1,2,3}，`muscle` ∈ 9 个部位 key（小腿已并入腿）
    - 新部位需同时：新建 `data/exercises/<key>.js`、在 `index.js` 的 MUSCLES 加部位知识、require 合并
 3. 跑 `node test.js` 验证通过后提交
 

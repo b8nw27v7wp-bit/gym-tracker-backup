@@ -13,7 +13,7 @@
 1. **纯函数分层**：计算/聚合逻辑全部抽为 `utils/*` 纯函数模块（无 wx 依赖），node 可直接单测
 2. **数据兜底**：任何非法/脏数据不崩溃（原型链注入防御、未知词忽略计数、类型强校验）
 3. **浅色极简 UI**：白底卡片、主文字 #1d1d1f、强调 indigo #4f46e5、蓝系数据色板
-4. **测试门禁**：主套件 660 项 + 专项 749 项全绿才可提交
+4. **测试门禁**：主套件 673 项 + 专项 749 项全绿才可提交
 5. **页面瘦身**：页面 JS 只做编排（读 store → 调纯函数 → setData），不内联业务计算
 
 **分层架构**
@@ -33,7 +33,7 @@
 ├─────────────────────────────────────────────┤
 │ 存储层 wx.setStorageSync（16 个业务 key + 4 个跨页 key） │
 ├─────────────────────────────────────────────┤
-│ 测试 test.js（660）+ scripts/verify-*.js（专项 749）    │
+│ 测试 test.js（673）+ scripts/verify-*.js（专项 749）    │
 └─────────────────────────────────────────────┘
 ```
 
@@ -52,7 +52,7 @@ gym-tracker/
 ├── utils/                纯函数层（18 个模块，见 §3.1）
 ├── doc/                  11 份文档（见 §9）
 ├── scripts/              11 个专项验证脚本（见 §8）
-├── test.js               主测试套件（660 项）
+├── test.js               主测试套件（673 项）
 └── README.md             项目说明
 ```
 
@@ -89,7 +89,7 @@ gym-tracker/
 
 | 模块 | 内容 | 说明 |
 |---|---|---|
-| `exercises/` | 173 个动作，按 10 部位拆 9 文件 + index.js | 含 target/secondary 肌群词、要领/错误/贴士、难度/器械/休息秒数 |
+| `exercises/` | 189 个动作，按 9 部位拆 8 文件 + index.js | 含 target/secondary 肌群词、要领/错误/贴士、难度/器械/休息秒数 |
 | `knowledge/` | 30 篇文章，4 主题（原理/计划/进阶/生活）+ index.js | 每篇 para/list 结构化章节 |
 | `plans.js` | 5 套内置计划（新手/PPL/上下肢/减脂/居家）= 17 训练日 | |
 | `muscle-map.js` | 45 个发力 zone 坐标 + 肌群词映射 + 部位→主/协同肌群 | 词映射供热力图/自定义动作校验 |
@@ -135,7 +135,7 @@ gym-tracker/
 | 板块 | 主页面 | 子页/入口 | 核心模块 | 专项覆盖 |
 |---|---|---|---|---|
 | **训练** | train | history、plans、plan-edit、exercise-detail（去记录） | training-intelligence、rest-advice、plate-calculator、warmup、substitute、plan、plan-reminder、set-editor 组件 | verify-user-scenarios（休息/计时）、主套件 10f/10g/14/18 |
-| **动作库** | exercises | exercise-detail、exercise-edit、muscle-detail | custom-exercises、data/exercises、muscle-map、ex-card 组件 | verify-muscle-map、verify-page-match（动作详情×173） |
+| **动作库** | exercises | exercise-detail、exercise-edit、muscle-detail | custom-exercises、data/exercises、muscle-map、ex-card 组件 | verify-muscle-map、verify-page-match（动作详情×189） |
 | **知识** | knowledge | knowledge-detail | data/knowledge | 主套件 §3（30 篇完整性） |
 | **统计** | stats | profile、export、data、calculator、food、privacy、measurements、goals | util、muscle-heatmap、training-intelligence（deload/PR 预测）、nutrition、export、units、achievements、goals、muscle-recovery、store | verify-muscle-heatmap、verify-extreme（30 天数据）、主套件 10d/12/16 |
 | **数据底座** | —（app.js/store 初始化） | — | store（schema v5 迁移/导入导出） | verify-security-final/round2、verify-hardening、verify-boundaries |
@@ -147,7 +147,7 @@ gym-tracker/
 | 页面 | 职责 | 关键数据流 | 入口/出口 |
 |---|---|---|---|
 | `pages/train/train` | 训练记录主流程：选部位→选动作→记组→保存；休息计时/自动休息/热身组/训练智能建议/模板/Tabata/递减组/复制上次/历史编辑 | store.getWorkouts → lastRecords/sessionsIndex → draft（不可变更新）→ saveWorkout | ← exercises（部位）/exercise-detail（预选）/plans（计划填充）/history（编辑） |
-| `pages/exercises/exercises` | 动作库浏览（10 部位/类型/难度筛选 + 搜索），自定义动作"我的动作"合并展示 | exercisesData.ALL + customExercises.mergeExercises | → exercise-detail / exercise-edit / train |
+| `pages/exercises/exercises` | 动作库浏览（9 部位/类型/难度筛选 + 搜索），自定义动作"我的动作"合并展示 | exercisesData.ALL + customExercises.mergeExercises | → exercise-detail / exercise-edit / train |
 | `pages/knowledge/knowledge` | 知识库列表（5 分类） | knowledge 数据 | → knowledge-detail |
 | `pages/stats/stats` | 统计总览：简报/热量/容量图/日历热力图/肌群矩阵/分布/PR+1RM 预测/体重/月度/平衡/密度/频率 | store + util + muscleHeatmap + trainingIntelligence；**指纹缓存**（数据未变零重算） | → profile/calculator/food |
 
@@ -157,7 +157,7 @@ gym-tracker/
 |---|---|---|
 | `pages/history/history` | 训练历史列表/展开/编辑/删除 + 分享卡 canvas 生成 | 编辑走 pending_edit_workout → 训练页；删除二次确认；分享权限引导 |
 | `pages/exercise-detail/exercise-detail` | 动作详情：步骤/错误/贴士 + 部位知识 + 替代动作 + 关联文章 | 同页推荐跳转用 redirectTo 防栈溢出；"去记录"写 pending_exercise |
-| `pages/muscle-detail/muscle-detail` | 部位训练指南（10 部位切换 + 发力肌群词 + 分区动作） | 非法 key 兜底回胸部 |
+| `pages/muscle-detail/muscle-detail` | 部位训练指南（9 部位切换 + 发力肌群词 + 分区动作） | 非法 key 兜底回胸部 |
 | `pages/knowledge-detail/knowledge-detail` | 文章详情（para/list 渲染） | |
 | `pages/plans/plans` | 计划库：5 内置 + 自建，完成度打卡 | "开始训练"写 pending_plan_day |
 | `pages/plan-edit/plan-edit` | 自建计划新建/编辑（多训练日/选动作/组次） | 无名称/无动作拦截 |
@@ -242,7 +242,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 | `verify-interaction.js` | 19 | **交互审计**：分板块分页面——WXML 事件绑定→JS handler 存在性、导航目标注册与跳转方式（navigateTo/switchTab/redirectTo）、同页 navigateTo 栈溢出、dataset 一致性、裸 navigateBack 兜底、组件/custom-tab-bar 事件 |
 | `verify-user-flow.js` | 42 | **用户使用逻辑仿真（端到端）**：初始化→身体资料→训练记录→历史编辑/复制→计划打卡→目标/围度→导出清空恢复，逐场景断言 |
 | `verify-security-audit.js` | 49 | **安全漏洞回归**：training-intelligence/weekly-report/plate-calculator/nutrition/substitute/custom-exercises/warmup/muscleGroups 的原型注入·崩溃·DoS·对象型字段修复回归 |
-| **合计** | **1409** | 提交门槛：主套件 + 全部专项全绿 |
+| **合计** | **1422** | 提交门槛：主套件 + 全部专项全绿 |
 
 ---
 
@@ -288,7 +288,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 4. [ ] architecture §3.3 表格同步
 
 ### 通用
-1. [ ] 提交前跑全量：`node test.js` + 15 个专项脚本（1409 项）
+1. [ ] 提交前跑全量：`node test.js` + 15 个专项脚本（1422 项）
 2. [ ] 模块/页面/存储 key 变更后跑 `scripts/verify-modules.js`（建构管理守门）
 3. [ ] 文档同步（architecture 板块矩阵/模块表 + changelog + 涉及文档）
 4. [ ] 手工清单抽查改动模块（微信开发者工具）

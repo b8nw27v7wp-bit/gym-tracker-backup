@@ -273,6 +273,7 @@
     muscle-name="{{editingMuscleName}}"
     sets="{{editing.sets}}"
     unit="{{unitLabel}}"
+    bodyweight="{{editing.bodyweight}}"
     last-prefill="{{editing.lastPrefillText}}"
     bind:togglewarmup="onToggleWarmup"
     bind:weightinput="onWeightInput"

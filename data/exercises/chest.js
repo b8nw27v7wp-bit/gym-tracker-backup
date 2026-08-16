@@ -176,5 +176,69 @@ module.exports = [
     steps: ["上斜凳置于龙门架中间，双手握低位滑轮把手", "手肘微屈，沿弧线向胸前合拢", "顶端挤压胸肌停顿 1 秒，缓慢还原"],
     errors: ["手肘角度全程变化", "耸肩代偿", "还原过快失去张力"],
     rest: '45-60 秒', tip: '上斜角度+低位滑轮=全程张力，上胸孤立首选'
+  },
+  {
+    id: 'reverse-grip-bench', name: '反握杠铃卧推', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'barbell', difficulty: 3,
+    target: ["胸大肌上部"], secondary: ["肱二头肌", "三角肌前束"],
+    steps: ["反握（掌心朝向自己）握杠，握距略窄于肩", "肩胛骨收紧，杠铃下放至胸部下沿", "胸部发力推起至手臂伸直"],
+    errors: ["握距过窄手腕压力大", "反握时杠铃滑脱", "肩胛未收紧肩部前引"],
+    rest: '60-90 秒', tip: '反握角度对上胸和肱二头肌刺激更明显，务必用护握或有人保护'
+  },
+  {
+    id: 'incline-db-fly', name: '上斜哑铃飞鸟', muscle: 'chest', type: 'isolate', mechanic: 'push',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ["胸大肌上部"], secondary: ["三角肌前束"],
+    steps: ["上斜凳手持哑铃于胸上方，掌心相对", "手肘微屈固定角度，向两侧展开至胸部有拉伸", "沿弧线合拢至胸前，顶端挤压 1 秒"],
+    errors: ["手肘角度变化变成卧推", "下放过深拉伤胸肩", "借助惯性甩动"],
+    rest: '45-60 秒', tip: '上斜+飞鸟=上胸孤立拉伸感最足的动作'
+  },
+  {
+    id: 'high-cable-fly', name: '高位绳索夹胸', muscle: 'chest', type: 'isolate', mechanic: 'push',
+    equipment: 'cable', difficulty: 2,
+    target: ["胸大肌下部"], secondary: ["三角肌前束"],
+    steps: ["滑轮调至高位，双手握柄侧平举", "身体前倾一步，双臂微屈", "沿弧线向下向内夹紧至腹前，顶峰收缩 1 秒", "缓慢还原控制离心"],
+    errors: ["手臂伸直变成推举", "还原时被拉过头", "耸肩借力"],
+    rest: '45-60 秒', tip: '高位拉向低位，重点刺激下胸外沿'
+  },
+  {
+    id: 'decline-pushup', name: '下斜俯卧撑', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["胸大肌上部"], secondary: ["三角肌前束", "肱三头肌"],
+    steps: ["双脚垫高（凳/台阶），双手撑地身体呈直线", "屈肘下放身体至胸部接近地面", "胸部发力推起还原"],
+    errors: ["塌腰或臀部过高", "垫得过高变成肩推", "只做半程"],
+    rest: '45-60 秒', tip: '脚垫得越高上胸参与越多，自重练上胸首选'
+  },
+  {
+    id: 'db-floor-press', name: '哑铃地板卧推', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'dumbbell', difficulty: 2,
+    target: ["胸大肌中部"], secondary: ["肱三头肌"],
+    steps: ["仰卧于地面，手持哑铃于胸侧", "下放至上臂触地为止，保持张力不停顿", "推起至手臂伸直"],
+    errors: ["地面过硬手肘不适", "触地后完全放松失去张力", "腰部过度反弓"],
+    rest: '60-90 秒', tip: '地板限制行程，重点强化三头与卧推顶端锁定'
+  },
+  {
+    id: 'knee-pushup', name: '跪姿俯卧撑', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 1,
+    target: ["胸大肌"], secondary: ["肱三头肌", "三角肌前束"],
+    steps: ["双膝跪地，双手略宽于肩撑地，身体从头到膝呈直线", "屈肘下放身体至胸部接近地面", "胸部发力推起还原"],
+    errors: ["臀部过高变成斜板", "腰部塌陷", "幅度不足半程"],
+    rest: '45-60 秒', tip: '标准俯卧撑做不动时的入门版本，注意膝盖垫软垫'
+  },
+  {
+    id: 'standing-cable-press', name: '站姿绳索推胸', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'cable', difficulty: 1,
+    target: ["胸大肌中部"], secondary: ["三角肌前束", "肱三头肌", "核心"],
+    steps: ["背对龙门架，双手握两侧把手于胸前", "弓步站稳，保持核心收紧", "向前推至手臂伸直，控制回收"],
+    errors: ["身体后仰借力", "推到底耸肩", "核心松弛腰部晃动"],
+    rest: '60-90 秒', tip: '站姿推胸附带核心稳定训练，适合热身或居家单侧训练'
+  },
+  {
+    id: 'diamond-pushup', name: '钻石俯卧撑', muscle: 'chest', type: 'compound', mechanic: 'push',
+    equipment: 'bodyweight', difficulty: 2,
+    target: ["胸大肌中部", "肱三头肌"], secondary: ["核心"],
+    steps: ["双手虎口相对呈菱形撑于胸下", "身体呈直线，屈肘下放至胸部接近手背", "推起还原，全程收紧核心"],
+    errors: ["双手间距过大变成窄距俯卧撑", "塌腰", "手肘外展"],
+    rest: '60-90 秒', tip: '窄支撑面让三头和胸内侧受力最大，进阶动作'
   }
 ];

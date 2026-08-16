@@ -22,7 +22,7 @@
 │  muscle-detail  food  profile            │
 ├─────────────────────────────────────────┤
 │ 数据层 data/                            │
-│  exercises/（10 部位模块 + index）       │
+│  exercises/（9 部位模块 + index）       │
 │  knowledge/（4 主题模块 + index）        │
 │  plans.js（5 套训练计划模板）            │
 │  foods.js（205 种食物 × 8 分类）         │

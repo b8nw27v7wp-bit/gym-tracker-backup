@@ -349,7 +349,12 @@ Page({
       var lastText = '';
       if (rec) {
         var date = rec.ts ? util.fmtDate(rec.ts) : '';
-        lastText = '上次 ' + date + ' · ' + units.weightText(rec.weight) + ' × ' + rec.reps;
+        // 自重动作（引体/俯卧撑等）：只显示次数，不显示重量
+        if (ex.equipment === 'bodyweight') {
+          lastText = '上次 ' + date + ' · ' + rec.reps + ' 次';
+        } else {
+          lastText = '上次 ' + date + ' · ' + units.weightText(rec.weight) + ' × ' + rec.reps;
+        }
       }
       // 渐进超负荷建议
       var adv = trainingIntelligence.overloadAdvice(self.sessionsIndex, ex.id);
@@ -437,14 +442,17 @@ Page({
     var ex = customExercises.findExercise(id, exercisesData.ALL, store.getCustomExercises());
     if (!ex) return;
     var isCustom = ex.source === 'custom';
+    var isBodyweight = !isCustom && ex.equipment === 'bodyweight';
     // 上次记录预填：有历史则第一组带入上次重量/次数（prefilled 标记供"已带入"提示，保存时剥离）
+    // 自重动作只预填次数（重量固定 0，界面显示"自重"）
     var rec = this.lastRecords && this.lastRecords[id];
     var item = {
       exerciseId: ex.id,
       exerciseName: ex.name,
       muscle: isCustom ? customExercises.deriveMuscleFromTarget(ex.target) : ex.muscle,
       target: ex.target || [],
-      sets: [{ weight: rec ? String(units.displayWeight(rec.weight)) : '', reps: rec ? String(rec.reps) : '', rpe: '', warmup: false }]
+      bodyweight: isBodyweight,
+      sets: [{ weight: (rec && !isBodyweight) ? String(units.displayWeight(rec.weight)) : '', reps: rec ? String(rec.reps) : '', rpe: '', warmup: false }]
     };
     if (rec) item.prefilled = true;
     // 不可变更新：concat 生成新数组，setData 才能 diff 到变化并刷新视图
@@ -482,6 +490,8 @@ Page({
     var rec = this.lastRecords && this.lastRecords[editing.exerciseId];
     if (rec && editing.prefilled && editing.sets.length > 0 && editing.sets[0].weight !== '' && editing.sets[0].weight !== undefined) {
       editing.lastPrefillText = '已带入上次记录 ' + units.weightText(rec.weight) + ' × ' + rec.reps;
+    } else if (rec && editing.prefilled && editing.bodyweight && editing.sets.length > 0 && editing.sets[0].reps !== '' && editing.sets[0].reps !== undefined) {
+      editing.lastPrefillText = '已带入上次记录 ' + rec.reps + ' 次';
     } else {
       editing.lastPrefillText = '';
     }
@@ -558,9 +568,17 @@ Page({
 
   onDoneEdit: function () {
     var editing = this.data.editing;
-    // 过滤完全空白的组（保留 rpe/warmup 字段）
+    // 过滤完全空白的组（保留 rpe/warmup 字段）；自重动作忽略重量字段（界面隐藏，只按次数）
+    var bodyweight = !!editing.bodyweight;
     var cleaned = [];
     (editing.sets || []).forEach(function (s) {
+      if (bodyweight) {
+        if (s.reps === '' || s.reps === undefined || s.reps === null) return;
+        var bw = Object.assign({}, s, { weight: '' }); // 清掉误填重量
+        delete bw.uid;
+        cleaned.push(bw);
+        return;
+      }
       if ((s.weight === '' || s.weight === undefined) && (s.reps === '' || s.reps === undefined)) return;
       // 剥离临时 uid（仅编辑态使用，不进 draft/存储）
       var s2 = Object.assign({}, s);
@@ -652,11 +670,13 @@ Page({
       return;
     }
     this._saving = true;
-    // 统计全空组（重量和次数都没填），保存时自动跳过
+    // 统计全空组（重量和次数都没填），保存时自动跳过；自重动作只统计次数
     var emptyCount = 0;
     draft.forEach(function (item) {
       item.sets.forEach(function (s) {
-        if ((s.weight === '' || s.weight === undefined) && (s.reps === '' || s.reps === undefined)) emptyCount++;
+        var hasReps = (s.reps !== '' && s.reps !== undefined && s.reps !== null);
+        var hasWeight = (s.weight !== '' && s.weight !== undefined && s.weight !== null);
+        if (!hasReps && (!hasWeight || item.bodyweight)) emptyCount++;
       });
     });
     var self = this;
@@ -676,13 +696,17 @@ Page({
             target: item.target || [],
             sets: item.sets
               .filter(function (s) {
-                // 跳过全空组
-                return !((s.weight === '' || s.weight === undefined) && (s.reps === '' || s.reps === undefined));
+                // 跳过全空组；自重动作重量恒空，只按次数判断
+                var hasReps = (s.reps !== '' && s.reps !== undefined && s.reps !== null);
+                var hasWeight = (s.weight !== '' && s.weight !== undefined && s.weight !== null);
+                if (item.bodyweight) return hasReps;
+                return hasReps || hasWeight;
               })
               .map(function (s) {
                 // 使用安全数字转换，防御对象型/NaN/Infinity；重量统一换算回 kg 存储
+                // 自重动作（引体/俯卧撑等）不记录重量：weight 固定 0，计数方式为次数
                 var savedSet = {
-                  weight: units.storedWeight(s.weight),
+                  weight: item.bodyweight ? 0 : units.storedWeight(s.weight),
                   reps: util.toNum(s.reps)
                 };
                 // RPE 可选字段，1-10 有效范围
@@ -695,6 +719,8 @@ Page({
               })
           };
           if (item.note) saved.note = item.note;
+          // 冗余自重标记（历史/统计显示"10 次"而非"0kg×10"；动作库变更不影响旧记录）
+          if (item.bodyweight) saved.bodyweight = true;
           return saved;
         }).filter(function (item) {
           // 过滤组全空的动作，避免残留 sets: [] 的空条目
@@ -917,6 +943,7 @@ Page({
         exerciseName: ex.name,
         muscle: isCustom ? customExercises.deriveMuscleFromTarget(ex.target) : ex.muscle,
         target: ex.target || [],
+        bodyweight: !isCustom && ex.equipment === 'bodyweight',
         sets: sets
       };
     }).filter(Boolean);
@@ -986,17 +1013,20 @@ Page({
     this.applyRepeat(last);
   },
 
-  // 应用上次训练到草稿（组带上次重量/次数预填，重量换算显示单位）
+  // 应用上次训练到草稿（组带上次重量/次数预填，重量换算显示单位；自重动作只预填次数）
   applyRepeat: function (last) {
     var draft = (last.items || []).map(function (item) {
+      var ex = customExercises.findExercise(item.exerciseId, exercisesData.ALL, store.getCustomExercises());
+      var isBodyweight = !!(item.bodyweight || (ex && ex.equipment === 'bodyweight'));
       return {
         exerciseId: item.exerciseId,
         exerciseName: item.exerciseName,
         muscle: item.muscle,
         target: item.target || [],
         note: item.note || '',
+        bodyweight: isBodyweight,
         sets: (item.sets || []).map(function (s) {
-          var w = (s.weight !== undefined && s.weight !== null && s.weight !== '') ? String(units.displayWeight(s.weight)) : '';
+          var w = (!isBodyweight && s.weight !== undefined && s.weight !== null && s.weight !== '') ? String(units.displayWeight(s.weight)) : '';
           var r = (s.reps !== undefined && s.reps !== null && s.reps !== '') ? String(s.reps) : '';
           var rpe = (s.rpe !== undefined && s.rpe !== null && s.rpe !== '') ? String(s.rpe) : '';
           return { weight: w, reps: r, rpe: rpe, warmup: !!s.warmup };
@@ -1020,14 +1050,17 @@ Page({
         return;
       }
       var draft = (w.items || []).map(function (item) {
+        var ex = customExercises.findExercise(item.exerciseId, exercisesData.ALL, store.getCustomExercises());
+        var isBodyweight = !!(item.bodyweight || (ex && ex.equipment === 'bodyweight'));
         return {
           exerciseId: item.exerciseId,
           exerciseName: item.exerciseName,
           muscle: item.muscle,
           target: item.target || [],
           note: item.note || '',
+          bodyweight: isBodyweight,
           sets: (item.sets || []).map(function (s) {
-            var wv = (s.weight !== undefined && s.weight !== null && s.weight !== '') ? String(units.displayWeight(s.weight)) : '';
+            var wv = (!isBodyweight && s.weight !== undefined && s.weight !== null && s.weight !== '') ? String(units.displayWeight(s.weight)) : '';
             var r = (s.reps !== undefined && s.reps !== null && s.reps !== '') ? String(s.reps) : '';
             var rpe = (s.rpe !== undefined && s.rpe !== null && s.rpe !== '') ? String(s.rpe) : '';
             return { weight: wv, reps: r, rpe: rpe, warmup: !!s.warmup };

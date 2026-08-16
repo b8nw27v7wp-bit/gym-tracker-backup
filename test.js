@@ -24,8 +24,8 @@ function assert(cond, name) {
 
 // ---------- 动作库 v2 ----------
 console.log('1. 动作库（v2 专业版）');
-assert(exercisesData.ALL.length === 173, '共 ' + exercisesData.ALL.length + ' 个动作');
-assert(exercisesData.MUSCLES.length === 10, '10 个部位');
+assert(exercisesData.ALL.length === 189, '共 ' + exercisesData.ALL.length + ' 个动作');
+assert(exercisesData.MUSCLES.length === 9, '9 个部位（小腿已并入腿）');
 // id 唯一
 const ids = new Set();
 let dup = 0;
@@ -76,6 +76,13 @@ assert(exercisesData.muscleInfo('nonexistent-muscle').name === 'nonexistent-musc
 // 划船机 / 游泳（游泳板块）仍可用
 assert(exercisesData.getExercise('rowing') && exercisesData.getExercise('rowing').name === '划船机', '划船机动作存在');
 assert(exercisesData.getExercise('swimming') && exercisesData.getExercise('swimming').steps.length >= 2, '游泳动作存在且字段完整');
+
+// 小腿并入腿模块（v2.26.7）：部位不在列表、动作归 legs、历史记录兜底名保留
+assert(exercisesData.MUSCLES.every(function (m) { return m.key !== 'calves'; }), '小腿部位已并入腿模块');
+assert(exercisesData.getExercise('standing-calf').muscle === 'legs' && exercisesData.getExercise('seated-calf').muscle === 'legs', '小腿动作 muscle 归 legs');
+assert(exercisesData.exercisesByMuscle('legs').some(function (e) { return e.id === 'standing-calf'; }), '小腿动作在腿部位动作列表');
+assert(exercisesData.muscleInfo('calves').name === '小腿', '历史记录小腿兜底名（统计显示）');
+assert(exercisesData.muscleGroups('calves').length === 0, 'calves 无训练指南分区（已并入 legs）');
 
 // 游泳板块（v2.4 新增独立部位）
 const swims = exercisesData.exercisesByMuscle('swimming');
@@ -169,7 +176,7 @@ exercisesData.MUSCLES.forEach(m => {
     });
   });
 });
-assert(groupCount === 31, '全部部位共 31 个肌肉分区（实际 ' + groupCount + '）');
+assert(groupCount === 29, '全部部位共 29 个肌肉分区（实际 ' + groupCount + '）');
 assert(groupBad === 0, '分区名称/要点/动作引用全部有效');
 // 分区细化字段（v2.5 增强）：训练处方/顺序/动作行扩展信息
 let recBad = 0, orderBad = 0, exMetaBad = 0;
@@ -190,7 +197,7 @@ assert(exMetaBad === 0, '动作行类型/器械文案完整');
 const coveredIds = {};
 exercisesData.MUSCLES.forEach(m => exercisesData.muscleGroups(m.key).forEach(g => g.exercises.forEach(e => { coveredIds[e.id] = true; })));
 const uncovered = exercisesData.ALL.filter(e => !coveredIds[e.id]);
-assert(uncovered.length === 0, '173 个动作全部归入肌肉分区');
+assert(uncovered.length === 0, '181 个动作全部归入肌肉分区');
 assert(exercisesData.muscleGroups('nonexistent').length === 0, '未知部位分区为空');
 
 // 搜索
@@ -785,10 +792,10 @@ assert(navLog[navLog.length - 1] === 'redir:/pages/exercise-detail/exercise-deta
 exPage.onArticleTap({ currentTarget: { dataset: { id: 'progressive-overload' } } });
 assert(navLog[navLog.length - 1] === 'nav:/pages/knowledge-detail/knowledge-detail?id=progressive-overload', '关联文章跳转');
 
-// 其他部位动作的关联知识（抽查腿部）
+// 其他部位动作的关联知识（抽查腿部，v2.26.7 小腿并入后 3 篇）
 const legsPage = instantiate(pageCfg);
 legsPage.onLoad({ id: 'squat' });
-assert(legsPage.data.muscle.name === '腿' && legsPage.data.articles.length === 2, '深蹲关联腿部知识');
+assert(legsPage.data.muscle.name === '腿' && legsPage.data.articles.length === 3, '深蹲关联腿部知识');
 
 // 不存在的动作 → toast + 返回
 const badPage = instantiate(pageCfg);
@@ -1967,16 +1974,17 @@ const wrNow = util.weekStart(Date.now());
 const wrMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
 
 // 17.1 纯函数聚合正确性（近 8 周，含跨周 PR / 肌群 / 连续天数 / 环比）
+// 注意：与真实保存一致，动作显式带 target（决定肌群分组）
 const wrW = [
   { id: 'wr1', ts: wrNow - 14 * wrDay + 1000, duration: 50, items: [
-    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 70, reps: 8 }, { weight: 70, reps: 8 }] } ] },
+    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', target: ['胸大肌中部'], sets: [{ weight: 70, reps: 8 }, { weight: 70, reps: 8 }] } ] },
   { id: 'wr2', ts: wrNow - 7 * wrDay + 1000, duration: 60, items: [
-    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 80, reps: 5 }, { weight: 80, reps: 5 }] },
-    { exerciseId: 'squat', exerciseName: '杠铃深蹲', muscle: 'legs', sets: [{ weight: 100, reps: 5 }] } ] },
+    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', target: ['胸大肌中部'], sets: [{ weight: 80, reps: 5 }, { weight: 80, reps: 5 }] },
+    { exerciseId: 'squat', exerciseName: '杠铃深蹲', muscle: 'legs', target: ['股四头肌', '腘绳肌'], sets: [{ weight: 100, reps: 5 }] } ] },
   { id: 'wr3', ts: wrNow + 1000, duration: 45, items: [
-    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 85, reps: 5 }] } ] },
+    { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', target: ['胸大肌中部'], sets: [{ weight: 85, reps: 5 }] } ] },
   { id: 'wr4', ts: wrNow + wrDay + 1000, duration: 30, items: [
-    { exerciseId: 'ohp', exerciseName: '杠铃推举', muscle: 'shoulder', sets: [{ weight: 55, reps: 6 }] } ] }
+    { exerciseId: 'ohp', exerciseName: '杠铃推举', muscle: 'shoulder', target: ['三角肌前束'], sets: [{ weight: 55, reps: 6 }] } ] }
 ];
 const wrReps = wrMod.buildWeeklyReports(wrW, 8);
 assert(wrReps.length === 8, '返回 8 周（含空周）');
@@ -2243,6 +2251,51 @@ assert(tpE.data.draft[0].exerciseId === 'squat', '取消确认不覆盖草稿');
 wx.showModal = o => o.success && o.success({ confirm: true }); // 用户确认
 tpE.loadWorkoutForEdit('w_e19');
 assert(tpE.data.draft[0].exerciseId === 'bench' && tpE.data.editWorkoutId === 'w_e19', '确认后加载编辑目标');
+store.clearAll(); store.ensureInit();
+store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
+
+// ---------- 20. 自重动作"仅次数"模式（v2.26.8 引体向上计数方式） ----------
+console.log('20. 自重动作仅次数（引体向上/俯卧撑等）');
+// 20.1 训练页添加引体向上：bodyweight 标记 + 只预填次数
+store.clearAll(); store.ensureInit();
+store.saveWorkout({ id: 'w_pull', ts: Date.now(), date: todayStr19(), duration: 40, items: [{ exerciseId: 'pullup', exerciseName: '引体向上', muscle: 'back', bodyweight: true, sets: [{ weight: 0, reps: 10 }] }] });
+const tpP = trainPageV26();
+tpP.lastRecords = util.lastRecordsMap(store.getWorkouts());
+tpP.addExerciseById('pullup');
+const pullItem = tpP.data.draft[0];
+assert(pullItem.bodyweight === true, '引体向上标记 bodyweight');
+assert(pullItem.sets[0].weight === '' && pullItem.sets[0].reps === '10', '只预填次数 10（重量留空）');
+// 20.2 编辑组：自重动作清理重量输入
+tpP.data.editing = JSON.parse(JSON.stringify(pullItem));
+tpP.data.editing.sets = [{ weight: '20', reps: '12', rpe: '', warmup: false }];
+tpP.data.editingIndex = 0;
+tpP.onDoneEdit();
+assert(tpP.data.draft[0].sets[0].weight === '' && tpP.data.draft[0].sets[0].reps === '12', '自重动作编辑后重量被清空（只留次数）');
+// 20.3 保存：weight 存 0 + bodyweight 冗余标记
+tpP.sessionStartTs = Date.now();
+tpP.onSave();
+const savedPull = store.getWorkouts()[0];
+assert(savedPull.items[0].bodyweight === true && savedPull.items[0].sets[0].weight === 0 && savedPull.items[0].sets[0].reps === 12, '自重训练保存 weight=0 + bodyweight 标记');
+assert(util.calcWorkout(savedPull).volume === 0, '自重动作容量 0（统计口径不变）');
+// 20.4 非自重动作不受影响
+tpP.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '60', reps: '8' }] }];
+tpP.onSave();
+const savedBench = store.getWorkouts().find(function (w) { return w.items[0].exerciseId === 'bench'; });
+assert(savedBench && savedBench.items[0].bodyweight === undefined && savedBench.items[0].sets[0].weight === 60, '非自重动作正常存重量');
+// 20.5 历史显示：自重动作 weight 不显示
+freshRequire('./pages/history/history.js');
+const hP = instantiate(pageCfg);
+hP.loadList();
+const hPull = hP.data.list.find(function (x) { return x.id === savedPull.id; });
+assert(hPull && hPull.items[0].bodyweight === true && hPull.items[0].sets[0].weight === '', '历史页自重动作不显示重量');
+// 20.6 重复上次：自重动作不预填重量
+freshRequire('./pages/train/train.js');
+const tpR = instantiate(pageCfg);
+tpR.sessionStartTs = Date.now();
+tpR.data.draft = [];
+tpR.onRepeatLast();
+const rItem = tpR.data.draft.find(function (x) { return x.exerciseId === 'pullup'; });
+assert(rItem && rItem.bodyweight === true && rItem.sets[0].weight === '' && rItem.sets[0].reps === '12', '重复上次：自重动作只带次数');
 store.clearAll(); store.ensureInit();
 store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
 
