@@ -19,4 +19,19 @@
   </view>
 
   <view class="end-note">坚持记录，比任何计划都重要</view>
+
+  <!-- v2.28.1：学完就练（文章→训练联动） -->
+  <view class="action-card" wx:if="{{related.length > 0}}">
+    <view class="action-title">📌 学完就练</view>
+    <view
+      wx:for="{{related}}"
+      wx:key="id"
+      class="action-row"
+      data-id="{{item.id}}"
+      bindtap="onGoTrain"
+    >
+      <text class="action-name">{{item.name}}</text>
+      <text class="action-go">去记录 ›</text>
+    </view>
+  </view>
 </view>

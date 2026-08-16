@@ -302,6 +302,23 @@
       <view class="added-index">{{index + 1}}</view>
       <view class="added-info">
         <text class="added-name">{{item.exerciseName}}</text>
+        <!-- 内联组摘要（v2.28.1）：点击组行进入编辑，× 快速删组，＋ 快速加组（复制上一组） -->
+        <view class="added-sets">
+          <view
+            wx:for="{{item.sets}}"
+            wx:for-item="s"
+            wx:for-index="si"
+            wx:key="*this"
+            class="added-set"
+            data-index="{{index}}"
+            data-set="{{si}}"
+            catchtap="onEditItem"
+          >
+            <text class="added-set-text">{{s.warmup ? '热身 ' : ''}}{{s.weight !== '' && s.weight !== undefined && s.weight !== null ? s.weight + ' ' + unitLabel + ' × ' : ''}}{{s.reps}}{{s.rpe ? ' · RPE' + s.rpe : ''}}</text>
+            <view class="added-set-del" data-index="{{index}}" data-set="{{si}}" catchtap="onQuickRemoveSet">×</view>
+          </view>
+          <view class="added-add-set" data-index="{{index}}" catchtap="onQuickAddSet">＋ 加一组</view>
+        </view>
         <text class="added-sub">{{item.sets.length}} 组 · 容量 {{itemVolumes[index]}} {{unitLabel}}</text>
       </view>
       <view class="added-right">
@@ -342,5 +359,38 @@
       <text class="footer-sub">{{totalSets}} 组 · {{sessionMinutes}} 分钟</text>
     </view>
     <view class="save-btn" bindtap="onSave">保存训练</view>
+  </view>
+
+  <!-- 练后总结浮层（v2.28.1 正反馈瞬间） -->
+  <view class="mask" wx:if="{{summaryShow}}" bindtap="onCloseSummary">
+    <view class="summary-card" catchtap="">
+      <view class="summary-title">🎉 本次训练完成</view>
+      <view class="summary-grid">
+        <view class="summary-cell">
+          <text class="summary-num">{{summary.volumeText}}</text>
+          <text class="summary-label">总容量</text>
+        </view>
+        <view class="summary-cell">
+          <text class="summary-num">{{summary.sets}}</text>
+          <text class="summary-label">组数</text>
+        </view>
+        <view class="summary-cell">
+          <text class="summary-num">{{summary.exercises}}</text>
+          <text class="summary-label">动作</text>
+        </view>
+        <view class="summary-cell">
+          <text class="summary-num summary-num-sm">{{summary.durationText}}</text>
+          <text class="summary-label">时长</text>
+        </view>
+      </view>
+      <view class="summary-compare" wx:if="{{summary.prevText}}">
+        <text class="summary-compare-text {{summary.deltaClass}}">{{summary.deltaText}}</text>
+      </view>
+      <view class="summary-pr" wx:if="{{summary.newPrCount > 0}}">🔥 刷新 {{summary.newPrCount}} 个动作纪录</view>
+      <view class="summary-motto">{{summary.motto}}</view>
+      <view class="summary-btns">
+        <view class="summary-btn" bindtap="onCloseSummary">继续记录</view>
+      </view>
+    </view>
   </view>
 </view>

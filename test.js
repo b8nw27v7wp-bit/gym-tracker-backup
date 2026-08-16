@@ -2533,6 +2533,72 @@ assert(store.getDraft() === null, '未计时保存同样清除草稿');
 store.clearAll(); store.ensureInit();
 store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
 
+// ---------- 23. 记录流减摩擦 + 练后总结 + 欠练直达 + 文章联动（v2.28.1） ----------
+console.log('23. 记录流减摩擦/练后总结/欠练直达/文章联动');
+// 23.1 内联快速加组（复制上一组）
+store.clearAll(); store.ensureInit();
+freshRequire('./pages/train/train.js');
+const qp = instantiate(pageCfg);
+qp.onLoad({});
+qp.onShow();
+qp.addExerciseById('bench');
+qp.data.draft[0].sets = [{ weight: '60', reps: '8', rpe: '', warmup: false }];
+qp.onQuickAddSet({ currentTarget: { dataset: { index: 0 } } });
+assert(qp.data.draft[0].sets.length === 2 && qp.data.draft[0].sets[1].weight === '60' && qp.data.draft[0].sets[1].reps === '8', '快速加组复制上一组');
+assert(store.getDraft() !== null && store.getDraft().items[0].sets.length === 2, '快速加组同步草稿');
+// 23.2 内联删组
+qp.onQuickRemoveSet({ currentTarget: { dataset: { index: 0, set: 1 } } });
+assert(qp.data.draft[0].sets.length === 1, '快速删组生效');
+// 23.3 只剩一组时删组被拦截
+qp.onQuickRemoveSet({ currentTarget: { dataset: { index: 0, set: 0 } } });
+assert(qp.data.draft[0].sets.length === 1, '仅剩一组时删组拦截');
+// 23.4 练后总结浮层（保存后展示 + 字段正确）
+qp.data.draft[0].sets = [{ weight: '60', reps: '8', rpe: '', warmup: false }, { weight: '60', reps: '8', rpe: '', warmup: false }];
+qp.data.note = '';
+qp.sessionStartTs = Date.now() - 3600000;
+qp.onSave();
+assert(qp.data.summaryShow === true, '保存后弹出练后总结浮层');
+assert(qp.data.summary && qp.data.summary.sets === 2 && qp.data.summary.exercises === 1 && qp.data.summary.volumeText === '960 kg' && qp.data.summary.durationText === '1小时', '总结字段正确（960kg/2组/1动作/1小时）');
+qp.onCloseSummary();
+assert(qp.data.summaryShow === false, '关闭总结浮层');
+// 23.5 对比上次 + 新 PR 文案（独立会话：仅一条 50×8 历史）
+store.clearAll(); store.ensureInit();
+store.saveWorkout({ id: 'prev23', ts: Date.now() - 7200000, date: util.todayStr(), duration: 40, items: [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 50, reps: 8 }] }] });
+freshRequire('./pages/train/train.js');
+const qp2 = instantiate(pageCfg);
+qp2.onLoad({});
+qp2.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '60', reps: '8' }] }];
+qp2.sessionStartTs = Date.now();
+qp2.onSave();
+assert(qp2.data.summary.deltaText.indexOf('较上次训练容量 +') === 0 && qp2.data.summary.deltaClass === 'delta-up', '容量上升对比文案（较上次 +X%）');
+assert(qp2.data.summary.newPrCount === 1, '刷新纪录提示（60 > 50）');
+// 23.6 统计页欠练部位 → 去练直达
+freshRequire('./pages/stats/stats.js');
+const spRec = instantiate(pageCfg);
+store.saveWorkout({ id: 'onlyBench23', ts: Date.now(), date: util.todayStr(), duration: 30, items: [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: 60, reps: 8 }] }] });
+spRec.onShow();
+const lowKeys = spRec.data.recovery && spRec.data.recovery.lowSites;
+assert(Array.isArray(lowKeys) && lowKeys.length > 0, '统计页识别欠练部位（实际 ' + JSON.stringify(lowKeys) + '）');
+navLog.length = 0;
+spRec.onGoTrainLow();
+assert(wx._store['pending_muscle_key'] === lowKeys[0] && navLog[navLog.length - 1] === 'tab:/pages/train/train', '欠练直达写入部位并切训练页');
+// 训练页消费欠练部位
+freshRequire('./pages/train/train.js');
+const qp3 = instantiate(pageCfg);
+qp3.onLoad({});
+qp3.onShow();
+assert(qp3.data.currentMuscle === lowKeys[0] && wx._store['pending_muscle_key'] === undefined, '训练页消费欠练部位并自动筛选');
+// 23.7 文章→训练联动（学完就练）
+freshRequire('./pages/knowledge-detail/knowledge-detail.js');
+const kdRel = instantiate(pageCfg);
+kdRel.onLoad({ id: 'progressive-overload' });
+assert(kdRel.data.related.length > 0, '文章关联推荐动作（学完就练）');
+navLog.length = 0;
+kdRel.onGoTrain({ currentTarget: { dataset: { id: kdRel.data.related[0].id } } });
+assert(wx._store['pending_exercise'] === kdRel.data.related[0].id && navLog[navLog.length - 1] === 'tab:/pages/train/train', '去记录携带预选动作跳训练页');
+store.clearAll(); store.ensureInit();
+store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
+
 
 
 

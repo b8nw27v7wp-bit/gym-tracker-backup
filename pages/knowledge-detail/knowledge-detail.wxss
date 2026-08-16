@@ -80,3 +80,12 @@
   color: #9ca3af;
   margin-top: 60rpx;
 }
+
+/* v2.28.1 学完就练（文章→训练联动） */
+.action-card { margin: 24rpx 0 40rpx; background: #fff; border-radius: 20rpx; padding: 24rpx; }
+.action-title { font-size: 26rpx; font-weight: 600; color: #1d1d1f; margin-bottom: 12rpx; }
+.action-row { display: flex; align-items: center; justify-content: space-between; padding: 16rpx 0; border-top: 1rpx solid #f3f4f6; }
+.action-row:first-of-type { border-top: none; }
+.action-name { font-size: 26rpx; color: #374151; }
+.action-go { font-size: 24rpx; color: #4f46e5; font-weight: 600; }
+.action-row:active { opacity: 0.8; }

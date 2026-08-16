@@ -345,6 +345,20 @@ Page({
     var recovery = muscleRecovery.recoveryAdvice(workouts, function (id) {
       return Object.prototype.hasOwnProperty.call(exById, id) ? exById[id] : null;
     });
+    // v2.28.1：欠练肌群 → 部位（训练页筛选用），供"去练"直达
+    var GROUP_TO_SITE = {
+      chest: 'chest', back: 'back', shoulder: 'shoulder', trap: 'shoulder', neck: 'shoulder',
+      bicep: 'arms', tricep: 'arms', forearm: 'arms', abs: 'core',
+      quad: 'legs', hamstring: 'legs', calf: 'legs', glute: 'glutes', cardio: 'cardio'
+    };
+    var lowSites = [];
+    (recovery.rows || []).forEach(function (r) {
+      if (r.status === 'low' && GROUP_TO_SITE[r.key] && lowSites.indexOf(GROUP_TO_SITE[r.key]) < 0) {
+        lowSites.push(GROUP_TO_SITE[r.key]);
+      }
+    });
+    recovery.lowSites = lowSites;
+    recovery.lowNames = lowSites.map(function (k) { return exercisesData.muscleInfo(k).name; }).join('、');
     // v5：身体围度摘要（最近 3 个有记录的部位 + 变化）
     var msTrend = util.measurementTrend(store.getMeasurements());
     var measurementSummary = msTrend.fields.filter(function (f) { return f.points.length > 0; }).slice(0, 3).map(function (f) {
@@ -838,6 +852,14 @@ Page({
     var r = this.data.planReminder;
     if (!r) return;
     wx.setStorageSync('pending_plan_day', { planId: r.planId, dayId: r.dayId });
+    wx.switchTab({ url: '/pages/train/train' });
+  },
+
+  // v2.28.1：欠练部位 → 跳训练页并自动筛选该部位
+  onGoTrainLow: function () {
+    var low = this.data.recovery && this.data.recovery.lowSites;
+    if (!low || !low.length) return;
+    wx.setStorageSync('pending_muscle_key', low[0]);
     wx.switchTab({ url: '/pages/train/train' });
   },
 

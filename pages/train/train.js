@@ -59,7 +59,9 @@ Page({
     tabataPhase: 'idle', // idle/work/rest/cycleRest
     tabataRound: 0, // 当前轮数
     tabataCycle: 0, // 当前组数
-    tabataRemaining: 0 // 当前阶段剩余秒数
+    tabataRemaining: 0, // 当前阶段剩余秒数
+    summaryShow: false, // 练后总结浮层（v2.28.1）
+    summary: null
   },
 
   onLoad: function () {
@@ -193,6 +195,14 @@ Page({
     if (pendingEdit) {
       wx.removeStorageSync('pending_edit_workout');
       this.loadWorkoutForEdit(pendingEdit);
+    }
+    // 从统计页"去练欠练部位"跳来：写入部位并自动筛选（v2.28.1）
+    var pendingMuscle = wx.getStorageSync('pending_muscle_key');
+    if (pendingMuscle) {
+      wx.removeStorageSync('pending_muscle_key');
+      var mi = exercisesData.muscleInfo(pendingMuscle);
+      this.setData({ currentMuscle: pendingMuscle, currentMuscleName: mi ? mi.name : pendingMuscle });
+      this.refreshExerciseList();
     }
     // 恢复上次未保存的草稿（无草稿时；编辑历史加载后 draft 非空不会误覆盖）
     this.restoreDraft();
@@ -515,6 +525,46 @@ Page({
     this.persistDraft();
   },
 
+  // ---------- 内联加组/删组（v2.28.1 记录流减摩擦：日常同重量多组不用进编辑层） ----------
+  // 快速加一组：复制该动作最后一组（重量/次数/RPE/热身），bodyweight 动作只复制次数
+  onQuickAddSet: function (e) {
+    var idx = Number(e.currentTarget.dataset.index);
+    var item = this.data.draft[idx];
+    if (!item) return;
+    var last = item.sets[item.sets.length - 1] || {};
+    var newSet = {
+      weight: (item.bodyweight || last.weight === undefined || last.weight === null) ? '' : last.weight,
+      reps: (last.reps !== undefined && last.reps !== null) ? last.reps : '',
+      rpe: last.rpe || '',
+      warmup: !!(last.warmup)
+    };
+    var next = this.data.draft.slice();
+    next[idx] = Object.assign({}, next[idx], { sets: next[idx].sets.concat([newSet]) });
+    this.setData({ draft: next });
+    this.refreshDraftMeta();
+    this.persistDraft();
+    wx.showToast({ title: '已加一组（复制上一组）', icon: 'none' });
+  },
+
+  // 快速删除一组（至少保留一组；删完请用动作删除）
+  onQuickRemoveSet: function (e) {
+    var idx = Number(e.currentTarget.dataset.index);
+    var si = Number(e.currentTarget.dataset.set);
+    var item = this.data.draft[idx];
+    if (!item || !item.sets[si]) return;
+    if (item.sets.length === 1) {
+      wx.showToast({ title: '至少保留一组，删动作请用右侧 ×', icon: 'none' });
+      return;
+    }
+    var next = this.data.draft.slice();
+    var sets = next[idx].sets.slice();
+    sets.splice(si, 1);
+    next[idx] = Object.assign({}, next[idx], { sets: sets });
+    this.setData({ draft: next });
+    this.refreshDraftMeta();
+    this.persistDraft();
+  },
+
   // ---------- 组编辑 ----------
   enterEdit: function (index) {
     var draft = this.data.draft;
@@ -670,6 +720,73 @@ Page({
     this.setData({ step: 'pick' });
   },
 
+  // ---------- 练后总结（v2.28.1 正反馈瞬间） ----------
+  // 保存后组装：本次容量/组数/动作/时长 + 对比上次训练 + 新 PR 数 + 鼓励文案
+  buildSummary: function (mins) {
+    var self = this;
+    var draft = this.data.draft;
+    var volume = 0;
+    var sets = 0;
+    var prCount = 0;
+    draft.forEach(function (item) {
+      var itemMax = 0;
+      (item.sets || []).forEach(function (s) {
+        if (s.warmup) return;
+        var w = util.toNum(s && s.weight);
+        var r = util.toNum(s && s.reps);
+        if (w > 0) volume += w * r;
+        else if (r > 0 && (s.weight === 0 || s.weight === '' || s.weight === undefined || s.weight === null)) volume += r;
+        if (w > itemMax) itemMax = w;
+        if (r > 0) sets += 1;
+      });
+      // 新 PR：该动作正式组最大重量超过历史最高（仅负重动作；无历史不算首练 PR）
+      if (itemMax > 0) {
+        var rec = this.lastRecords && this.lastRecords[item.exerciseId];
+        if (rec && rec.weight > 0 && itemMax > rec.weight) prCount += 1;
+      }
+    }, this);
+    // 对比上次训练（保存后 [0]=本次，[1]=上次）
+    var ws = store.getWorkouts();
+    var prevVolume = ws.length > 1 ? util.calcWorkout(ws[1]).volume : 0;
+    var deltaClass = 'delta-flat';
+    var deltaText = '';
+    var motto = '记录是最好的进步方式，继续保持！';
+    if (prevVolume > 0) {
+      var delta = volume - prevVolume;
+      var pct = Math.round(Math.abs(delta) / prevVolume * 100);
+      if (delta > 0) {
+        deltaClass = 'delta-up';
+        deltaText = '较上次训练容量 +' + pct + '%';
+        motto = '状态起飞，比上次更进一步！';
+      } else if (delta < 0) {
+        deltaClass = 'delta-down';
+        deltaText = '较上次训练容量 -' + pct + '%';
+        motto = '波动很正常，恢复好下次再战！';
+      } else {
+        deltaText = '与上次训练容量持平';
+      }
+    } else {
+      motto = '第一练完成，坚持就是胜利！';
+    }
+    if (prCount > 0) motto = '刷新纪录的感觉真爽，乘胜追击！';
+    return {
+      volumeText: units.volumeText(volume),
+      sets: sets,
+      exercises: draft.length,
+      durationText: (mins > 0) ? util.fmtDuration(mins) : '未计时',
+      prevText: prevVolume > 0 ? units.volumeText(prevVolume) : '',
+      deltaClass: deltaClass,
+      deltaText: deltaText,
+      newPrCount: prCount,
+      motto: motto
+    };
+  },
+
+  // 关闭练后总结浮层
+  onCloseSummary: function () {
+    this.setData({ summaryShow: false, summary: null });
+  },
+
   // ---------- 汇总 ----------
   refreshDraftMeta: function () {
     var draft = this.data.draft;
@@ -793,6 +910,8 @@ Page({
       if (mins > 0) workout.duration = mins; // 未计时/不足 1 分钟：不写时长字段
       store.saveWorkout(workout);
       store.clearDraft(); // 草稿已保存，清除自动草稿
+      // 练后总结（正反馈）：基于保存前草稿 + 保存后的历史对比
+      self.setData({ summaryShow: true, summary: self.buildSummary(mins) });
       self.stopRestTimer(); // 训练结束，停止休息倒计时（内部处理自动恢复/清除）
       self.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '', planInfo: null, restCustomSecs: '', restRecommendSecs: 0, restRecommendLabel: '', editWorkoutId: '' });
       self.refreshDraftMeta();

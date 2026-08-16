@@ -1740,3 +1740,9 @@
   font-size: 23rpx;
   color: #9ca3af;
 }
+
+/* v2.28.1 欠练去练直达 */
+.rec-go { display:flex; align-items:center; justify-content:space-between; background:#eef2ff; border-radius:14rpx; padding:18rpx 22rpx; margin-top:16rpx; }
+.rec-go-text { font-size:26rpx; color:#3730a3; }
+.rec-go-arrow { font-size:26rpx; font-weight:600; color:#4f46e5; }
+.rec-go:active { opacity:0.85; }

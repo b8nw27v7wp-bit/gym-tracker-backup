@@ -412,6 +412,11 @@
     <view class="rec-tips" wx:if="{{recovery.tips.length > 0}}">
       <view wx:for="{{recovery.tips}}" wx:key="*this" class="rec-tip">{{item}}</view>
     </view>
+    <!-- v2.28.1：欠练部位 → 去练直达 -->
+    <view class="rec-go" wx:if="{{recovery.lowSites.length > 0}}" bindtap="onGoTrainLow">
+      <text class="rec-go-text">欠练：{{recovery.lowNames}}，去补上</text>
+      <text class="rec-go-arrow">去练 ›</text>
+    </view>
     <view class="rec-legend">
       <view class="rec-legend-item"><view class="rec-dot rec-low"></view><text>欠练</text></view>
       <view class="rec-legend-item"><view class="rec-dot rec-ok"></view><text>正常</text></view>
