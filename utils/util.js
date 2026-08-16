@@ -10,8 +10,15 @@ function toNum(v) {
   return isFinite(n) ? n : 0;
 }
 
+// 单组容量：负重 = 重量×次数；显式自重（weight 为 0/空字符串/未填）且有次数时 = 次数
+// （如 10 次=10 单位，避免自重训练者容量统计恒 0）；脏数据（NaN/对象等非法 weight）归 0
 function setVolume(set) {
-  return toNum(set && set.weight) * toNum(set && set.reps);
+  var w = toNum(set && set.weight);
+  var r = toNum(set && set.reps);
+  if (w > 0) return w * r;
+  var raw = set && set.weight;
+  var isExplicitBodyweight = raw === 0 || raw === '' || raw === undefined || raw === null;
+  return isExplicitBodyweight && r > 0 ? r : 0;
 }
 
 // 是否热身组（热身组不纳入统计）

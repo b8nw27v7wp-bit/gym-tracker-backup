@@ -131,10 +131,10 @@
     </view>
     <view class="menu-item" bindtap="onToggleReminder">
       <text class="menu-text">训练日提醒</text>
-      <text class="menu-sub">{{settings.trainReminder ? (settings.reminderSubscribed ? '开 · 已订阅' : '开') : '关'}}</text>
+      <text class="menu-sub">{{settings.trainReminder ? '开 · 应用内提醒' : '关'}}</text>
       <text class="menu-arrow">›</text>
     </view>
-    <view class="menu-note">开启后，到本周计划训练日时在应用内提醒你；订阅消息推送需后端</view>
+    <view class="menu-note">开启后，到本周计划训练日时在应用内提醒你；微信订阅消息推送需配置后端服务</view>
   </view>
 
   <!-- 数据与隐私 -->
@@ -144,6 +144,7 @@
       <text class="menu-text">数据管理</text>
       <text class="menu-arrow">›</text>
     </view>
+    <view class="menu-note">数据仅保存在本机，卸载/换机前请先导出备份</view>
     <view class="menu-item" bindtap="onExport">
       <text class="menu-text">数据导出</text>
       <text class="menu-arrow">›</text>
@@ -157,7 +158,7 @@
   <!-- 应用信息 -->
   <view class="card app-info">
     <text class="app-name">铁馆日志</text>
-    <text class="app-version">v1.0.0</text>
+    <text class="app-version">v2.28</text>
     <text class="app-desc">专业健身训练记录工具</text>
   </view>
 </view>

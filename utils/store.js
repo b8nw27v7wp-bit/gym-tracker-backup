@@ -13,6 +13,36 @@ var KEY_SETTINGS = 'gym_settings';            // 应用设置 { unit: 'kg'|'lb',
 var KEY_MEASUREMENTS = 'gym_measurements';    // 身体围度记录 [{ ts, chest, waist, hips, armLeft, armRight, thighLeft, thighRight }]（cm）
 var KEY_GOALS = 'gym_goals';                  // 训练目标 { bodyweight: { target, start }, strength: [{ exerciseId, name, target }] }
 
+// ---------- 训练草稿自动保存（v2.28：防"练到一半退出丢草稿"） ----------
+var KEY_DRAFT = 'gym_draft';                  // 未保存训练草稿 { ts, note, editWorkoutId, items: [...] }
+
+// 保存草稿（items 为空不保存；失败静默返回 false）
+function saveDraft(draft) {
+  if (!draft || !Array.isArray(draft.items) || draft.items.length === 0) {
+    return false;
+  }
+  try {
+    wx.setStorageSync(KEY_DRAFT, draft);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// 读取草稿（脏数据/无草稿返回 null）
+function getDraft() {
+  var d = wx.getStorageSync(KEY_DRAFT);
+  if (!d || typeof d !== 'object' || !Array.isArray(d.items) || d.items.length === 0) {
+    return null;
+  }
+  return d;
+}
+
+// 清除草稿
+function clearDraft() {
+  wx.removeStorageSync(KEY_DRAFT);
+}
+
 var SCHEMA_VERSION = 5;
 
 // 某 ts 所在周的周一 0 点（本地实现，避免依赖 util）
@@ -474,6 +504,7 @@ function clearAll() {
   clearWeeklyPlan();
   wx.removeStorageSync(KEY_PROFILE);
   wx.removeStorageSync(KEY_TAKEOFF); // 起飞🦌计时器（趣味数据随清空一并清除）
+  wx.removeStorageSync(KEY_DRAFT);   // 训练草稿（清空数据时一并丢弃）
 }
 
 // 当前数据量估算（字节）
@@ -548,14 +579,9 @@ function isLoggedIn() {
   return !!getWxUser();
 }
 
-// 检查登录是否有效（30天内有效，超过需要重新登录）
+// 登录有效性（v2.28：本地昵称不过期——纯本地工具无后端，强制 30 天重登是多余摩擦）
 function isLoginValid() {
-  var wxUser = getWxUser();
-  if (!wxUser || !wxUser.loginTime) return false;
-  var now = Date.now();
-  var loginTime = wxUser.loginTime;
-  var daysDiff = (now - loginTime) / (1000 * 60 * 60 * 24);
-  return daysDiff < 30; // 30天内有效
+  return !!getWxUser();
 }
 
 // ---------- 起飞🦌计时器（昵称"李鑫"专属趣味功能，v2.27.2） ----------
@@ -993,6 +1019,9 @@ module.exports = {
   startTakeoff: startTakeoff,
   stopTakeoff: stopTakeoff,
   formatTakeoffSec: formatTakeoffSec,
+  saveDraft: saveDraft,
+  getDraft: getDraft,
+  clearDraft: clearDraft,
   getLoginStatus: getLoginStatus,
   // 自定义食物
   getCustomFoods: getCustomFoods,

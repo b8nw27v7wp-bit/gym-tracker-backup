@@ -77,6 +77,40 @@ Page({
     this.refreshExerciseList();
   },
 
+  // ---------- 草稿自动保存/恢复（v2.28：防"练到一半退出丢草稿"） ----------
+  // 将当前草稿持久化（剥离编辑态临时 uid；空草稿清除）
+  persistDraft: function () {
+    var items = (this.data.draft || []).map(function (item) {
+      var item2 = JSON.parse(JSON.stringify(item));
+      if (Array.isArray(item2.sets)) {
+        item2.sets.forEach(function (s) { delete s.uid; });
+      }
+      return item2;
+    });
+    if (items.length === 0) { store.clearDraft(); return; }
+    store.saveDraft({
+      ts: Date.now(),
+      note: this.data.note || '',
+      editWorkoutId: this.data.editWorkoutId || '',
+      items: items
+    });
+  },
+
+  // 恢复上次未保存的草稿（仅当前无草稿时；编辑历史加载后草稿非空，不会误覆盖）
+  restoreDraft: function () {
+    if (this.data.draft.length > 0) return;
+    var d = store.getDraft();
+    if (!d) return;
+    this.setData({
+      draft: d.items,
+      note: d.note || '',
+      editWorkoutId: d.editWorkoutId || '',
+      step: 'pick'
+    });
+    this.refreshDraftMeta();
+    wx.showToast({ title: '已恢复上次未保存的草稿', icon: 'none' });
+  },
+
   onShareAppMessage: function () {
     return {
       title: '铁馆日志 · 记录每一次训练',
@@ -160,6 +194,8 @@ Page({
       wx.removeStorageSync('pending_edit_workout');
       this.loadWorkoutForEdit(pendingEdit);
     }
+    // 恢复上次未保存的草稿（无草稿时；编辑历史加载后 draft 非空不会误覆盖）
+    this.restoreDraft();
     // 本周计划今日提醒
     this.refreshPlanReminder();
     // 重新统计动作使用频率（保存训练后切回时常用动作排序更新）
@@ -318,6 +354,7 @@ Page({
   fillDraftFromPlan: function (draft, pending) {
     this.setData({ draft: draft, step: 'pick', planInfo: { planId: pending.planId, dayId: pending.dayId } });
     this.refreshDraftMeta();
+    this.persistDraft();
     wx.showToast({ title: '已按计划填充 ' + draft.length + ' 个动作', icon: 'none' });
   },
 
@@ -337,6 +374,7 @@ Page({
 
   onNoteInput: function (e) {
     this.setData({ note: e.detail.value });
+    this.persistDraft();
   },
 
   // ---------- 选动作 ----------
@@ -459,6 +497,7 @@ Page({
     var next = draft.concat([item]);
     this.setData({ draft: next });
     this.enterEdit(next.length - 1);
+    this.persistDraft();
   },
 
   // 调整已添加动作顺序（上移/下移）
@@ -473,6 +512,7 @@ Page({
     next[target] = tmp;
     this.setData({ draft: next });
     this.refreshDraftMeta();
+    this.persistDraft();
   },
 
   // ---------- 组编辑 ----------
@@ -608,6 +648,7 @@ Page({
     draft[this.data.editingIndex] = editing;
     this.setData({ draft: draft, step: 'pick' });
     this.refreshDraftMeta();
+    this.persistDraft();
     wx.showToast({ title: '已添加', icon: 'success' });
     // 组间休息自动开始（v5，对标 Strong/Hevy）：设置开启 + 有推荐秒数时自动启动休息倒计时
     // 若已有休息在跑则先停掉再开新的（完成新动作后应开启新一组的休息）
@@ -622,6 +663,7 @@ Page({
     next.splice(e.currentTarget.dataset.index, 1);
     this.setData({ draft: next, step: 'pick' });
     this.refreshDraftMeta();
+    this.persistDraft();
   },
 
   onBackToPick: function () {
@@ -681,12 +723,12 @@ Page({
     });
     var self = this;
     var doSave = function () {
-      var mins = Math.max(self.sessionElapsedMinutes(), 1);
+      // 训练时长：按计时器实际经过分钟数；不足 1 分钟/未计时则不写 duration（历史显示"未计时"）
+      var mins = Math.max(self.sessionElapsedMinutes(), 0);
       var workout = {
         id: store.genId(),
         ts: Date.now(),
         date: util.todayStr(),
-        duration: mins,
         note: self.data.note.trim(),
         items: draft.map(function (item) {
           var saved = {
@@ -748,7 +790,9 @@ Page({
         wx.showToast({ title: '没有可保存的有效数据', icon: 'none' });
         return;
       }
+      if (mins > 0) workout.duration = mins; // 未计时/不足 1 分钟：不写时长字段
       store.saveWorkout(workout);
+      store.clearDraft(); // 草稿已保存，清除自动草稿
       self.stopRestTimer(); // 训练结束，停止休息倒计时（内部处理自动恢复/清除）
       self.setData({ draft: [], step: 'pick', currentMuscle: 'chest', note: '', planInfo: null, restCustomSecs: '', restRecommendSecs: 0, restRecommendLabel: '', editWorkoutId: '' });
       self.refreshDraftMeta();
@@ -1035,6 +1079,7 @@ Page({
     });
     this.setData({ draft: draft, step: 'pick', note: last.note || '', editWorkoutId: '', planInfo: null });
     this.refreshDraftMeta();
+    this.persistDraft();
     wx.showToast({ title: '已复制上次训练', icon: 'success' });
   },
 
@@ -1075,6 +1120,7 @@ Page({
         planInfo: (w.plan && w.plan.planId) ? { planId: w.plan.planId, dayId: w.plan.dayId } : null
       });
       self.refreshDraftMeta();
+      self.persistDraft();
       wx.showToast({ title: '正在编辑历史训练', icon: 'none' });
     };
     if (this.data.draft.length > 0) {
@@ -1104,6 +1150,7 @@ Page({
         if (res.confirm) {
           self.setData({ draft: [], step: 'pick', note: '', editWorkoutId: '', planInfo: null });
           self.refreshDraftMeta();
+          store.clearDraft(); // 放弃编辑同时丢弃草稿
           wx.showToast({ title: '已放弃修改', icon: 'none' });
         }
       }

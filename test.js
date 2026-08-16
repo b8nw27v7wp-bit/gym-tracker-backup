@@ -343,7 +343,7 @@ assert(c1.volume === 2560, 'w1 容量 = 2560（实际 ' + c1.volume + '）');
 assert(c1.sets === 5 && c1.reps === 33 && c1.maxWeight === 100, 'w1 组/次/最大重量');
 
 const c2 = util.calcWorkout(w2);
-assert(c2.volume === 40, 'w2 自重动作容量 = 40（实际 ' + c2.volume + '）');
+assert(c2.volume === 52, 'w2 自重动作容量 = 52（自重按次数 12 + 附加重量 40，实际 ' + c2.volume + '）');
 
 // ---------- 存储 CRUD ----------
 console.log('5. 存储层');
@@ -361,15 +361,15 @@ store.saveWorkout(w2);
 console.log('6. 统计');
 const all = [w1, w2, w3];
 const cmp = util.weekCompare(all);
-assert(cmp.thisVol === 2600, '本周容量 2600（实际 ' + cmp.thisVol + '）');
-assert(cmp.lastVol === 500 && cmp.pct === 420, '上周 500 / +420%');
+assert(cmp.thisVol === 2612, '本周容量 2612（实际 ' + cmp.thisVol + '）');
+assert(cmp.lastVol === 500 && cmp.pct === 422, '上周 500 / +422%');
 
 const byMuscle = util.volumeByMuscle(all);
 assert(byMuscle.chest === 2060, '胸部容量 2060（实际 ' + byMuscle.chest + '）');
-assert(byMuscle.back === 40 && byMuscle.legs === 1000, '背 40 / 腿 1000');
+assert(byMuscle.back === 52 && byMuscle.legs === 1000, '背 52 / 腿 1000');
 
 const weekly = util.weeklyVolume(all, 8);
-assert(weekly.length === 8 && weekly[7].volume === 2600, '近 8 周 / 本周柱 2600');
+assert(weekly.length === 8 && weekly[7].volume === 2612, '近 8 周 / 本周柱 2612');
 assert(weekly[6].volume === 500, '上周柱 500');
 
 // 训练热力图
@@ -2322,7 +2322,7 @@ tpP.sessionStartTs = Date.now();
 tpP.onSave();
 const savedPull = store.getWorkouts().find(function (w) { return w.items[0] && w.items[0].exerciseId === 'pullup'; });
 assert(savedPull && savedPull.items[0].bodyweight === true && savedPull.items[0].sets[0].weight === 0 && savedPull.items[0].sets[0].reps === 12, '自重训练保存 weight=0 + bodyweight 标记');
-assert(util.calcWorkout(savedPull).volume === 0, '自重动作容量 0（统计口径不变）');
+assert(util.calcWorkout(savedPull).volume === 12, '自重动作容量按次数计入（0×12=12）');
 // 20.4 非自重动作不受影响
 tpP.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '60', reps: '8' }] }];
 tpP.onSave();
@@ -2468,6 +2468,68 @@ for (let tki = 0; tki < 100; tki++) {
 }
 const tkLoop = store.getTakeoffStats();
 assert(tkLoop.totalCount === 100 && tkLoop.totalSec === 100, '起飞落地循环 100 次统计正确（100 次/100 秒）');
+store.clearAll(); store.ensureInit();
+store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
+
+// ---------- 22. 草稿自动保存/恢复 + 时长未计时（v2.28） ----------
+console.log('22. 草稿自动保存/恢复 + 时长未计时');
+// 22.1 添加动作后草稿自动持久化（含剥离 uid）
+store.clearAll(); store.ensureInit();
+freshRequire('./pages/train/train.js');
+const dp = instantiate(pageCfg);
+dp.onLoad({});
+dp.onShow();
+dp.addExerciseById('bench');
+dp.data.editing = JSON.parse(JSON.stringify(dp.data.draft[0]));
+dp.data.editing.sets = [{ weight: '60', reps: '8', rpe: '', warmup: false }];
+dp.data.editingIndex = 0;
+dp.onDoneEdit();
+let dSaved = store.getDraft();
+assert(dSaved && dSaved.items.length === 1 && dSaved.items[0].exerciseId === 'bench' && dSaved.items[0].sets[0].reps === '8', '添加/编辑动作后草稿自动持久化');
+assert(dSaved.items[0].sets[0].uid === undefined, '草稿剥离编辑态临时 uid');
+// 22.2 备注变化同步草稿
+dp.onNoteInput({ detail: { value: '状态好' } });
+assert(store.getDraft().note === '状态好', '备注变化同步草稿');
+// 22.3 删光动作 → 草稿清除
+dp.onRemoveItem({ currentTarget: { dataset: { index: 0 } } });
+assert(store.getDraft() === null, '删光动作后草稿自动清除');
+// 22.4 模拟退出后恢复（新实例 onShow 恢复草稿 + toast）
+dp.addExerciseById('squat');
+dp.onNoteInput({ detail: { value: '第二天继续' } });
+assert(store.getDraft() !== null, '再次添加后草稿存在');
+let draftToast = '';
+wx.showToast = function (o) { draftToast = (o && o.title) || ''; };
+freshRequire('./pages/train/train.js');
+const dp2 = instantiate(pageCfg);
+dp2.onLoad({});
+dp2.onShow();
+assert(dp2.data.draft.length === 1 && dp2.data.draft[0].exerciseId === 'squat' && dp2.data.note === '第二天继续', '新实例恢复草稿（动作+备注）');
+assert(draftToast.indexOf('已恢复') >= 0, '恢复草稿弹出提示');
+// 22.5 已有草稿不重复恢复（不覆盖）
+dp2.addExerciseById('bench');
+const beforeLen = dp2.data.draft.length;
+dp2.onShow();
+assert(dp2.data.draft.length === beforeLen && dp2.data.draft[0].exerciseId === 'squat', '已有草稿时 onShow 不重复恢复');
+// 22.6 填写组后保存 → 草稿清除
+dp2.data.draft = dp2.data.draft.map(function (item) {
+  return Object.assign({}, item, { sets: [{ weight: '60', reps: '8', rpe: '', warmup: false }] });
+});
+dp2.sessionStartTs = Date.now() - 3600000;
+dp2.onSave();
+assert(store.getDraft() === null, '保存成功后草稿清除');
+assert(store.getWorkouts()[0].duration === 60, '计时中保存时长正确（60 分钟）');
+// 22.7 未计时/不足 1 分钟：不写 duration
+store.clearAll(); store.ensureInit();
+freshRequire('./pages/train/train.js');
+const dp3 = instantiate(pageCfg);
+dp3.onLoad({});
+dp3.data.sessionStarted = false;
+dp3.sessionStartTs = undefined;
+dp3.data.draft = [{ exerciseId: 'bench', exerciseName: '卧推', muscle: 'chest', sets: [{ weight: '60', reps: '8' }] }];
+dp3.onSave();
+const d3 = store.getWorkouts()[0];
+assert(d3 && d3.duration === undefined, '未计时保存不写 duration 字段（实际 ' + d3.duration + '）');
+assert(store.getDraft() === null, '未计时保存同样清除草稿');
 store.clearAll(); store.ensureInit();
 store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
 
