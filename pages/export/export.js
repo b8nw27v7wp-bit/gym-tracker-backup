@@ -117,6 +117,9 @@ Page({
       data: content,
       success: function () {
         wx.showToast({ title: '已复制到剪贴板', icon: 'success' });
+      },
+      fail: function () {
+        wx.showToast({ title: '复制失败，请重试', icon: 'none' });
       }
     });
   },

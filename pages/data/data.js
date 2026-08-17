@@ -50,6 +50,13 @@ Page({
           showCancel: false
         });
         self.refresh();
+      },
+      fail: function () {
+        wx.showModal({
+          title: '复制失败',
+          content: '备份未能复制到剪贴板，请检查隐私授权后重试',
+          showCancel: false
+        });
       }
     });
   },
