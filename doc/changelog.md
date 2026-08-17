@@ -2,6 +2,17 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.28.4（2026-08-17）— 边界/安全排查：导出与自定义动作加固
+
+- **fix(security)**: custom-exercises `difficultyName` 查表防原型链注入——原来 `difficultyName('__proto__')` 命中 Object.prototype 返回对象，现 hasOwnProperty 防护回退「入门」（equipmentName/validDifficulty 本就防护，补齐最后一处）
+- **fix(bug)**: `searchExercises` 脏 muscle 字段（数字/对象）原 `e.muscle.indexOf` 抛 TypeError，改 `typeof e.muscle === 'string'` 守卫
+- **fix(security)**: export `escapeCSV` 补 CSV 公式注入防护——以 `= + - @ 制表符` 开头的字段前置单引号，防 Excel/WPS 打开 CSV 时把备注/动作名当公式执行（OWASP CSV Injection）
+- **fix(bug)**: export `numText` 纯空白字符串不再误转 `"0"`（原 `Number('  ')=0` 落 isFinite 分支）
+- **fix(bug)**: `buildCustomExercise` createdAt 脏值（字符串/对象/负数/0/NaN）原样保留，改 safeNum 校验回退 Date.now()
+- **test**: 新增 `scripts/verify-export-custom.js`（93 项：export + custom-exercises 边界/安全矩阵）；test.js 新增第 24 节（8 项回归）；主套件 759→767
+- **docs**: architecture/testing/dev-guide/README 测试计数与脚本清单同步（专项 858→904、合计 1617→1671）
+- 回归：test.js 767 项 + 17 个专项脚本全绿
+
 ## v2.28.3（2026-08-17）— 代码排查：断言同步 + wx:key 清理 + 剪贴板兜底
 
 - **fix(test)**: 同步 v2.28「自重容量按次数」口径在 3 个专项脚本里的 5 处遗留断言（v2.28 改口径时 test.js 与文档已同步、专项脚本漏掉，致全量 verify 5 项红）

@@ -2685,6 +2685,26 @@ assert((!spOk.data.recovery || spOk.data.recovery.lowSites.length === 0), '无�
 store.clearAll(); store.ensureInit();
 store.saveSettings({ unit: 'kg', autoRest: true, trainReminder: true });
 
+// ---------- 24. 导出与自定义动作边界/安全（v2.28.4 代码排查） ----------
+console.log('24. 导出与自定义动作边界/安全（v2.28.4）');
+const ceMod = require('./utils/custom-exercises');
+const exportMod = require('./utils/export');
+
+// 24.1 难度文案查表防原型链注入（difficultyName 修复回归）
+assert(ceMod.difficultyName('__proto__') === '入门', '难度文案 __proto__ 不命中原型（回归）');
+assert(ceMod.difficultyName('constructor') === '入门', '难度文案 constructor 不命中原型（回归）');
+// 24.2 搜索脏 muscle 字段不崩（searchExercises 修复回归）
+assert((function () { try { ceMod.searchExercises('x', [{ id: 'a', name: 'a', muscle: 123 }], []); return true; } catch (e) { return false; } })(), '搜索脏 muscle 字段不崩（回归）');
+// 24.3 CSV 公式注入防护（escapeCSV 修复回归）
+assert(exportMod.escapeCSV('=1+1') === "'=1+1", 'CSV = 前缀注入被防护（回归）');
+assert(exportMod.escapeCSV('-1+1') === "'-1+1", 'CSV - 前缀注入被防护');
+assert(exportMod.escapeCSV('@SUM(1,2)') === '"\'@SUM(1,2)"', 'CSV @ 前缀注入被防护');
+// 24.4 数字文本空白字符串边界（numText 修复回归）
+assert(exportMod.numText('  ') === '', 'numText 纯空白字符串返回空（回归）');
+// 24.5 自定义动作脏时间戳回退（buildCustomExercise 修复回归）
+const ceBw = ceMod.buildCustomExercise({ name: 'x', target: ['胸大肌'], createdAt: 'abc' });
+assert(typeof ceBw.createdAt === 'number' && isFinite(ceBw.createdAt) && ceBw.createdAt > 0, '自定义动作 createdAt 脏值回退合法时间戳（回归）');
+
 
 
 

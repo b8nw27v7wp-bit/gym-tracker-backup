@@ -108,6 +108,7 @@ function buildCustomExercise(input) {
   // id 防御：仅接受 custom_ 前缀合法格式（编辑/导入传原 id），__proto__ 等非法 id 回退生成新 id
   var id = (typeof data.id === 'string' && /^custom_[A-Za-z0-9_-]{1,40}$/.test(data.id))
     ? data.id : 'custom_' + Date.now();
+  var createdTs = safeNum(data.createdAt);
   return {
     id: id,
     name: safeStr(data.name).trim().slice(0, 30),
@@ -120,7 +121,7 @@ function buildCustomExercise(input) {
     mistakes: safeStr(data.mistakes).trim().slice(0, 2000),
     rest: validRest(data.rest),
     source: 'custom',
-    createdAt: data.createdAt || Date.now(),
+    createdAt: (isFinite(createdTs) && createdTs > 0) ? createdTs : Date.now(),
     updatedAt: Date.now()
   };
 }
@@ -182,7 +183,7 @@ function searchExercises(keyword, builtin, custom) {
     if (targets.toLowerCase().indexOf(kw) >= 0) return true;
     if (e.source === 'custom') {
       if (String(e.equipment || '').indexOf(kw) >= 0) return true;
-    } else if (e.muscle && e.muscle.indexOf(kw) >= 0) {
+    } else if (typeof e.muscle === 'string' && e.muscle.indexOf(kw) >= 0) {
       return true;
     }
     return false;
@@ -219,7 +220,8 @@ function equipmentName(key) {
 }
 
 function difficultyName(key) {
-  return DIFFICULTY_MAP[String(key)] || '入门';
+  var k = String(key);
+  return Object.prototype.hasOwnProperty.call(DIFFICULTY_MAP, k) ? DIFFICULTY_MAP[k] : '入门';
 }
 
 module.exports = {

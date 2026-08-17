@@ -8,6 +8,8 @@ var CSV_HEADER = ['日期', '动作名', '重量(kg)', '次数', '组类型', 'R
 // CSV 字段转义：含逗号/双引号/换行/回车 → 双引号包裹，内部引号翻倍（RFC 4180）
 function escapeCSV(field) {
   var s = field === undefined || field === null ? '' : String(field);
+  // CSV 公式注入防护：以 = + - @ 或制表符开头的字段前置单引号，防止 Excel/WPS 把内容当公式执行
+  if (/^[=+\-@\t]/.test(s)) s = "'" + s;
   if (/[",\r\n]/.test(s)) {
     return '"' + s.replace(/"/g, '""') + '"';
   }
@@ -17,8 +19,10 @@ function escapeCSV(field) {
 // 安全数字文本：非有限数/NaN/undefined → ''，其余原样（保留小数）
 function numText(v) {
   try {
+    if (v === '' || v === null || v === undefined) return '';
+    if (typeof v === 'string' && v.trim() === '') return '';
     var n = Number(v);
-    return isFinite(n) ? (v === '' || v === null || v === undefined ? '' : String(n)) : '';
+    return isFinite(n) ? String(n) : '';
   } catch (e) {
     return '';
   }

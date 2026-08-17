@@ -33,7 +33,7 @@
 ├─────────────────────────────────────────────┤
 │ 存储层 wx.setStorageSync（16 个业务 key + 4 个跨页 key） │
 ├─────────────────────────────────────────────┤
-│ 测试 test.js（759）+ scripts/verify-*.js（专项 858）    │
+│ 测试 test.js（767）+ scripts/verify-*.js（专项 904）    │
 └─────────────────────────────────────────────┘
 ```
 
@@ -228,7 +228,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 
 | 套件 | 项数 | 覆盖 |
 |---|---|---|
-| `test.js`（主套件，17 节） | 759 | 数据层 + 页面冒烟 + 训练智能 + 安全守门 + 审计回归 + v5 单位/成就/目标/恢复/围度/编辑/重复 + 训练周报 |
+| `test.js`（主套件） | 767 | 数据层 + 页面冒烟 + 训练智能 + 安全守门 + 审计回归 + v5 单位/成就/目标/恢复/围度/编辑/重复 + 训练周报 + 导出/自定义动作边界安全 |
 | `verify-muscle-map.js` | 68 | 发力图↔部位一致性 + 注入 |
 | `verify-muscle-heatmap.js` | 35 | 肌群矩阵：色阶/分组/分周聚合/性能/注入 |
 | `verify-modules.js` | 11 | **建构管理守门**：模块可加载/依赖无环/页面四件套/tab 注册/组件完整/存储 key 单一出口与文档一致/跨页 key 成对/文档↔代码一致 |
@@ -236,6 +236,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 | `verify-security-final.js` | 147 | 综合安全（存储/注入/防黑客/压力） |
 | `verify-hardening.js` | 61 | 高强度安全/容量/注入 |
 | `verify-boundaries.js` | 45 | 边界矩阵 |
+| `verify-export-custom.js` | 93 | 导出与自定义动作边界/安全：CSV 公式注入/原型链注入/脏字段/时间戳 |
 | `verify-extreme.js` | 64 | 极限/压力/安全威胁 |
 | `verify-extreme-usage.js` | 62 | **极端使用习惯专项**：乱输入（10 万字符搜索/注入备注/1e308 重量/100 组/删光组）、狂点（连点 20 次/循环保存/单位切换 100 次/重复上次循环）、脏数据（损坏存储/垃圾元素/100 动作单条/未来远古 ts）、自定义动作极端（空 target/超长名/非法 id）、计划极端、统计极端（0 容量/1000 条/未知 muscle）、19 页面 deep-link 注入、存储极端（超限/清空/导入导出循环）、日期边界 |
 | `verify-user-scenarios.js` | 68 | 用户场景（误操作/中断/损坏恢复） |
@@ -245,7 +246,7 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 | `verify-interaction.js` | 19 | **交互审计**：分板块分页面——WXML 事件绑定→JS handler 存在性、导航目标注册与跳转方式（navigateTo/switchTab/redirectTo）、同页 navigateTo 栈溢出、dataset 一致性、裸 navigateBack 兜底、组件/custom-tab-bar 事件 |
 | `verify-user-flow.js` | 42 | **用户使用逻辑仿真（端到端）**：初始化→身体资料→训练记录→历史编辑/复制→计划打卡→目标/围度→导出清空恢复，逐场景断言 |
 | `verify-security-audit.js` | 49 | **安全漏洞回归**：training-intelligence/weekly-report/plate-calculator/nutrition/substitute/custom-exercises/warmup/muscleGroups 的原型注入·崩溃·DoS·对象型字段修复回归 |
-| **合计** | **1617** | 提交门槛：主套件 + 全部专项全绿 |
+| **合计** | **1671** | 提交门槛：主套件 + 全部专项全绿 |
 
 ---
 
