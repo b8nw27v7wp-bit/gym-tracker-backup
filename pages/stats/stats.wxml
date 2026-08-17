@@ -358,7 +358,7 @@
       <view class="gh-head">
         <view class="gh-head-name">部位</view>
         <view class="gh-head-cells">
-          <text wx:for="{{heatWeekLabels}}" wx:key="index" class="gh-head-label">{{item}}</text>
+          <text wx:for="{{heatWeekLabels}}" class="gh-head-label">{{item}}</text>
         </view>
       </view>
       <view wx:for="{{heatRows}}" wx:key="key"
@@ -366,7 +366,7 @@
             data-key="{{item.key}}" bindtap="onGroupTap" hover-class="gh-row-hover">
         <text class="gh-row-name">{{item.name}}</text>
         <view class="gh-row-cells">
-          <view wx:for="{{item.cells}}" wx:for-item="c" wx:key="index" class="gh-cell heat-l{{c.level}}"></view>
+          <view wx:for="{{item.cells}}" wx:for-item="c" class="gh-cell heat-l{{c.level}}"></view>
         </view>
         <text class="gh-row-total">{{item.total}}</text>
       </view>

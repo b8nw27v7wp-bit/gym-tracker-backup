@@ -253,10 +253,10 @@ store.clearAll(); store.ensureInit();
 console.log('⑥ 边界值回归');
 
 // 重量边界：0, 0.5, 999.5, -0
-check(util.calcWorkout({ items: [{ sets: [{ weight: 0, reps: 12 }] }] }).volume === 0, '0kg 自重');
+check(util.calcWorkout({ items: [{ sets: [{ weight: 0, reps: 12 }] }] }).volume === 12, '0kg 自重（容量按次数 12）');
 check(util.calcWorkout({ items: [{ sets: [{ weight: 0.5, reps: 1 }] }] }).volume === 0.5, '0.5kg 最小重量');
 check(util.calcWorkout({ items: [{ sets: [{ weight: 999.5, reps: 1 }] }] }).volume === 999.5, '999.5kg 大重量');
-check(util.calcWorkout({ items: [{ sets: [{ weight: -0, reps: 8 }] }] }).volume === 0, '-0 视为 0');
+check(util.calcWorkout({ items: [{ sets: [{ weight: -0, reps: 8 }] }] }).volume === 8, '-0 视为 0 自重（容量按次数 8）');
 
 // 次数边界：0, 1, 999
 check(util.calcWorkout({ items: [{ sets: [{ weight: 60, reps: 0 }] }] }).reps === 0, '0 次');

@@ -30,7 +30,7 @@ console.log('1. calcWorkout 数值边界');
 check(util.calcWorkout(null).volume === 0, 'null workout 安全');
 check(util.calcWorkout({ items: [] }).sets === 0, '空 items 安全');
 const negSet = util.calcWorkout({ items: [{ sets: [{ weight: -10, reps: 5 }] }] });
-check(negSet.volume === -50, '负数重量：容量按原值计算 -50（实际 ' + negSet.volume + '）');
+check(negSet.volume === 0, '负数重量：容量归 0（实际 ' + negSet.volume + '）');
 const nanSet = util.calcWorkout({ items: [{ sets: [{ weight: NaN, reps: 5 }] }] });
 check(nanSet.volume === 0 && nanSet.sets === 1, 'NaN 重量安全（0 容量，正式组仍计 1）');
 const infSet = util.calcWorkout({ items: [{ sets: [{ weight: Infinity, reps: 5 }] }] });
@@ -41,7 +41,7 @@ check(util.calcWorkout({ items: [{ sets: [{ weight: 0, reps: 0 }] }] }).sets ===
 
 // ---------- 2. 数值边界：setVolume / 1RM ----------
 console.log('2. setVolume / epley1RM 边界');
-check(util.setVolume({ weight: 0, reps: 12 }) === 0, '自重组容量 0');
+check(util.setVolume({ weight: 0, reps: 12 }) === 12, '显式自重组容量按次数 12');
 check(util.setVolume({}) === 0, '空组对象容量 0');
 check(util.epley1RM(100, 1) === 103, '1RM reps=1 → Epley 103（100×(1+1/30)）');
 check(util.epley1RM(100, 0) === 0, '1RM reps=0 → 0（公式无效域，设计行为）');

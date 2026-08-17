@@ -71,8 +71,8 @@ var dirtyVw = [
   { ts: Date.now(), items: [{ sets: [{ weight: NaN, reps: 5 }] }] }
 ];
 var dirtyVg = goalsMod.weeklyVolumeProgress({ weeklyVolume: { target: 10000 } }, dirtyVw);
-// 有效组 600 + 负数重量组 -50（负数与容量口径一致，不崩溃） = 550
-check(dirtyVg && dirtyVg.current === 550, '脏 workouts 不崩且确定性（550，实际 ' + (dirtyVg && dirtyVg.current) + '）');
+// 有效组 600 + 负数重量组 0（负重量归 0，不崩溃） = 600
+check(dirtyVg && dirtyVg.current === 600, '脏 workouts 不崩且确定性（600，实际 ' + (dirtyVg && dirtyVg.current) + '）');
 // 热身组不计入周容量
 var warmVw = [{ id: 'w', ts: Date.now(), items: [{ sets: [{ weight: 60, reps: 10, warmup: true }, { weight: 60, reps: 10 }] }] }];
 var warmVg = goalsMod.weeklyVolumeProgress({ weeklyVolume: { target: 100000 } }, warmVw);

@@ -2,6 +2,15 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.28.3（2026-08-17）— 代码排查：校验断言同步 + wx:key 清理
+
+- **fix(test)**: 同步 v2.28「自重容量按次数」口径在 3 个专项脚本里的 5 处遗留断言（v2.28 改口径时 test.js 与文档已同步、专项脚本漏掉，致全量 verify 5 项红）
+  - verify-boundaries.js：负重量容量 `-50 → 0`（负重量归 0）；`setVolume(0×12) 0 → 12`（显式自重按次数）
+  - verify-security-round2.js：`0kg 自重 volume 0 → 12`；`-0 视为 0 自重 volume 0 → 8`
+  - verify-v6.js：脏 workouts 负重量组期望 `550 → 600`
+- **fix(ui)**: 清理 3 处非标准 `wx:key="index"` 写法（goals 力量目标、stats 热力图周标签/格子），均为静态固定长度列表 → 移除 wx:key 回退默认 index（消除控制台警告，无渲染语义变化）
+- 回归：test.js 759 项全绿 + 16 个专项脚本全绿
+
 ## v2.28.2（2026-08-16）— v2.28.1 代码排查/边界/安全加固
 
 - **fix(train)**: 练后总结对比对象按 `workout.id` 精确定位——同毫秒连续保存（测试/极端场景）时 `getWorkouts()[0]` 排序不确定会对比到本次自身，现排除本次后取 ts 最大记录

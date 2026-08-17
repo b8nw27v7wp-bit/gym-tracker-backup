@@ -33,7 +33,7 @@
   <view class="card">
     <view class="card-title">力量目标（最多 3 个）</view>
     <view class="goal-tip" style="margin-bottom: 8rpx;">目标重量按该动作历史最大重量追踪</view>
-    <view wx:for="{{strength}}" wx:key="index" class="goal-row">
+    <view wx:for="{{strength}}" class="goal-row">
       <picker class="goal-picker" range="{{exerciseOptions}}" range-key="name" data-index="{{index}}" bindchange="onStrengthExercise">
         <view class="goal-picker-btn">
           <text class="{{item.exerciseId ? '' : 'goal-picker-placeholder'}}">{{item.exerciseId ? strengthName(item.exerciseId) : '选择动作'}}</text>
