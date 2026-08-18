@@ -5,11 +5,12 @@ var util = require('./util');
 var planUtil = require('./plan');
 
 // 返回 { planId, planName, dayId, dayName } 或 null（无周计划 / 计划不存在 / 今日已完成 / 全部完成）
-function todayPlanReminder(workouts, weeklyPlan, customPlans) {
+// 可选 nowTs：时间冻结注入（测试确定性用），缺省真实时钟
+function todayPlanReminder(workouts, weeklyPlan, customPlans, nowTs) {
   if (!weeklyPlan || !weeklyPlan.planId) return null;
   var plan = planUtil.getPlan(weeklyPlan.planId, customPlans);
   if (!plan) return null;
-  var progress = util.weeklyPlanProgress(workouts, plan, weeklyPlan.weekStart);
+  var progress = util.weeklyPlanProgress(workouts, plan, weeklyPlan.weekStart, nowTs);
   if (!progress.nextDay || progress.todayDone) return null;
   return {
     planId: plan.id,

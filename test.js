@@ -474,25 +474,28 @@ assert(util.est1RMTrend('nonexistent', all).length === 0, '无记录动作趋势
 const onePoint = util.est1RMTrend('bench', [w3], 6);
 assert(onePoint.length === 1 && onePoint[0].height >= 8, '单点趋势高度最小 8%');
 
-// 计划完成度
+// 计划完成度（时间冻结 v2.29：nowTs 注入基准=本周四 10:00，断言与跑测试当天星期几无关——原"今日（周一）未打卡"仅周一可过）
+const nowRefDay = util.weekStart(Date.now()) + 3 * dayMs; // 本周四 00:00
+const nowRef = nowRefDay + 10 * 3600000;                  // 周四 10:00
+const nowRefDateStr = util.dateStr(nowRef);
 const wPlan = {
-  id: 'wp', ts: Date.now(), date: util.todayStr(), duration: 50,
+  id: 'wp', ts: nowRef, date: nowRefDateStr, duration: 50,
   plan: { planId: 'beginner-fullbody', dayId: 'a' },
   items: [
     { exerciseId: 'squat', exerciseName: '杠铃深蹲', muscle: 'legs', sets: [{ weight: 100, reps: 5 }] },
     { exerciseId: 'bench', exerciseName: '杠铃卧推', muscle: 'chest', sets: [{ weight: 60, reps: 10 }] }
   ]
 };
-const st = util.planDayStatus([wPlan], 'beginner-fullbody', 'a');
+const st = util.planDayStatus([wPlan], 'beginner-fullbody', 'a', nowRef);
 assert(st.done === true && st.count === 1, '今日计划日已打卡');
-const stNot = util.planDayStatus([wPlan], 'beginner-fullbody', 'b');
+const stNot = util.planDayStatus([wPlan], 'beginner-fullbody', 'b', nowRef);
 assert(stNot.done === false, '其他计划日未打卡');
-const stNoPlan = util.planDayStatus([wPlan], 'ppl', 'push');
+const stNoPlan = util.planDayStatus([wPlan], 'ppl', 'push', nowRef);
 assert(stNoPlan.done === false, '未带 plan 标记的训练不计入');
 // 完成率：新手 A 日共 5 个动作，今日练了 squat+bench 2 个
-const comp = util.planDayCompletion([wPlan], 'beginner-fullbody', 'a', planUtil.getPlanDay('beginner-fullbody', 'a'));
+const comp = util.planDayCompletion([wPlan], 'beginner-fullbody', 'a', planUtil.getPlanDay('beginner-fullbody', 'a'), nowRef);
 assert(comp.total === 5 && comp.done === 2 && comp.pct === 40, '计划日完成率 2/5=40%（实际 ' + comp.done + '/' + comp.total + '=' + comp.pct + '%）');
-const compEmpty = util.planDayCompletion([], 'beginner-fullbody', 'a', planUtil.getPlanDay('beginner-fullbody', 'a'));
+const compEmpty = util.planDayCompletion([], 'beginner-fullbody', 'a', planUtil.getPlanDay('beginner-fullbody', 'a'), nowRef);
 assert(compEmpty.total === 5 && compEmpty.done === 0 && compEmpty.pct === 0, '无训练完成率 0');
 // 计划合并：自定义计划
 const customPlan = { id: 'cp_mine', name: '我的计划', level: '自定义', daysPerWeek: 2, desc: '', custom: true, days: [{ id: 'd1', name: '推日', items: [{ exerciseId: 'bench', sets: 4, reps: 8 }] }] };
@@ -518,33 +521,36 @@ wx._store.gym_weekly_plan = { planId: 'ppl', weekStart: util.weekStart(Date.now(
 assert(store.getWeeklyPlan() === null, '上周设置自动失效');
 wx.removeStorageSync('gym_weekly_plan');
 
-// weeklyPlanProgress
+// weeklyPlanProgress（时间冻结 v2.29：nowTs 锚定本周周一 12:00 → todayDone 不再依赖跑测试当天的真实星期几）
+// 原 '今日（周一）未打卡' 断言以真实 Date.now() 计算今天，只在周一跑测试才通过（周二起 wp1 命中今天 → todayDone=true 假失败）
 const pplPlan = planUtil.getPlan('ppl');
 const monTs = util.weekStart(Date.now());
-// 本周：完成 push 日；上周：完成 pull 日（不计入）
+const frozenNow = monTs + 12 * 3600000;      // 周一 12:00
+const frozenToday = util.dateStr(frozenNow); // 周一日期
+// 本周：完成 push 日（周二）；上周：完成 pull 日（不计入）
 const wpWorkouts = [
   { id: 'wp1', ts: monTs + 1 * dayMs, date: util.dateStr(monTs + 1 * dayMs), plan: { planId: 'ppl', dayId: 'push' }, items: [{ exerciseId: 'bench', exerciseName: 'x', muscle: 'chest', sets: [{ weight: 60, reps: 8 }] }] },
   { id: 'wp2', ts: monTs - 7 * dayMs, date: util.dateStr(monTs - 7 * dayMs), plan: { planId: 'ppl', dayId: 'pull' }, items: [{ exerciseId: 'bb-row', exerciseName: 'x', muscle: 'back', sets: [{ weight: 60, reps: 8 }] }] },
   { id: 'wp3', ts: monTs + 2 * dayMs, date: util.dateStr(monTs + 2 * dayMs), plan: { planId: 'beginner-fullbody', dayId: 'a' }, items: [{ exerciseId: 'squat', exerciseName: 'x', muscle: 'legs', sets: [{ weight: 60, reps: 8 }] }] }
 ];
-const wpp = util.weeklyPlanProgress(wpWorkouts, pplPlan, monTs);
+const wpp = util.weeklyPlanProgress(wpWorkouts, pplPlan, monTs, frozenNow);
 assert(wpp.totalDays === 3 && wpp.doneCount === 1 && wpp.pct === 33, '本周完成 1/3 天（实际 ' + wpp.doneCount + '/' + wpp.totalDays + '）');
 assert(wpp.doneIds[0] === 'push', '完成日按计划顺序');
 assert(wpp.nextDay && wpp.nextDay.id === 'pull' && wpp.nextDay.name === '拉日', '下一训练日为拉日');
-assert(wpp.todayDone === false, '今日（周一）未打卡');
-// 今天完成的训练（同计划）
+assert(wpp.todayDone === false, '冻结今日（周一）未打卡：已练 push 在周二，不等于冻结今天');
+// 冻结今天完成的训练（同计划）→ date 命中冻结今天
 const wpToday = util.weeklyPlanProgress([{
-  id: 'wt', ts: Date.now(), date: util.todayStr(), plan: { planId: 'ppl', dayId: 'push' }, items: []
-}], pplPlan, monTs);
-assert(wpToday.todayDone === true && wpToday.doneIds[0] === 'push', '今日同计划打卡计入并标记 todayDone');
-// 其他计划的今日训练不影响本计划
-const wpOther = util.weeklyPlanProgress([wPlan], pplPlan, monTs);
+  id: 'wt', ts: frozenNow, date: frozenToday, plan: { planId: 'ppl', dayId: 'push' }, items: []
+}], pplPlan, monTs, frozenNow);
+assert(wpToday.todayDone === true && wpToday.doneIds[0] === 'push', '冻结今日同计划打卡计入并标记 todayDone');
+// 其他计划（beginner-fullbody，非 ppl）的今日训练不影响本计划 → todayDone=true 也不代表 ppl 已打卡
+const wpOther = util.weeklyPlanProgress([wPlan], pplPlan, monTs, frozenNow);
 assert(wpOther.todayDone === false && wpOther.doneCount === 0, '其他计划今日训练不影响本计划');
 const wpAll = util.weeklyPlanProgress([
   { id: 'wa', ts: monTs + dayMs, date: util.dateStr(monTs + dayMs), plan: { planId: 'ppl', dayId: 'push' }, items: [] },
   { id: 'wb', ts: monTs + 2 * dayMs, date: util.dateStr(monTs + 2 * dayMs), plan: { planId: 'ppl', dayId: 'pull' }, items: [] },
   { id: 'wc', ts: monTs + 3 * dayMs, date: util.dateStr(monTs + 3 * dayMs), plan: { planId: 'ppl', dayId: 'legs' }, items: [] }
-], pplPlan, monTs);
+], pplPlan, monTs, frozenNow);
 assert(wpAll.doneCount === 3 && wpAll.pct === 100 && wpAll.nextDay === null, '全部完成无下一日');
 // 清空数据清理周计划
 store.setWeeklyPlan('ppl');
@@ -1829,11 +1835,12 @@ const prWarm = [
 const prFix = util.exercisePR('bench', prWarm);
 assert(prFix.maxWeight === 80 && prFix.bestSetVol === 640, 'PR 排除热身组（max=' + prFix.maxWeight + ' best=' + prFix.bestSetVol + '）');
 // 15.4 计划进度：跳练中间日 → nextDay 应为第一个未完成日（原 bug：按 doneIds.length 推断会指向已完成的日）
+// 时间冻结 v2.29：nowTs 注入周三 12:00，todayDone 语义与真实时钟解耦
 const plan3 = { id: 'p', name: '三练', days: [{ id: 'd1', name: '练1' }, { id: 'd2', name: '练2' }, { id: 'd3', name: '练3' }] };
 const skipMid = util.weeklyPlanProgress([
-  { id: 'x1', ts: mhWeek + 1000, date: util.todayStr(), plan: { planId: 'p', dayId: 'd1' } },
-  { id: 'x2', ts: mhWeek + 2000, date: util.todayStr(), plan: { planId: 'p', dayId: 'd3' } }
-], plan3, mhWeek);
+  { id: 'x1', ts: mhWeek + 1000, date: util.dateStr(mhWeek + 1000), plan: { planId: 'p', dayId: 'd1' } },
+  { id: 'x2', ts: mhWeek + 2000, date: util.dateStr(mhWeek + 2000), plan: { planId: 'p', dayId: 'd3' } }
+], plan3, mhWeek, mhWeek + 2 * dayMs + 12 * 3600000);
 assert(skipMid.doneCount === 2 && skipMid.nextDay && skipMid.nextDay.id === 'd2', '跳练中间日 → 下一日为 d2（实际 ' + (skipMid.nextDay && skipMid.nextDay.id) + '）');
 // 15.5 导入恢复语义：空数据备份也能清掉现有数据（原 bug：validX.length>0 判断导致空备份不覆盖）
 store.clearAll(); store.ensureInit();

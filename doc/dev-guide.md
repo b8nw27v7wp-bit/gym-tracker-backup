@@ -1,6 +1,6 @@
 ﻿# 开发指南（Developer Guide）
 
-版本：v2.21.0 | 更新：2026-08-13
+版本：v2.29.0 | 更新：2026-08-18
 
 ## 1. 环境准备
 
@@ -80,6 +80,19 @@ gym-tracker/
 - 保存 workout 时冗余存储 exerciseName/muscle，历史数据与动作库解耦
 - 计算一律用 `util.toNum(x)` 防御脏数据（try/catch + isFinite，对象型/NaN/Infinity 归 0）；`Number(x) || 0` 会因对象型 x 抛 TypeError，勿用
 - 排序/统计统一以 `ts`（毫秒时间戳）为准，`date` 仅展示用
+
+### 3.5 时间冻结约定（v2.29，BUG-014 教训）
+
+- **禁止写"以今天星期几为前提"的断言**——真实 `Date.now()` 会让测试只在特定星期几通过（曾有一条断言仅周一可过，周二起必挂）
+- 日期依赖纯函数（`weeklyPlanProgress`/`planDayStatus`/`planDayCompletion`/`todayPlanReminder`）均支持可选末参 `nowTs`；测试必须注入固定时间戳，夹具 `date` 用 `util.dateStr(nowTs)` 对齐
+- `util.safeNowTs` 只接受「有限正整数 number」，其他输入（字符串/对象/NaN/原型键）回退真实时钟，脏注入不崩溃
+- 新增日期依赖纯函数时遵循同一约定，并在 `scripts/verify-clock-independent.js` 补星期无关回归
+
+### 3.6 CI 与提交门禁（v2.29）
+
+- `.github/workflows/ci.yml`：push/PR/每日定时/手动触发，自动跑 `node test.js` + 全部 `scripts/verify-*.js`，任一失败即红
+- 提交前本地至少跑 `node test.js` 全绿；涉及隐私接口变动加跑 `scripts/verify-privacy-decls.js`
+- 发版流程与 git tag 纪律见 `release-checklist.md`「版本迭代规范」
 
 ## 4. 如何新增动作
 

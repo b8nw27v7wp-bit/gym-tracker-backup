@@ -1,6 +1,6 @@
 ﻿# 项目路线图（Roadmap）
 
-版本：v2.26.0 | 更新：2026-08-15
+版本：v2.29.0 | 更新：2026-08-18
 
 > 本文档定义项目发展方向与优先级。每个方向完成时更新状态并记录到 changelog.md。
 > 优先级定义：P0 核心可用 / P1 重要增强 / P2 锦上添花
@@ -51,6 +51,10 @@
 | 备份导出/恢复（剪贴板 JSON） | ✅ 完成（数据管理页） |
 | storage 容量监控与清理提示 | ✅ 完成（>3MB 提示 + 容量展示） |
 | 组件化重构（动作卡片/组编辑器抽组件） | ✅ 完成（v2.4.0，set-editor/ex-card/empty-state 已抽） |
+| CI 全量回归门禁（push/PR/每日定时，主套件+19 专项） | ✅ 完成（v2.29.0） |
+| 时间冻结机制（nowTs 注入，消灭星期几相关 flaky 测试） | ✅ 完成（v2.29.0，verify-clock-independent 25 项） |
+| 隐私接口巡检（声明表/高危接口/未知接口守门） | ✅ 完成（v2.29.0，verify-privacy-decls 26 项） |
+| 版本迭代规范（tag 纪律/回滚策略/schema 迁移纪律） | ✅ 完成（v2.29.0，release-checklist） |
 
 ## 方向六：分享能力（P2 · 进行中）
 
@@ -165,6 +169,17 @@
 | 每周容量目标：统计页 canvas 进度环 + 弹窗设置/编辑/删除 | ✅ 完成 |
 | 动作重量趋势图：动作详情页 canvas 折线（strengthCurve + 单位换算 + 空态） | ✅ 完成 |
 | schema 字段扩展：gym_settings.trainReminder/reminderSubscribed、gym_goals.weeklyVolume + 备份适配 | ✅ 完成 |
+
+## v2.29.0 迭代 ✅（2026-08-18）— 工程健壮性：时钟无关 / CI / 隐私守门 / 版本规范
+
+| 任务 | 状态 |
+|-----|------|
+| 修复周二必挂 flaky 断言（BUG-014）+ 时间冻结机制（safeNowTs/nowTs 注入） | ✅ 完成 |
+| verify-clock-independent.js（星期无关 + 脏 nowTs 注入 + 原型污染 25 项） | ✅ 完成 |
+| verify-privacy-decls.js（隐私声明/高危接口/未知接口 26 项） | ✅ 完成 |
+| GitHub Actions CI（push/PR/每日定时/手动，全量回归门禁） | ✅ 完成 |
+| release-checklist：上传前门禁 §4.0 + 版本迭代规范（tag/回滚/迁移纪律） | ✅ 完成 |
+| 文档全量同步（architecture/testing/dev-guide/changelog/bug-log） | ✅ 完成 |
 
 ## 完成标准（每方向通用）
 

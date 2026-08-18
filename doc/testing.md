@@ -1,12 +1,14 @@
 ﻿# 测试文档（Testing）
 
-版本：v2.23.1 | 更新：2026-08-15
+版本：v2.29.0 | 更新：2026-08-18
 
 ## 1. 测试策略
 
 - **数据层自动化**：计算/存储/内容完整性用 node 单测，`node test.js` 一键运行，数据层断言 + 页面冒烟（共 767 项）
 - **页面层冒烟**：mock `Page`/`wx` 实跑页面交互逻辑（编辑/保存流程），见第 4 章
-- **安全专项测试**：17 套 scripts/verify-*.js 专项脚本覆盖安全/边界/压力/注入/XSS/并发/导航/交互/模块完整性场景（共 904 项）
+- **安全专项测试**：19 套 scripts/verify-*.js 专项脚本覆盖安全/边界/压力/注入/XSS/并发/导航/交互/模块完整性/时钟无关/隐私声明场景（共 955 项）
+- **时间冻结约定（v2.29）**：日期依赖纯函数支持可选 `nowTs` 注入（`util.safeNowTs` 守门），测试禁止以"今天星期几"为前提写断言（教训：`'今日（周一）未打卡'` 在周二必假失败）；回归见 `verify-clock-independent.js`
+- **CI 门禁（v2.29）**：`.github/workflows/ci.yml` 在 push/PR/每日定时/手动触发时跑主套件 + 全部专项，任一失败即红；**每日定时专抓时钟/日期类回归**
 - **手工**：页面渲染与视觉在微信开发者工具中验证（见第 5 章）
 - **回归**：任何数据层改动后必须 `node test.js` 全绿；页面逻辑改动后跑冒烟测试再提交
 
@@ -201,7 +203,9 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 
 ## 6. 回归流程
 
-1. `node test.js` 全绿（759 项）
+> 全量回归已由 CI（`.github/workflows/ci.yml`）自动执行；本地手动回归按下表（全绿才可提交）。
+
+1. `node test.js` 全绿（767 项）
 2. 页面冒烟测试全绿（动作详情 10 项 + 自建计划 22 项）
 3. `node scripts/verify-page-match.js` + `node scripts/verify-nav.js` 全绿
 4. `node scripts/verify-boundaries.js` 全绿（边界矩阵 45 项）
@@ -214,9 +218,11 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 11. `node scripts/verify-muscle-heatmap.js` 全绿（部位热力图：色阶守护/分组完整性/分周聚合/性能预算/注入与脏数据安全 35 项）
 12. `node scripts/verify-modules.js` 全绿（建构管理守门：模块可加载/依赖无环/页面四件套/存储 key/文档一致 11 项）
 13. `node scripts/verify-extreme-usage.js` 全绿（极端使用习惯专项：乱输入/狂点/脏数据/自定义动作极端/计划极端/统计极端/19 页面 deep-link 注入/存储极端/日期边界 62 项）
-14. 开发者工具编译无报错
-15. 手工清单按改动模块抽查
-16. 提审前完整跑一遍手工清单 + 手机真机预览
+14. `node scripts/verify-clock-independent.js` 全绿（时钟无关性 + 时间冻结安全 25 项）
+15. `node scripts/verify-privacy-decls.js` 全绿（隐私声明/高危接口/未知接口守门 26 项）
+16. 开发者工具编译无报错
+17. 手工清单按改动模块抽查
+18. 提审前完整跑一遍手工清单 + 手机真机预览
 
 ## 7. 用户场景测试（verify-user-scenarios.js）
 
@@ -421,7 +427,7 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 
 | 脚本 | 用途 | 项数 |
 |------|------|------|
-| `test.js` | 主测试套件（数据层 + 页面冒烟 + 发力图守门 + 工具函数 + 审计回归 + v5 训练体验与追踪 + 训练周报 + v6 提醒·周目标·趋势） | 650 |
+| `test.js` | 主测试套件（数据层 + 页面冒烟 + 发力图守门 + 工具函数 + 审计回归 + v5 训练体验与追踪 + 训练周报 + v6 提醒·周目标·趋势 + 时间冻结断言） | 767 |
 | `scripts/verify-boundaries.js` | 边界测试矩阵 | 45 |
 | `scripts/verify-extreme.js` | 极限/压力/安全威胁 | 64 |
 | `scripts/verify-hardening.js` | 高强度安全/容量/注入 | 61 |
@@ -429,13 +435,17 @@ page.setData = function (obj) { /* 路径解析后写入 this.data */ };
 | `scripts/verify-security-final.js` | 综合安全测试（存储/注入/防黑客/压力） | 147 |
 | `scripts/verify-user-scenarios.js` | 用户场景测试（错误操作/中断/损坏恢复） | 68 |
 | `scripts/verify-muscle-map.js` | 发力图↔部位卡片一致性 + 安全注入 | 68 |
-| scripts/verify-muscle-heatmap.js | 部位热力图专项（色阶守护/分组完整性/分周聚合/性能预算/注入与脏数据安全） | 35 |
-| scripts/verify-modules.js | 建构管理守门（模块可加载/依赖无环/页面四件套/tab/组件/存储 key 单一出口/跨页 key/文档一致） | 11 |
+| `scripts/verify-muscle-heatmap.js` | 部位热力图专项（色阶守护/分组完整性/分周聚合/性能预算/注入与脏数据安全） | 35 |
+| `scripts/verify-modules.js` | 建构管理守门（模块可加载/依赖无环/页面四件套/tab/组件/存储 key 单一出口/跨页 key/文档一致） | 11 |
 | `scripts/verify-nav.js` | 导航审计 | 1 |
 | `scripts/verify-page-match.js` | 页面数据匹配 | 4 |
 | `scripts/verify-v6.js` | v6 边界+安全专项（训练日提醒/周容量目标/单位换算/重量趋势/订阅守卫：脏输入、原型注入、周界、非法值） | 60 |
 | `scripts/verify-interaction.js` | 交互审计（分板块分页面：事件 handler 存在性、导航目标/方式、同页栈溢出、dataset 一致、裸 navigateBack 兜底、组件事件） | 19 |
 | `scripts/verify-user-flow.js` | 用户使用逻辑仿真（端到端：初始化/资料/训练/历史编辑复制/计划打卡/目标围度/导出恢复） | 42 |
 | `scripts/verify-security-audit.js` | 安全漏洞回归（原型注入/崩溃/DoS/对象型字段，覆盖 8 个纯函数模块 + muscleGroups） | 49 |
+| `scripts/verify-export-custom.js` | 导出与自定义动作边界/安全（CSV 公式注入/原型链注入/脏字段/时间戳） | 93 |
+| `scripts/verify-extreme-usage.js` | 极端使用习惯专项（乱输入/狂点/脏数据/自定义动作极端/计划极端/统计极端/19 页面 deep-link 注入/存储极端/日期边界） | 62 |
+| `scripts/verify-clock-independent.js` | 时钟无关性 + 时间冻结安全（7 天逐日冻结一致/脏 nowTs 注入×22/原型污染/向后兼容） | 25 |
+| `scripts/verify-privacy-decls.js` | 隐私接口巡检（声明表全覆盖/高危与网络接口零容忍/未知 wx.* 接口守门/发布文档一致） | 26 |
 
-**总计：1422 项测试**
+**总计：1722 项测试（主套件 767 + 19 专项 955），CI 每次 push/PR/每日定时自动执行**

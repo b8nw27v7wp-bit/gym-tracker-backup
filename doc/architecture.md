@@ -1,6 +1,6 @@
 ﻿# 建构规划与模块管理（Architecture）
 
-版本：v2.24.0 | 更新：2026-08-15
+版本：v2.29.0 | 更新：2026-08-18
 配套：`dev-guide.md`（开发指引）/ `design.md`（设计决策）/ `testing.md`（测试体系）
 
 ---
@@ -13,7 +13,7 @@
 1. **纯函数分层**：计算/聚合逻辑全部抽为 `utils/*` 纯函数模块（无 wx 依赖），node 可直接单测
 2. **数据兜底**：任何非法/脏数据不崩溃（原型链注入防御、未知词忽略计数、类型强校验）
 3. **浅色极简 UI**：白底卡片、主文字 #1d1d1f、强调 indigo #4f46e5、蓝系数据色板
-4. **测试门禁**：主套件 759 项 + 专项 858 项全绿才可提交
+4. **测试门禁**：主套件 767 项 + 专项 955 项全绿才可提交（CI 自动守门：push/PR/每日定时）
 5. **页面瘦身**：页面 JS 只做编排（读 store → 调纯函数 → setData），不内联业务计算
 
 **分层架构**
@@ -33,7 +33,8 @@
 ├─────────────────────────────────────────────┤
 │ 存储层 wx.setStorageSync（16 个业务 key + 4 个跨页 key） │
 ├─────────────────────────────────────────────┤
-│ 测试 test.js（767）+ scripts/verify-*.js（专项 904）    │
+│ 测试 test.js（767）+ scripts/verify-*.js（专项 955）    │
+│ CI .github/workflows/ci.yml（push/PR/每日定时全量回归）    │
 └─────────────────────────────────────────────┘
 ```
 
@@ -51,8 +52,9 @@ gym-tracker/
 ├── data/                 静态数据层（见 §3.2）
 ├── utils/                纯函数层（18 个模块，见 §3.1）
 ├── doc/                  11 份文档（见 §9）
-├── scripts/              11 个专项验证脚本（见 §8）
-├── test.js               主测试套件（759 项）
+├── scripts/              19 个专项验证脚本（见 §8）
+├── test.js               主测试套件（767 项）
+├── .github/workflows/    CI（push/PR/每日定时跑主套件+全部专项）
 └── README.md             项目说明
 ```
 
@@ -210,6 +212,9 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 
 | 机制 | 位置 | 说明 |
 |---|---|---|
+| 时间冻结（nowTs 注入） | util.safeNowTs + weeklyPlanProgress/planDayStatus/planDayCompletion/plan-reminder | 日期依赖纯函数可选末参 nowTs，仅接受有限正整数，脏值回退真实时钟；测试禁止以"今天星期几"为前提写断言（v2.29，修复周二必挂的 flaky 断言） |
+| CI 全量回归门 | .github/workflows/ci.yml | push/PR/每日定时/手动：主套件 + 19 专项全跑，任一失败即红；每日定时专抓时钟类回归 |
+| 隐私接口守门 | scripts/verify-privacy-decls.js | 声明表全覆盖 + 高危/网络接口零容忍 + 未知 wx.* 接口 FAIL + release-checklist 声明清单一致 |
 | 数据指纹缓存 | stats.js `_dataFingerprint/_statsCache` | 训练/体重/摄入/自定义/资料/设置/围度/目标未变 → loadStats 零重算，切 tab 秒开 |
 | setData 两级拆分 | stats.js | critical（简报/成就/目标）先渲染，rest（图表/恢复）随后 |
 | 不可变更新 | train.js draft | concat/map 生成新数组，保证 setData diff 生效 |
@@ -246,7 +251,9 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 | `verify-interaction.js` | 19 | **交互审计**：分板块分页面——WXML 事件绑定→JS handler 存在性、导航目标注册与跳转方式（navigateTo/switchTab/redirectTo）、同页 navigateTo 栈溢出、dataset 一致性、裸 navigateBack 兜底、组件/custom-tab-bar 事件 |
 | `verify-user-flow.js` | 42 | **用户使用逻辑仿真（端到端）**：初始化→身体资料→训练记录→历史编辑/复制→计划打卡→目标/围度→导出清空恢复，逐场景断言 |
 | `verify-security-audit.js` | 49 | **安全漏洞回归**：training-intelligence/weekly-report/plate-calculator/nutrition/substitute/custom-exercises/warmup/muscleGroups 的原型注入·崩溃·DoS·对象型字段修复回归 |
-| **合计** | **1671** | 提交门槛：主套件 + 全部专项全绿 |
+| `verify-clock-independent.js` | 25 | **时钟无关性+时间冻结安全（v2.29）**：weeklyPlanProgress/planDayStatus/planDayCompletion/todayPlanReminder 一周 7 天逐日冻结结果一致；脏 nowTs 注入（字符串/原型键/对象/NaN/Infinity/负数/Symbol ×22）零崩溃；原型污染防护；3 参旧调用向后兼容 |
+| `verify-privacy-decls.js` | 26 | **隐私接口巡检（v2.29）**：7 个在用隐私接口与声明表逐条对应；15 类高危/网络接口零容忍；未知 wx.* 接口守门（白名单外即 FAIL，逼出隐私评估）；隐私页注册 + release-checklist 声明清单一致 |
+| **合计** | **1722** | 提交门槛：主套件 + 全部专项全绿（CI 自动执行） |
 
 ---
 
@@ -292,7 +299,10 @@ tab 间：switchTab；子页间：navigateTo；同页链式跳转：redirectTo
 4. [ ] architecture §3.3 表格同步
 
 ### 通用
-1. [ ] 提交前跑全量：`node test.js` + 15 个专项脚本（1422 项）
+1. [ ] 提交前跑全量：`node test.js` + 19 个专项脚本（1722 项）——或直接推分支由 CI 执行
 2. [ ] 模块/页面/存储 key 变更后跑 `scripts/verify-modules.js`（建构管理守门）
 3. [ ] 文档同步（architecture 板块矩阵/模块表 + changelog + 涉及文档）
 4. [ ] 手工清单抽查改动模块（微信开发者工具）
+5. [ ] 新增/删除 `wx.*` 接口后跑 `scripts/verify-privacy-decls.js` 并同步后台隐私指引
+6. [ ] 日期相关逻辑改动跑 `scripts/verify-clock-independent.js`（星期无关回归）
+7. [ ] 对外发版按 release-checklist「版本迭代规范」：CI 绿 → changelog → 上传 → tag

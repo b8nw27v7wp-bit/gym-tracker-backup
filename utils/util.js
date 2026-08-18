@@ -128,6 +128,13 @@ function dateStr(ts) {
 
 function todayStr() { return dateStr(Date.now()); }
 
+// 时间冻结支持（v2.29）：日期依赖纯函数的可选 nowTs 注入，测试可脱离真实时钟跑确定性断言
+// 仅接受「有限正整数 number」；其他一律回退真实 Date.now()（脏注入不崩溃、不影响生产路径）
+function safeNowTs(nowTs) {
+  if (typeof nowTs === 'number' && isFinite(nowTs) && nowTs > 0) return nowTs;
+  return Date.now();
+}
+
 // 某 ts 所在周的周一 0 点
 function weekStart(ts) {
   var d = new Date(ts);
@@ -337,10 +344,12 @@ function est1RMTrend(exerciseId, workouts, n) {
 
 // 计划完成度：今日某计划日训练完成情况
 // 返回 { done: bool 今日是否已练该计划日, count 今日该计划日训练次数 }
-function planDayStatus(workouts, planId, dayId) {
-  var today = todayStr();
+// 可选 nowTs：时间冻结注入（测试确定性用），缺省真实时钟
+function planDayStatus(workouts, planId, dayId, nowTs) {
+  var today = dateStr(safeNowTs(nowTs));
   var count = 0;
   (workouts || []).forEach(function (w) {
+    if (!w || typeof w !== 'object') return;
     if (w.date !== today) return;
     if (w.plan && w.plan.planId === planId && w.plan.dayId === dayId) count += 1;
   });
@@ -349,11 +358,13 @@ function planDayStatus(workouts, planId, dayId) {
 
 // 某计划日动作完成率：今日训练中命中该计划日动作的数量占比
 // 返回 { total, done, pct }；无训练或无匹配时 pct=0
-function planDayCompletion(workouts, planId, dayId, planDay) {
-  var today = todayStr();
+// 可选 nowTs：时间冻结注入（测试确定性用），缺省真实时钟
+function planDayCompletion(workouts, planId, dayId, planDay, nowTs) {
+  var today = dateStr(safeNowTs(nowTs));
   var total = (planDay && planDay.items) ? planDay.items.length : 0;
   var doneSet = {};
   (workouts || []).forEach(function (w) {
+    if (!w || typeof w !== 'object') return;
     if (w.date !== today) return;
     (w.items || []).forEach(function (item) {
       doneSet[item.exerciseId] = true;
@@ -373,11 +384,12 @@ function planDayCompletion(workouts, planId, dayId, planDay) {
 // workouts 内本周（ts >= weekStartTs）带该计划标记的训练，按计划日顺序统计完成情况
 // 返回 { totalDays, doneCount, pct, doneIds, todayDone, nextDay|null }
 // nextDay = 按顺序第一个未完成的训练日（{ id, name }）；全部完成则 null
-function weeklyPlanProgress(workouts, plan, weekStartTs) {
+// 可选 nowTs：时间冻结注入（测试确定性用），缺省真实时钟
+function weeklyPlanProgress(workouts, plan, weekStartTs, nowTs) {
   var days = (plan && plan.days) || [];
   var totalDays = days.length;
   var doneSet = {};
-  var today = todayStr();
+  var today = dateStr(safeNowTs(nowTs));
   var todayDone = false;
   (workouts || []).forEach(function (w) {
     // 脏数据防御：null/非对象/非法 ts 跳过（stateless 纯函数不崩溃）

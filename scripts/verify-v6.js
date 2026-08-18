@@ -45,9 +45,9 @@ check(protoRem && protoRem.planId === 'ppl', 'weeklyPlan __proto__ 键注入不�
 // 周边界：上周训练不计入本周打卡
 var lastWeek = [{ id: 'lw', ts: WEEK_START - DAY, date: util.dateStr(WEEK_START - DAY), plan: { planId: 'ppl', dayId: 'push' }, items: [] }];
 check(planReminder.todayPlanReminder(lastWeek, { planId: 'ppl', weekStart: WEEK_START }, []) !== null, '上周训练不视为本周完成');
-// 本周已练 → 不提醒
-var thisWeek = [{ id: 'tw', ts: WEEK_START + 1000, date: util.todayStr(), plan: { planId: 'ppl', dayId: 'push' }, items: [] }];
-check(planReminder.todayPlanReminder(thisWeek, { planId: 'ppl', weekStart: WEEK_START }, []) === null, '本周已练不提醒');
+// 本周已练 → 不提醒（nowTs 冻结周一 01:00：夹具日期=周一，todayDone 确定成立，不依赖跑测试当天星期几）
+var thisWeek = [{ id: 'tw', ts: WEEK_START + 1000, date: util.dateStr(WEEK_START + 1000), plan: { planId: 'ppl', dayId: 'push' }, items: [] }];
+check(planReminder.todayPlanReminder(thisWeek, { planId: 'ppl', weekStart: WEEK_START }, [], WEEK_START + 3600000) === null, '本周已练不提醒（时间冻结）');
 
 // ---------- 2. 每周容量目标（weeklyVolumeProgress）边界 ----------
 console.log('2. 每周容量目标 边界（脏输入/周界）');

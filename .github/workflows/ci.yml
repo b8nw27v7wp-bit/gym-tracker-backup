@@ -1,0 +1,47 @@
+# 铁馆日志 CI：数据层主套件 + 全部专项验证脚本
+# 触发：push / PR / 每日定时（抓日期/时钟类回归）/ 手动
+# 门槛：任一脚本失败即红（全部脚本均以非零退出码上报失败）
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # UTC 19:00 = 北京时间次日 03:00，每日巡检时钟相关回归
+    - cron: '0 19 * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: 数据层 + 专项验证
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 主套件 test.js
+        run: node test.js
+
+      - name: 专项验证 scripts/verify-*.js（逐个跑，全跑完再汇总失败）
+        shell: bash
+        run: |
+          fail=0
+          for f in scripts/verify-*.js; do
+            echo ""
+            echo "========== $f =========="
+            if ! node "$f"; then
+              fail=1
+              echo "FAILED: $f"
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "存在失败的专项脚本，CI 判定失败"
+            exit 1
+          fi
+          echo "全部专项脚本通过"

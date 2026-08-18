@@ -9,6 +9,14 @@
 
 ## 已关闭
 
+### BUG-014 | 2026-08-18 | S3 | 已关闭
+- 模块：test.js 7a 本周计划打卡（CI 巡检发现）
+- 描述：断言 `'今日（周一）未打卡'` 只在周一跑测试才通过，其余星期几（尤其周二）必假失败——导致 `node test.js` 长期"766 通过 1 失败"而被忽视
+- 复现步骤：周二运行 `node test.js` → 766 通过 / 1 失败
+- 根因：夹具 `wp1.ts = monTs + 1*dayMs`（本周二），而 `weeklyPlanProgress` 内部用真实 `Date.now()` 算"今天"；断言假设今天≠周二（注释写死"周一"），夹具与真实时钟耦合
+- 修复：`util.safeNowTs` + `weeklyPlanProgress`/`planDayStatus`/`planDayCompletion`/`todayPlanReminder` 增加可选 `nowTs` 注入（脏值回退真实时钟）；test.js 7a/15.4 与 verify-v6「本周已练」改为注入固定时间戳；新增 verify-clock-independent.js（25 项）星期无关回归 + 脏 nowTs 注入安全；CI 每日定时防同类回归
+- 验证：任意星期几运行 `node test.js` 767 项全绿；verify-clock-independent 25 项全绿
+
 ### BUG-012 | 2026-08-15 | S3 | 已关闭
 - 模块：stats.wxss 部位热力图（用户反馈）
 - 描述：部位训练热力图（GitHub 风格肌群矩阵）添加训练后格子依然灰色，颜色无变化（数据聚合正常，level 已算到 1-4）

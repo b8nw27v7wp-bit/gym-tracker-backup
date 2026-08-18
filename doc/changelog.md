@@ -2,6 +2,18 @@
 
 格式：`版本 | 日期 | 类型 | 变更`（feat 功能 / fix 修复 / docs 文档 / perf 性能 / refactor 重构 / test 测试 / chore 杂项）
 
+## v2.29.0（2026-08-18）— 工程健壮性：时间冻结机制 / CI 门禁 / 隐私巡检 / 版本迭代规范
+
+- **fix(test)**: 修复周二必挂的 flaky 断言 `'今日（周一）未打卡'`（test.js 7a）——夹具 `wp1.ts` 锚定本周二，`weeklyPlanProgress` 内部却用真实 `Date.now()` 算今天，导致断言只在周一成立（BUG-014）；test.js 15.4 跳练断言与 verify-v6「本周已练不提醒」同类隐患一并冻结
+- **feat(test)**: 时间冻结机制——`util.safeNowTs` 守门（仅接受有限正整数 number，字符串/对象/NaN/Infinity/负数/原型键一律回退真实时钟不崩溃）；`planDayStatus`/`planDayCompletion`/`weeklyPlanProgress` 新增可选末参 `nowTs`；`plan-reminder.todayPlanReminder` 透传；页面调用点零改动（缺省走真实时钟）
+- **feat(security)**: 顺手加固 `planDayStatus`/`planDayCompletion` 的 null/非对象元素防御（与 weeklyPlanProgress 口径一致，脏数据不崩溃）
+- **test**: 新增 `scripts/verify-clock-independent.js`（25 项）——7 天逐日冻结结果一致（todayDone 仅命中训练日）、脏 nowTs ×22 注入零崩溃、原型污染防护、3 参旧调用向后兼容
+- **feat(security)**: 新增 `scripts/verify-privacy-decls.js`（26 项）——7 个在用隐私接口与声明表逐条对应、15 类高危/网络接口零容忍（守住"纯本地无网络"承诺）、未知 `wx.*` 接口白名单守门（新接口必须先做隐私评估）、隐私页注册与 release-checklist 声明清单一致性
+- **feat(ci)**: 新增 `.github/workflows/ci.yml`——push/PR/每日定时（UTC 19:00 = 北京 03:00）/手动触发，自动跑主套件 + 全部 19 专项（逐个执行、全跑完再汇总失败），任一失败即红；每日定时专抓时钟/日期类回归
+- **feat(docs)**: release-checklist 新增 §4.0 上传前门禁（CI 绿 + 隐私巡检为提审前置）与「版本迭代规范」（版本号=changelog=上传版本=git tag、annotated tag 纪律、后台一键回滚策略、schema 迁移纪律、依赖引入评估）
+- **docs**: architecture（§7 横切机制 + §8 测试门禁 1722 项 + §10 提交清单）、testing（§1 策略 + §6 回归流程 18 步 + §8 脚本清单补齐 19 个）、dev-guide（§3.5 时间冻结约定 + §3.6 CI 门禁）、bug-log（BUG-014）同步
+- 回归：test.js 767 项 + 19 专项脚本（955 项）全绿，合计 1722 项
+
 ## v2.28.4（2026-08-17）— 边界/安全排查：导出与自定义动作加固
 
 - **fix(security)**: custom-exercises `difficultyName` 查表防原型链注入——原来 `difficultyName('__proto__')` 命中 Object.prototype 返回对象，现 hasOwnProperty 防护回退「入门」（equipmentName/validDifficulty 本就防护，补齐最后一处）
